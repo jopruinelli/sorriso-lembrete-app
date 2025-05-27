@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { PatientCard } from '@/components/PatientCard';
 import { PatientForm } from '@/components/PatientForm';
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Users, History, UserX, Phone, MessageSquare, Calendar, FileExcel, Shield } from 'lucide-react';
+import { Plus, Users, History, UserX, Phone, MessageSquare, Calendar, FileSpreadsheet, Shield } from 'lucide-react';
 import { format, isAfter, isBefore, startOfMonth, endOfMonth, addMonths, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -351,7 +352,7 @@ const Index = () => {
                     variant="outline"
                     className="border-dental-primary text-dental-primary hover:bg-dental-background"
                   >
-                    <FileExcel className="w-4 h-4 mr-1" />
+                    <FileSpreadsheet className="w-4 h-4 mr-1" />
                     Importar
                   </Button>
                   <Button
@@ -392,7 +393,7 @@ const Index = () => {
                         variant="outline"
                         className="border-dental-primary text-dental-primary hover:bg-dental-background"
                       >
-                        <FileExcel className="w-4 h-4 mr-2" />
+                        <FileSpreadsheet className="w-4 h-4 mr-2" />
                         Importar planilha
                       </Button>
                     </div>

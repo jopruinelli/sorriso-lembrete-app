@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileExcel, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { Patient } from '@/types/patient';
@@ -132,7 +132,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
         <CardHeader className="bg-dental-primary text-white">
           <CardTitle className="flex items-center gap-2">
-            <FileExcel className="w-5 h-5" />
+            <FileSpreadsheet className="w-5 h-5" />
             Importar Planilha Excel
           </CardTitle>
         </CardHeader>
