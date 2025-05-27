@@ -25,19 +25,19 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <div className="space-y-3 mb-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dental-secondary w-4 h-4" />
         <Input
           placeholder="Buscar por nome ou telefone..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
+          className="pl-10 border-dental-primary/30 focus:border-dental-primary"
         />
       </div>
 
       <div className="flex gap-2">
         <Select value={periodFilter} onValueChange={onPeriodFilterChange}>
-          <SelectTrigger className="flex-1">
-            <Filter className="w-4 h-4 mr-2" />
+          <SelectTrigger className="flex-1 border-dental-primary/30">
+            <Filter className="w-4 h-4 mr-2 text-dental-primary" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -51,7 +51,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <Button
           variant={showOverdueOnly ? "default" : "outline"}
           onClick={() => onShowOverdueOnlyChange(!showOverdueOnly)}
-          className="whitespace-nowrap"
+          className={showOverdueOnly 
+            ? "bg-dental-primary hover:bg-dental-secondary whitespace-nowrap" 
+            : "border-dental-primary text-dental-primary hover:bg-dental-background whitespace-nowrap"
+          }
         >
           Apenas atrasados
         </Button>
