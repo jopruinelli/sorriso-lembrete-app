@@ -64,18 +64,19 @@ export const usePatients = () => {
           date: new Date(contact.date)
         }))
       }));
-      console.log('Pacientes carregados do localStorage:', patientsWithDates);
+      console.log('📥 Pacientes carregados do localStorage:', patientsWithDates);
       setPatients(patientsWithDates);
     } else {
       // Carregar dados de exemplo na primeira vez
-      console.log('Carregando dados de exemplo');
+      console.log('🔄 Carregando dados de exemplo');
       setPatients(samplePatients);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(samplePatients));
     }
   }, []);
 
   const savePatients = (updatedPatients: Patient[]) => {
-    console.log('Salvando pacientes:', updatedPatients);
+    console.log('💾 Salvando pacientes no localStorage:', updatedPatients.length, 'pacientes');
+    console.log('📋 Lista de pacientes sendo salvos:', updatedPatients.map(p => ({ id: p.id, nome: p.name })));
     setPatients(updatedPatients);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPatients));
   };
@@ -83,12 +84,32 @@ export const usePatients = () => {
   const addPatient = (patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
     const newPatient: Patient = {
       ...patientData,
-      id: Date.now().toString(),
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // ID mais único
       contactHistory: []
     };
-    console.log('Adicionando novo paciente:', newPatient);
+    console.log('➕ Adicionando novo paciente:', newPatient);
     const updatedPatients = [...patients, newPatient];
+    console.log('📊 Total de pacientes após adição:', updatedPatients.length);
     savePatients(updatedPatients);
+  };
+
+  const bulkAddPatients = (patientsData: Omit<Patient, 'id' | 'contactHistory'>[]) => {
+    console.log('📥 Iniciando importação em massa de', patientsData.length, 'pacientes');
+    
+    const newPatients: Patient[] = patientsData.map((patientData, index) => ({
+      ...patientData,
+      id: (Date.now() + index).toString() + Math.random().toString(36).substr(2, 9),
+      contactHistory: []
+    }));
+    
+    console.log('✅ Pacientes criados para importação:', newPatients.map(p => ({ id: p.id, nome: p.name })));
+    
+    const updatedPatients = [...patients, ...newPatients];
+    console.log('📊 Total de pacientes após importação em massa:', updatedPatients.length);
+    
+    savePatients(updatedPatients);
+    
+    return newPatients.length;
   };
 
   const updatePatient = (patientId: string, patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
@@ -97,7 +118,7 @@ export const usePatients = () => {
         ? { ...patient, ...patientData }
         : patient
     );
-    console.log('Atualizando paciente:', patientId, patientData);
+    console.log('✏️ Atualizando paciente:', patientId, patientData);
     savePatients(updatedPatients);
   };
 
@@ -120,13 +141,13 @@ export const usePatients = () => {
   };
 
   const deletePatient = (patientId: string) => {
-    console.log('Excluindo paciente:', patientId);
+    console.log('🗑️ Excluindo paciente:', patientId);
     const updatedPatients = patients.filter(patient => patient.id !== patientId);
     savePatients(updatedPatients);
   };
 
   const bulkDeletePatients = (patientIds: string[]) => {
-    console.log('Excluindo pacientes em massa:', patientIds);
+    console.log('🗑️ Excluindo pacientes em massa:', patientIds);
     const updatedPatients = patients.filter(patient => !patientIds.includes(patient.id));
     savePatients(updatedPatients);
   };
@@ -134,6 +155,7 @@ export const usePatients = () => {
   return {
     patients,
     addPatient,
+    bulkAddPatients,
     updatePatient,
     addContactRecord,
     deletePatient,

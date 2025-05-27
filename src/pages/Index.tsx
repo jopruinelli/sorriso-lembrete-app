@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { PatientCard } from '@/components/PatientCard';
 import { PatientForm } from '@/components/PatientForm';
@@ -19,7 +20,7 @@ import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
-  const { patients, addPatient, updatePatient, addContactRecord, deletePatient, bulkDeletePatients } = usePatients();
+  const { patients, addPatient, bulkAddPatients, updatePatient, addContactRecord, deletePatient, bulkDeletePatients } = usePatients();
   const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState('active');
@@ -203,12 +204,11 @@ const Index = () => {
       title: 'Confirmar importação',
       message: `Tem certeza que deseja importar ${importedPatients.length} pacientes? Esta ação não pode ser desfeita.`,
       onConfirm: () => {
-        importedPatients.forEach(patientData => {
-          addPatient(patientData);
-        });
+        console.log('🚀 Iniciando importação de', importedPatients.length, 'pacientes');
+        const importedCount = bulkAddPatients(importedPatients);
         toast({
           title: "Importação concluída",
-          description: `${importedPatients.length} pacientes foram importados com sucesso.`,
+          description: `${importedCount} pacientes foram importados com sucesso.`,
         });
         setShowExcelImport(false);
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
@@ -391,10 +391,10 @@ const Index = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <Card className="bg-dental-accent border-dental-primary/20">
+            <Card className="bg-[#fdf3e7] border-dental-primary/30">
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-dental-primary">{stats.total}</div>
-                <div className="text-xs font-medium text-dental-primary">Pacientes Ativos</div>
+                <div className="text-xs font-semibold text-dental-primary">Pacientes Ativos</div>
               </CardContent>
             </Card>
             <Card className="bg-red-50 border-red-200">

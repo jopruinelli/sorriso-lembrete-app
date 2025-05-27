@@ -36,73 +36,100 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
   const { toast } = useToast();
 
   const parseDate = (dateString: string): Date | null => {
-    console.log('Tentando parsear data:', dateString);
+    console.log('🔍 Tentando parsear data:', dateString, 'tipo:', typeof dateString);
     
-    if (!dateString) return null;
+    if (!dateString || dateString === '') return null;
     
-    // Formatos aceitos
+    // Converter para string se for número (Excel às vezes exporta datas como números)
+    let dateStr = dateString.toString().trim();
+    
+    // Se for um número muito grande (timestamp do Excel), tentar converter
+    if (/^\d+$/.test(dateStr) && dateStr.length > 5) {
+      console.log('🔢 Detectado número, tentando converter de Excel serial date');
+      const excelEpoch = new Date(1899, 11, 30); // Base do Excel
+      const days = parseInt(dateStr);
+      const result = new Date(excelEpoch.getTime() + days * 24 * 60 * 60 * 1000);
+      if (isValid(result)) {
+        console.log('✅ Data convertida do Excel:', result);
+        return result;
+      }
+    }
+    
+    // Formatos aceitos priorizando DD/MM/YYYY
     const dateFormats = [
-      'dd/MM/yyyy',
-      'MM/dd/yyyy', 
-      'yyyy-MM-dd',
-      'dd-MM-yyyy',
-      'dd/MM/yy',
-      'MM/dd/yy'
+      'dd/MM/yyyy',    // Formato brasileiro preferido
+      'dd/MM/yy',      // Formato brasileiro com ano de 2 dígitos
+      'dd-MM-yyyy',    // Com hífen
+      'dd-MM-yy',      
+      'MM/dd/yyyy',    // Formato americano
+      'MM/dd/yy',      
+      'yyyy-MM-dd',    // ISO
+      'yyyy/MM/dd'
     ];
     
     // Tentar parsear com diferentes formatos
-    for (const format of dateFormats) {
+    for (const formatStr of dateFormats) {
       try {
-        const parsed = parse(dateString.toString(), format, new Date());
-        if (isValid(parsed)) {
-          console.log(`Data parseada com sucesso: ${dateString} -> ${parsed}`);
+        console.log(`⚙️ Tentando formato: ${formatStr} para "${dateStr}"`);
+        const parsed = parse(dateStr, formatStr, new Date());
+        if (isValid(parsed) && parsed.getFullYear() > 1970) {
+          console.log(`✅ Data parseada com sucesso: ${dateStr} -> ${parsed} usando formato ${formatStr}`);
           return parsed;
         }
       } catch (error) {
-        // Continuar tentando outros formatos
+        console.log(`❌ Erro no formato ${formatStr}:`, error);
       }
     }
     
     // Tentar parsing nativo do JavaScript como último recurso
-    const nativeDate = new Date(dateString);
-    if (isValid(nativeDate) && !isNaN(nativeDate.getTime())) {
-      console.log(`Data parseada nativamente: ${dateString} -> ${nativeDate}`);
+    const nativeDate = new Date(dateStr);
+    if (isValid(nativeDate) && !isNaN(nativeDate.getTime()) && nativeDate.getFullYear() > 1970) {
+      console.log(`✅ Data parseada nativamente: ${dateStr} -> ${nativeDate}`);
       return nativeDate;
     }
     
-    console.error('Não foi possível parsear a data:', dateString);
+    console.error('❌ Não foi possível parsear a data:', dateStr);
     return null;
   };
 
   const validateRow = (row: any): ImportRow => {
     const errors: string[] = [];
     
-    console.log('Validando linha:', row);
+    console.log('🔍 Validando linha:', row);
     
-    if (!row.nome || typeof row.nome !== 'string') {
+    if (!row.nome || typeof row.nome !== 'string' || row.nome.trim() === '') {
       errors.push('Nome é obrigatório');
     }
     
-    if (!row.telefone || typeof row.telefone !== 'string') {
+    if (!row.telefone || typeof row.telefone !== 'string' || row.telefone.trim() === '') {
       errors.push('Telefone é obrigatório');
     }
     
     const ultimaConsultaDate = parseDate(row.ultimaConsulta);
     if (!ultimaConsultaDate) {
-      errors.push('Data da última consulta é obrigatória e deve estar em formato válido');
+      errors.push(`Data da última consulta inválida: "${row.ultimaConsulta}"`);
     }
     
     const proximoContatoDate = parseDate(row.proximoContato);
     if (!proximoContatoDate) {
-      errors.push('Data do próximo contato é obrigatória e deve estar em formato válido');
+      errors.push(`Data do próximo contato inválida: "${row.proximoContato}"`);
     }
 
-    return {
+    console.log('📊 Resultado da validação:', {
       nome: row.nome,
-      telefone: row.telefone,
-      telefoneSecundario: row.telefoneSecundario,
-      ultimaConsulta: row.ultimaConsulta,
-      proximoContato: row.proximoContato,
+      ultimaConsultaOriginal: row.ultimaConsulta,
+      ultimaConsultaParsed: ultimaConsultaDate,
+      proximoContatoOriginal: row.proximoContato,
+      proximoContatoParsed: proximoContatoDate,
+      errors
+    });
+
+    return {
+      nome: row.nome?.trim(),
+      telefone: row.telefone?.toString().trim(),
+      telefoneSecundario: row.telefoneSecundario?.toString().trim(),
+      ultimaConsulta: row.ultimaConsulta?.toString(),
+      proximoContato: row.proximoContato?.toString(),
       ultimaConsultaDate,
       proximoContatoDate,
       motivoProximoContato: row.motivoProximoContato || 'Consulta de rotina',
@@ -127,19 +154,23 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        console.log('Dados importados da planilha:', jsonData);
+        console.log('📊 Dados brutos importados da planilha:', jsonData);
 
-        const processedData = jsonData.map((row: any) => validateRow(row));
+        const processedData = jsonData.map((row: any, index: number) => {
+          console.log(`🔄 Processando linha ${index + 1}:`, row);
+          return validateRow(row);
+        });
+        
         setImportData(processedData);
 
-        console.log('Dados processados:', processedData);
+        console.log('✅ Dados processados para preview:', processedData);
 
         toast({
           title: "Planilha processada",
           description: `${processedData.length} linhas encontradas. Verifique os dados antes de importar.`,
         });
       } catch (error) {
-        console.error('Erro ao processar planilha:', error);
+        console.error('❌ Erro ao processar planilha:', error);
         toast({
           title: "Erro ao processar planilha",
           description: "Verifique se o arquivo está no formato correto.",
@@ -168,14 +199,14 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
     const patients: Omit<Patient, 'id' | 'contactHistory'>[] = validRows.map(row => ({
       name: row.nome!,
       phone: row.telefone!,
-      secondaryPhone: row.telefoneSecundario,
+      secondaryPhone: row.telefoneSecundario || undefined,
       lastVisit: row.ultimaConsultaDate!,
       nextContactDate: row.proximoContatoDate!,
       nextContactReason: row.motivoProximoContato!,
       status: row.status as 'active' | 'inactive'
     }));
 
-    console.log('Pacientes a serem importados:', patients);
+    console.log('📤 Pacientes finais a serem importados:', patients);
     onImport(patients);
   };
 
@@ -220,10 +251,15 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
                   <p><strong>nome:</strong> Nome completo do paciente</p>
                   <p><strong>telefone:</strong> Telefone principal</p>
                   <p><strong>telefoneSecundario:</strong> Telefone alternativo (opcional)</p>
-                  <p><strong>ultimaConsulta:</strong> Data da última consulta (DD/MM/AAAA, MM/DD/AAAA ou AAAA-MM-DD)</p>
-                  <p><strong>proximoContato:</strong> Data do próximo contato (DD/MM/AAAA, MM/DD/AAAA ou AAAA-MM-DD)</p>
+                  <p><strong>ultimaConsulta:</strong> Data da última consulta (DD/MM/AAAA)</p>
+                  <p><strong>proximoContato:</strong> Data do próximo contato (DD/MM/AAAA)</p>
                   <p><strong>motivoProximoContato:</strong> Motivo do contato (opcional)</p>
                   <p><strong>status:</strong> active ou inactive (opcional, padrão: active)</p>
+                </div>
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                  <p className="text-sm text-blue-800 font-medium">
+                    💡 Dica: Use sempre o formato DD/MM/AAAA para datas (ex: 15/03/2024)
+                  </p>
                 </div>
               </div>
             </div>
@@ -277,16 +313,18 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
                       <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-2">
                         <div>
                           <strong>Última consulta:</strong><br />
+                          <span className="text-xs text-gray-500">Original: {row.ultimaConsulta}</span><br />
                           {row.ultimaConsultaDate 
-                            ? format(row.ultimaConsultaDate, 'dd/MM/yyyy', { locale: ptBR })
-                            : `❌ ${row.ultimaConsulta || 'Não informado'}`
+                            ? <span className="text-green-600">✅ {format(row.ultimaConsultaDate, 'dd/MM/yyyy', { locale: ptBR })}</span>
+                            : <span className="text-red-600">❌ Data inválida</span>
                           }
                         </div>
                         <div>
                           <strong>Próximo contato:</strong><br />
+                          <span className="text-xs text-gray-500">Original: {row.proximoContato}</span><br />
                           {row.proximoContatoDate 
-                            ? format(row.proximoContatoDate, 'dd/MM/yyyy', { locale: ptBR })
-                            : `❌ ${row.proximoContato || 'Não informado'}`
+                            ? <span className="text-green-600">✅ {format(row.proximoContatoDate, 'dd/MM/yyyy', { locale: ptBR })}</span>
+                            : <span className="text-red-600">❌ Data inválida</span>
                           }
                         </div>
                       </div>
