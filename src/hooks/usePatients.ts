@@ -64,15 +64,18 @@ export const usePatients = () => {
           date: new Date(contact.date)
         }))
       }));
+      console.log('Pacientes carregados do localStorage:', patientsWithDates);
       setPatients(patientsWithDates);
     } else {
       // Carregar dados de exemplo na primeira vez
+      console.log('Carregando dados de exemplo');
       setPatients(samplePatients);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(samplePatients));
     }
   }, []);
 
   const savePatients = (updatedPatients: Patient[]) => {
+    console.log('Salvando pacientes:', updatedPatients);
     setPatients(updatedPatients);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPatients));
   };
@@ -83,6 +86,7 @@ export const usePatients = () => {
       id: Date.now().toString(),
       contactHistory: []
     };
+    console.log('Adicionando novo paciente:', newPatient);
     const updatedPatients = [...patients, newPatient];
     savePatients(updatedPatients);
   };
@@ -93,6 +97,7 @@ export const usePatients = () => {
         ? { ...patient, ...patientData }
         : patient
     );
+    console.log('Atualizando paciente:', patientId, patientData);
     savePatients(updatedPatients);
   };
 
@@ -115,7 +120,14 @@ export const usePatients = () => {
   };
 
   const deletePatient = (patientId: string) => {
+    console.log('Excluindo paciente:', patientId);
     const updatedPatients = patients.filter(patient => patient.id !== patientId);
+    savePatients(updatedPatients);
+  };
+
+  const bulkDeletePatients = (patientIds: string[]) => {
+    console.log('Excluindo pacientes em massa:', patientIds);
+    const updatedPatients = patients.filter(patient => !patientIds.includes(patient.id));
     savePatients(updatedPatients);
   };
 
@@ -124,6 +136,7 @@ export const usePatients = () => {
     addPatient,
     updatePatient,
     addContactRecord,
-    deletePatient
+    deletePatient,
+    bulkDeletePatients
   };
 };

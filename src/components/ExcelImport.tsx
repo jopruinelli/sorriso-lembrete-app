@@ -8,6 +8,8 @@ import { Upload, FileSpreadsheet, CheckCircle, XCircle, AlertCircle } from 'luci
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { Patient } from '@/types/patient';
+import { format, parse, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface ExcelImportProps {
   onImport: (patients: Omit<Patient, 'id' | 'contactHistory'>[]) => void;
@@ -22,6 +24,8 @@ interface ImportRow {
   proximoContato?: string;
   motivoProximoContato?: string;
   status?: string;
+  ultimaConsultaDate?: Date;
+  proximoContatoDate?: Date;
   isValid: boolean;
   errors: string[];
 }
@@ -31,8 +35,49 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
+  const parseDate = (dateString: string): Date | null => {
+    console.log('Tentando parsear data:', dateString);
+    
+    if (!dateString) return null;
+    
+    // Formatos aceitos
+    const dateFormats = [
+      'dd/MM/yyyy',
+      'MM/dd/yyyy', 
+      'yyyy-MM-dd',
+      'dd-MM-yyyy',
+      'dd/MM/yy',
+      'MM/dd/yy'
+    ];
+    
+    // Tentar parsear com diferentes formatos
+    for (const format of dateFormats) {
+      try {
+        const parsed = parse(dateString.toString(), format, new Date());
+        if (isValid(parsed)) {
+          console.log(`Data parseada com sucesso: ${dateString} -> ${parsed}`);
+          return parsed;
+        }
+      } catch (error) {
+        // Continuar tentando outros formatos
+      }
+    }
+    
+    // Tentar parsing nativo do JavaScript como último recurso
+    const nativeDate = new Date(dateString);
+    if (isValid(nativeDate) && !isNaN(nativeDate.getTime())) {
+      console.log(`Data parseada nativamente: ${dateString} -> ${nativeDate}`);
+      return nativeDate;
+    }
+    
+    console.error('Não foi possível parsear a data:', dateString);
+    return null;
+  };
+
   const validateRow = (row: any): ImportRow => {
     const errors: string[] = [];
+    
+    console.log('Validando linha:', row);
     
     if (!row.nome || typeof row.nome !== 'string') {
       errors.push('Nome é obrigatório');
@@ -42,12 +87,14 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
       errors.push('Telefone é obrigatório');
     }
     
-    if (!row.ultimaConsulta) {
-      errors.push('Data da última consulta é obrigatória');
+    const ultimaConsultaDate = parseDate(row.ultimaConsulta);
+    if (!ultimaConsultaDate) {
+      errors.push('Data da última consulta é obrigatória e deve estar em formato válido');
     }
     
-    if (!row.proximoContato) {
-      errors.push('Data do próximo contato é obrigatória');
+    const proximoContatoDate = parseDate(row.proximoContato);
+    if (!proximoContatoDate) {
+      errors.push('Data do próximo contato é obrigatória e deve estar em formato válido');
     }
 
     return {
@@ -56,6 +103,8 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
       telefoneSecundario: row.telefoneSecundario,
       ultimaConsulta: row.ultimaConsulta,
       proximoContato: row.proximoContato,
+      ultimaConsultaDate,
+      proximoContatoDate,
       motivoProximoContato: row.motivoProximoContato || 'Consulta de rotina',
       status: row.status || 'active',
       isValid: errors.length === 0,
@@ -78,14 +127,19 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+        console.log('Dados importados da planilha:', jsonData);
+
         const processedData = jsonData.map((row: any) => validateRow(row));
         setImportData(processedData);
+
+        console.log('Dados processados:', processedData);
 
         toast({
           title: "Planilha processada",
           description: `${processedData.length} linhas encontradas. Verifique os dados antes de importar.`,
         });
       } catch (error) {
+        console.error('Erro ao processar planilha:', error);
         toast({
           title: "Erro ao processar planilha",
           description: "Verifique se o arquivo está no formato correto.",
@@ -115,12 +169,13 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
       name: row.nome!,
       phone: row.telefone!,
       secondaryPhone: row.telefoneSecundario,
-      lastVisit: new Date(row.ultimaConsulta!),
-      nextContactDate: new Date(row.proximoContato!),
+      lastVisit: row.ultimaConsultaDate!,
+      nextContactDate: row.proximoContatoDate!,
       nextContactReason: row.motivoProximoContato!,
       status: row.status as 'active' | 'inactive'
     }));
 
+    console.log('Pacientes a serem importados:', patients);
     onImport(patients);
   };
 
@@ -165,8 +220,8 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
                   <p><strong>nome:</strong> Nome completo do paciente</p>
                   <p><strong>telefone:</strong> Telefone principal</p>
                   <p><strong>telefoneSecundario:</strong> Telefone alternativo (opcional)</p>
-                  <p><strong>ultimaConsulta:</strong> Data da última consulta (DD/MM/AAAA)</p>
-                  <p><strong>proximoContato:</strong> Data do próximo contato (DD/MM/AAAA)</p>
+                  <p><strong>ultimaConsulta:</strong> Data da última consulta (DD/MM/AAAA, MM/DD/AAAA ou AAAA-MM-DD)</p>
+                  <p><strong>proximoContato:</strong> Data do próximo contato (DD/MM/AAAA, MM/DD/AAAA ou AAAA-MM-DD)</p>
                   <p><strong>motivoProximoContato:</strong> Motivo do contato (opcional)</p>
                   <p><strong>status:</strong> active ou inactive (opcional, padrão: active)</p>
                 </div>
@@ -200,10 +255,13 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
                           : 'bg-red-50 border-red-200'
                       }`}
                     >
-                      <div className="flex items-start justify-between">
-                        <div>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
                           <p className="font-medium">{row.nome || 'Nome inválido'}</p>
                           <p className="text-sm text-gray-600">{row.telefone || 'Telefone inválido'}</p>
+                          {row.telefoneSecundario && (
+                            <p className="text-xs text-gray-500">Tel. secundário: {row.telefoneSecundario}</p>
+                          )}
                         </div>
                         <div className="text-right">
                           {row.isValid ? (
@@ -211,13 +269,37 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
                           ) : (
                             <div className="flex items-center gap-1">
                               <AlertCircle className="w-5 h-5 text-red-500" />
-                              <div className="text-xs text-red-600">
-                                {row.errors.join(', ')}
-                              </div>
                             </div>
                           )}
                         </div>
                       </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-2">
+                        <div>
+                          <strong>Última consulta:</strong><br />
+                          {row.ultimaConsultaDate 
+                            ? format(row.ultimaConsultaDate, 'dd/MM/yyyy', { locale: ptBR })
+                            : `❌ ${row.ultimaConsulta || 'Não informado'}`
+                          }
+                        </div>
+                        <div>
+                          <strong>Próximo contato:</strong><br />
+                          {row.proximoContatoDate 
+                            ? format(row.proximoContatoDate, 'dd/MM/yyyy', { locale: ptBR })
+                            : `❌ ${row.proximoContato || 'Não informado'}`
+                          }
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-600">
+                        <strong>Motivo:</strong> {row.motivoProximoContato}
+                      </div>
+                      
+                      {row.errors.length > 0 && (
+                        <div className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded">
+                          <strong>Erros:</strong> {row.errors.join(', ')}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

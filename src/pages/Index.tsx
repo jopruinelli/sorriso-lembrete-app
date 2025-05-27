@@ -1,10 +1,10 @@
-
 import React, { useState, useMemo } from 'react';
 import { PatientCard } from '@/components/PatientCard';
 import { PatientForm } from '@/components/PatientForm';
 import { ContactForm } from '@/components/ContactForm';
 import { FilterBar } from '@/components/FilterBar';
 import { ExcelImport } from '@/components/ExcelImport';
+import { AdminControls } from '@/components/AdminControls';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { AuthGuard } from '@/components/AuthGuard';
 import { usePatients } from '@/hooks/usePatients';
@@ -13,19 +13,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Users, History, UserX, Phone, MessageSquare, Calendar, FileSpreadsheet, Shield } from 'lucide-react';
+import { Plus, Users, History, UserX, Phone, MessageSquare, Calendar, FileSpreadsheet, Shield, Settings } from 'lucide-react';
 import { format, isAfter, isBefore, startOfMonth, endOfMonth, addMonths, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
-  const { patients, addPatient, updatePatient, addContactRecord } = usePatients();
+  const { patients, addPatient, updatePatient, addContactRecord, deletePatient, bulkDeletePatients } = usePatients();
   const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState('active');
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [showExcelImport, setShowExcelImport] = useState(false);
+  const [showAdminControls, setShowAdminControls] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>();
   const [contactingPatient, setContactingPatient] = useState<Patient | undefined>();
   
@@ -49,13 +50,18 @@ const Index = () => {
   const [showOverdueOnly, setShowOverdueOnly] = useState(false);
 
   const filteredPatients = useMemo(() => {
+    console.log('Aplicando filtros. Total de pacientes:', patients.length);
+    console.log('Pacientes completos:', patients);
+    
     let filtered = patients;
 
     // Filtrar por status
     if (activeTab === 'active') {
       filtered = filtered.filter(patient => patient.status === 'active');
+      console.log('Pacientes ativos após filtro de status:', filtered.length);
     } else if (activeTab === 'inactive') {
       filtered = filtered.filter(patient => patient.status === 'inactive');
+      console.log('Pacientes inativos após filtro de status:', filtered.length);
     }
 
     // Filtrar por termo de busca
@@ -64,35 +70,65 @@ const Index = () => {
         patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.phone.includes(searchTerm)
       );
+      console.log('Pacientes após filtro de busca:', filtered.length);
     }
 
     // Filtrar por período (apenas para pacientes ativos)
     if (activeTab === 'active') {
       const now = new Date();
-      const thisMonth = { start: startOfMonth(now), end: endOfMonth(now) };
-      const nextMonth = { start: startOfMonth(addMonths(now, 1)), end: endOfMonth(addMonths(now, 1)) };
-
+      console.log('Data atual para filtros:', now);
+      
       if (periodFilter === 'thisMonth') {
-        filtered = filtered.filter(patient =>
-          patient.nextContactDate >= thisMonth.start && patient.nextContactDate <= thisMonth.end
-        );
+        const thisMonth = { start: startOfMonth(now), end: endOfMonth(now) };
+        filtered = filtered.filter(patient => {
+          const inRange = patient.nextContactDate >= thisMonth.start && patient.nextContactDate <= thisMonth.end;
+          console.log(`${patient.name} - próximo contato: ${patient.nextContactDate}, está no mês atual: ${inRange}`);
+          return inRange;
+        });
       } else if (periodFilter === 'nextMonth') {
-        filtered = filtered.filter(patient =>
-          patient.nextContactDate >= nextMonth.start && patient.nextContactDate <= nextMonth.end
-        );
+        const nextMonth = { start: startOfMonth(addMonths(now, 1)), end: endOfMonth(addMonths(now, 1)) };
+        filtered = filtered.filter(patient => {
+          const inRange = patient.nextContactDate >= nextMonth.start && patient.nextContactDate <= nextMonth.end;
+          console.log(`${patient.name} - próximo contato: ${patient.nextContactDate}, está no próximo mês: ${inRange}`);
+          return inRange;
+        });
       } else if (periodFilter === 'overdue') {
-        filtered = filtered.filter(patient => isBefore(patient.nextContactDate, now));
+        filtered = filtered.filter(patient => {
+          const isOverdue = isBefore(patient.nextContactDate, now);
+          console.log(`${patient.name} - próximo contato: ${patient.nextContactDate}, está atrasado: ${isOverdue}`);
+          return isOverdue;
+        });
       }
 
       // Filtro adicional para mostrar apenas atrasados
       if (showOverdueOnly) {
-        filtered = filtered.filter(patient => isBefore(patient.nextContactDate, now));
+        filtered = filtered.filter(patient => {
+          const isOverdue = isBefore(patient.nextContactDate, now);
+          console.log(`${patient.name} - filtro apenas atrasados, está atrasado: ${isOverdue}`);
+          return isOverdue;
+        });
       }
 
-      // Ordenar por data do próximo contato (atrasados primeiro)
-      filtered.sort((a, b) => a.nextContactDate.getTime() - b.nextContactDate.getTime());
+      // Ordenar por data do próximo contato quando não há filtros específicos
+      if (periodFilter === 'all' && !showOverdueOnly) {
+        filtered.sort((a, b) => a.nextContactDate.getTime() - b.nextContactDate.getTime());
+      } else {
+        // Para outros filtros, manter ordenação por urgência (atrasados primeiro)
+        filtered.sort((a, b) => {
+          const aOverdue = isBefore(a.nextContactDate, now);
+          const bOverdue = isBefore(b.nextContactDate, now);
+          
+          if (aOverdue && !bOverdue) return -1;
+          if (!aOverdue && bOverdue) return 1;
+          
+          return a.nextContactDate.getTime() - b.nextContactDate.getTime();
+        });
+      }
     }
 
+    console.log('Pacientes finais após todos os filtros:', filtered.length);
+    console.log('Lista final:', filtered.map(p => ({ nome: p.name, proximoContato: p.nextContactDate })));
+    
     return filtered;
   }, [patients, activeTab, searchTerm, periodFilter, showOverdueOnly]);
 
@@ -175,6 +211,42 @@ const Index = () => {
           description: `${importedPatients.length} pacientes foram importados com sucesso.`,
         });
         setShowExcelImport(false);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const handleDeletePatient = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Confirmar exclusão',
+      message: `Tem certeza que deseja excluir o paciente "${patient?.name}"? Esta ação não pode ser desfeita.`,
+      variant: 'destructive',
+      onConfirm: () => {
+        deletePatient(patientId);
+        toast({
+          title: "Paciente excluído",
+          description: "O paciente foi removido com sucesso.",
+        });
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const handleBulkDelete = (patientIds: string[]) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Confirmar exclusão em massa',
+      message: `Tem certeza que deseja excluir ${patientIds.length} pacientes? Esta ação não pode ser desfeita.`,
+      variant: 'destructive',
+      onConfirm: () => {
+        bulkDeletePatients(patientIds);
+        toast({
+          title: "Pacientes excluídos",
+          description: `${patientIds.length} pacientes foram removidos com sucesso.`,
+        });
+        setShowAdminControls(false);
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       }
     });
@@ -303,6 +375,14 @@ const Index = () => {
               <h1 className="text-2xl font-bold text-dental-primary">
                 Gestão de Pacientes
               </h1>
+              <Button
+                onClick={() => setShowAdminControls(true)}
+                size="sm"
+                variant="ghost"
+                className="ml-2 p-1"
+              >
+                <Settings className="w-4 h-4 text-dental-secondary" />
+              </Button>
             </div>
             <p className="text-dental-secondary text-sm">
               Acompanhamento odontológico simplificado
@@ -314,13 +394,13 @@ const Index = () => {
             <Card className="bg-dental-accent border-dental-primary/20">
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-dental-primary">{stats.total}</div>
-                <div className="text-xs text-dental-secondary">Pacientes Ativos</div>
+                <div className="text-xs font-medium text-dental-primary">Pacientes Ativos</div>
               </CardContent>
             </Card>
             <Card className="bg-red-50 border-red-200">
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
-                <div className="text-xs text-red-600">Atrasados</div>
+                <div className="text-xs font-medium text-red-600">Atrasados</div>
               </CardContent>
             </Card>
           </div>
@@ -344,7 +424,7 @@ const Index = () => {
 
             <TabsContent value="active" className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-dental-primary">Pacientes Ativos</h2>
+                <h2 className="text-lg font-bold text-dental-primary">Pacientes Ativos</h2>
                 <div className="flex gap-2">
                   <Button
                     onClick={() => setShowExcelImport(true)}
@@ -418,7 +498,7 @@ const Index = () => {
 
             <TabsContent value="history">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold mb-2 text-dental-primary">Histórico de Contatos</h2>
+                <h2 className="text-lg font-bold mb-2 text-dental-primary">Histórico de Contatos</h2>
                 <p className="text-sm text-dental-secondary">
                   {stats.totalContacts} contatos registrados
                 </p>
@@ -428,7 +508,7 @@ const Index = () => {
 
             <TabsContent value="inactive">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold text-dental-primary">Pacientes Inativos</h2>
+                <h2 className="text-lg font-bold text-dental-primary">Pacientes Inativos</h2>
               </div>
               {renderInactivePatients()}
             </TabsContent>
@@ -462,6 +542,15 @@ const Index = () => {
           <ExcelImport
             onImport={handleBulkImport}
             onCancel={() => setShowExcelImport(false)}
+          />
+        )}
+
+        {showAdminControls && (
+          <AdminControls
+            patients={patients}
+            onDeletePatient={handleDeletePatient}
+            onBulkDelete={handleBulkDelete}
+            onClose={() => setShowAdminControls(false)}
           />
         )}
 
