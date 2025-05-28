@@ -55,6 +55,13 @@ export const ContactForm: React.FC<ContactFormProps> = ({ patient, onSave, onCan
     onSave(contactRecord, nextContactDate);
   };
 
+  const handleWhatsAppClick = () => {
+    const phoneNumber = patient.phone.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+    const message = "Olá tudo bem? Aqui é do consultório da dra. Gabriela Cechinatto. Estamos entrando em contato para agendar um retorno para você";
+    const whatsappUrl = `https://wa.me/55${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md">
@@ -79,6 +86,18 @@ export const ContactForm: React.FC<ContactFormProps> = ({ patient, onSave, onCan
               <Calendar className="w-4 h-4" />
               <span>Próximo contato: {format(patient.nextContactDate, 'dd/MM/yyyy', { locale: ptBR })}</span>
             </div>
+          </div>
+
+          {/* Botão do WhatsApp */}
+          <div className="mb-4">
+            <Button
+              onClick={handleWhatsAppClick}
+              className="w-full bg-green-500 hover:bg-green-600 text-white"
+              type="button"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Abrir WhatsApp
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
