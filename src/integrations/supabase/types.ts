@@ -9,7 +9,95 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      contact_records: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          method: string
+          notes: string | null
+          patient_id: string
+          successful: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          method: string
+          notes?: string | null
+          patient_id: string
+          successful?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          method?: string
+          notes?: string | null
+          patient_id?: string
+          successful?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          created_at: string
+          id: string
+          inactive_reason: string | null
+          last_visit: string
+          name: string
+          next_contact_date: string
+          next_contact_reason: string
+          payment_type: string
+          phone: string
+          secondary_phone: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inactive_reason?: string | null
+          last_visit: string
+          name: string
+          next_contact_date: string
+          next_contact_reason: string
+          payment_type?: string
+          phone: string
+          secondary_phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inactive_reason?: string | null
+          last_visit?: string
+          name?: string
+          next_contact_date?: string
+          next_contact_reason?: string
+          payment_type?: string
+          phone?: string
+          secondary_phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

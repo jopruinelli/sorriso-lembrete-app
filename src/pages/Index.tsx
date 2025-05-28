@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { PatientCard } from '@/components/PatientCard';
 import { PatientForm } from '@/components/PatientForm';
@@ -8,19 +7,21 @@ import { ExcelImport } from '@/components/ExcelImport';
 import { AdminControls } from '@/components/AdminControls';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { AuthGuard } from '@/components/AuthGuard';
-import { usePatients } from '@/hooks/usePatients';
+import { useAuth } from '@/hooks/useAuth';
+import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { Patient, ContactRecord } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Users, History, UserX, Phone, MessageSquare, Calendar, FileSpreadsheet, Shield, Settings } from 'lucide-react';
+import { Plus, Users, History, UserX, Phone, MessageSquare, Calendar, FileSpreadsheet, Settings, Shield } from 'lucide-react';
 import { format, isAfter, isBefore, startOfMonth, endOfMonth, addMonths, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
-  const { patients, addPatient, bulkAddPatients, updatePatient, addContactRecord, deletePatient, bulkDeletePatients } = usePatients();
+  const { user } = useAuth();
+  const { patients, loading, addPatient, bulkAddPatients, updatePatient, addContactRecord, deletePatient, bulkDeletePatients } = useSupabasePatients(user?.id);
   const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState('active');
@@ -364,6 +365,19 @@ const Index = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-dental-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-dental-secondary">Carregando dados seguros...</p>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent">
@@ -385,7 +399,7 @@ const Index = () => {
               </Button>
             </div>
             <p className="text-dental-secondary text-sm">
-              Acompanhamento odontológico simplificado
+              Sistema seguro e privado
             </p>
           </div>
 

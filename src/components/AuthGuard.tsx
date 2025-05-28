@@ -1,60 +1,31 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock, User } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { User, Chrome } from 'lucide-react';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-const ADMIN_PASSWORD = 'dental2024'; // Em produção, usar Supabase para segurança real
-
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { user, loading, signInWithGoogle, signOut } = useAuth();
 
-  useEffect(() => {
-    const auth = localStorage.getItem('dental_auth');
-    if (auth === 'authenticated') {
-      setIsAuthenticated(true);
-    }
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
+        <Card className="w-full max-w-md border-dental-primary/20">
+          <CardContent className="p-6 text-center">
+            <div className="w-8 h-8 border-4 border-dental-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-dental-secondary">Carregando...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const handleLogin = () => {
-    setIsLoading(true);
-    
-    // Simular delay de autenticação
-    setTimeout(() => {
-      if (password === ADMIN_PASSWORD) {
-        setIsAuthenticated(true);
-        localStorage.setItem('dental_auth', 'authenticated');
-        toast({
-          title: "Acesso autorizado",
-          description: "Bem-vinda ao sistema de gestão de pacientes!",
-        });
-      } else {
-        toast({
-          title: "Senha incorreta",
-          description: "Verifique sua senha e tente novamente.",
-          variant: "destructive",
-        });
-      }
-      setIsLoading(false);
-    }, 1000);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('dental_auth');
-    setPassword('');
-  };
-
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-dental-primary/20">
@@ -63,29 +34,18 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
               <User className="w-6 h-6 text-white" />
             </div>
             <CardTitle className="text-dental-primary">Gestão de Pacientes</CardTitle>
-            <p className="text-dental-secondary text-sm">Digite sua senha para acessar</p>
+            <p className="text-dental-secondary text-sm">Sistema privado e seguro</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dental-secondary w-4 h-4" />
-              <Input
-                type="password"
-                placeholder="Senha de acesso"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                className="pl-10 border-dental-primary/30 focus:border-dental-primary"
-              />
-            </div>
             <Button
-              onClick={handleLogin}
-              disabled={isLoading || !password}
-              className="w-full bg-dental-primary hover:bg-dental-secondary"
+              onClick={signInWithGoogle}
+              className="w-full bg-dental-primary hover:bg-dental-secondary flex items-center gap-2"
             >
-              {isLoading ? 'Verificando...' : 'Entrar'}
+              <Chrome className="w-4 h-4" />
+              Entrar com Google
             </Button>
             <p className="text-xs text-dental-secondary text-center">
-              Senha demo: dental2024
+              Acesso restrito para usuários autorizados
             </p>
           </CardContent>
         </Card>
@@ -95,11 +55,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   return (
     <div>
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <span className="text-sm text-dental-secondary bg-white/80 px-2 py-1 rounded">
+          {user.email}
+        </span>
         <Button
           variant="outline"
           size="sm"
-          onClick={handleLogout}
+          onClick={signOut}
           className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
         >
           Sair
