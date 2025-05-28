@@ -29,7 +29,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     nextContactReason: patient?.nextContactReason || '',
     nextContactDate: patient?.nextContactDate || addMonths(new Date(), 6),
     status: patient?.status || 'active' as const,
-    inactiveReason: patient?.inactiveReason || ''
+    inactiveReason: patient?.inactiveReason || '',
+    paymentType: patient?.paymentType || 'particular' as const
   });
 
   const [contactPeriod, setContactPeriod] = useState<ContactPeriod>('6months');
@@ -182,6 +183,22 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
                 placeholder="Ex: Limpeza, Revisão, Tratamento de canal..."
                 rows={3}
               />
+            </div>
+
+            <div>
+              <Label>Tipo de atendimento</Label>
+              <Select 
+                value={formData.paymentType} 
+                onValueChange={(value: 'particular' | 'convenio') => setFormData(prev => ({ ...prev, paymentType: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="particular">Particular</SelectItem>
+                  <SelectItem value="convenio">Convênio</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>

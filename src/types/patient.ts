@@ -9,6 +9,7 @@ export interface Patient {
   nextContactDate: Date;
   status: 'active' | 'inactive';
   inactiveReason?: string;
+  paymentType: 'particular' | 'convenio';
   contactHistory: ContactRecord[];
 }
 

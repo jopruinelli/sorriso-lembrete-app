@@ -15,6 +15,7 @@ const samplePatients: Patient[] = [
     nextContactReason: 'Limpeza e revisão semestral',
     nextContactDate: new Date('2025-03-15'),
     status: 'active',
+    paymentType: 'particular',
     contactHistory: [
       {
         id: '1',
@@ -33,6 +34,7 @@ const samplePatients: Patient[] = [
     nextContactReason: 'Continuação do tratamento de canal',
     nextContactDate: new Date('2024-12-10'),
     status: 'active',
+    paymentType: 'particular',
     contactHistory: []
   },
   {
@@ -43,6 +45,7 @@ const samplePatients: Patient[] = [
     nextContactReason: 'Avaliação pós-cirurgia',
     nextContactDate: new Date('2024-11-20'),
     status: 'active',
+    paymentType: 'particular',
     contactHistory: []
   }
 ];
@@ -54,11 +57,12 @@ export const usePatients = () => {
     const storedPatients = localStorage.getItem(STORAGE_KEY);
     if (storedPatients) {
       const parsedPatients = JSON.parse(storedPatients);
-      // Converter strings de data para objetos Date
+      // Converter strings de data para objetos Date e adicionar paymentType se não existir
       const patientsWithDates = parsedPatients.map((patient: any) => ({
         ...patient,
         lastVisit: new Date(patient.lastVisit),
         nextContactDate: new Date(patient.nextContactDate),
+        paymentType: patient.paymentType || 'particular', // Default para registros existentes
         contactHistory: patient.contactHistory.map((contact: any) => ({
           ...contact,
           date: new Date(contact.date)
