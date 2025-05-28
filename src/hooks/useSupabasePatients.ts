@@ -81,10 +81,16 @@ export const useSupabasePatients = (userId: string | undefined) => {
         });
       });
 
-      // Convert and combine data
-      const convertedPatients = patientsData?.map(patient => 
-        convertToAppPatient(patient, contactsByPatient[patient.id] || [])
-      ) || [];
+      // Convert and combine data with proper type assertion
+      const convertedPatients = patientsData?.map(patient => {
+        // Type assertion to ensure compatibility with DatabasePatient interface
+        const typedPatient: DatabasePatient = {
+          ...patient,
+          status: patient.status as 'active' | 'inactive',
+          payment_type: patient.payment_type as 'particular' | 'convenio'
+        };
+        return convertToAppPatient(typedPatient, contactsByPatient[patient.id] || []);
+      }) || [];
 
       setPatients(convertedPatients);
       console.log('📥 Pacientes carregados do Supabase:', convertedPatients.length);
@@ -114,7 +120,14 @@ export const useSupabasePatients = (userId: string | undefined) => {
 
       if (error) throw error;
 
-      const newPatient = convertToAppPatient(data, []);
+      // Type assertion for the returned data
+      const typedData: DatabasePatient = {
+        ...data,
+        status: data.status as 'active' | 'inactive',
+        payment_type: data.payment_type as 'particular' | 'convenio'
+      };
+
+      const newPatient = convertToAppPatient(typedData, []);
       setPatients(prev => [...prev, newPatient]);
       
       toast({
