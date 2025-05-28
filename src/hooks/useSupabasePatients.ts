@@ -1,43 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Patient, ContactRecord } from '@/types/patient';
-import { DatabasePatient, DatabaseContactRecord } from '@/types/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { convertToAppPatient } from '@/utils/patientConverters';
+import { PatientService } from '@/services/patientService';
+import { ContactService } from '@/services/contactService';
+import { getMigrationData, clearMigrationData } from '@/utils/migrationUtils';
 
 export const useSupabasePatients = (userId: string | undefined) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  // Convert database format to app format
-  const convertToAppPatient = (dbPatient: DatabasePatient, contactHistory: ContactRecord[] = []): Patient => ({
-    id: dbPatient.id,
-    name: dbPatient.name,
-    phone: dbPatient.phone,
-    secondaryPhone: dbPatient.secondary_phone,
-    lastVisit: new Date(dbPatient.last_visit),
-    nextContactReason: dbPatient.next_contact_reason,
-    nextContactDate: new Date(dbPatient.next_contact_date),
-    status: dbPatient.status,
-    inactiveReason: dbPatient.inactive_reason,
-    paymentType: dbPatient.payment_type,
-    contactHistory
-  });
-
-  // Convert app format to database format
-  const convertToDbPatient = (appPatient: Omit<Patient, 'id' | 'contactHistory'>, userId: string): Omit<DatabasePatient, 'id' | 'created_at' | 'updated_at'> => ({
-    user_id: userId,
-    name: appPatient.name,
-    phone: appPatient.phone,
-    secondary_phone: appPatient.secondaryPhone,
-    last_visit: appPatient.lastVisit.toISOString(),
-    next_contact_reason: appPatient.nextContactReason,
-    next_contact_date: appPatient.nextContactDate.toISOString(),
-    status: appPatient.status,
-    inactive_reason: appPatient.inactiveReason,
-    payment_type: appPatient.paymentType
-  });
 
   // Load patients from Supabase
   const loadPatients = async () => {
@@ -48,49 +21,16 @@ export const useSupabasePatients = (userId: string | undefined) => {
     }
 
     try {
-      // Load patients
-      const { data: patientsData, error: patientsError } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('user_id', userId)
-        .order('next_contact_date', { ascending: true });
+      // Load patients and contact records in parallel
+      const [patientsData, contactsByPatient] = await Promise.all([
+        PatientService.loadPatients(userId),
+        ContactService.loadContactRecords(userId)
+      ]);
 
-      if (patientsError) throw patientsError;
-
-      // Load contact records for all patients
-      const { data: contactsData, error: contactsError } = await supabase
-        .from('contact_records')
-        .select('*')
-        .eq('user_id', userId)
-        .order('date', { ascending: false });
-
-      if (contactsError) throw contactsError;
-
-      // Group contacts by patient
-      const contactsByPatient: Record<string, ContactRecord[]> = {};
-      contactsData?.forEach(contact => {
-        if (!contactsByPatient[contact.patient_id]) {
-          contactsByPatient[contact.patient_id] = [];
-        }
-        contactsByPatient[contact.patient_id].push({
-          id: contact.id,
-          date: new Date(contact.date),
-          method: contact.method as ContactRecord['method'],
-          notes: contact.notes || '',
-          successful: contact.successful
-        });
-      });
-
-      // Convert and combine data with proper type assertion
-      const convertedPatients = patientsData?.map(patient => {
-        // Type assertion to ensure compatibility with DatabasePatient interface
-        const typedPatient: DatabasePatient = {
-          ...patient,
-          status: patient.status as 'active' | 'inactive',
-          payment_type: patient.payment_type as 'particular' | 'convenio'
-        };
-        return convertToAppPatient(typedPatient, contactsByPatient[patient.id] || []);
-      }) || [];
+      // Convert and combine data
+      const convertedPatients = patientsData.map(patient => 
+        convertToAppPatient(patient, contactsByPatient[patient.id] || [])
+      );
 
       setPatients(convertedPatients);
       console.log('📥 Pacientes carregados do Supabase:', convertedPatients.length);
@@ -111,23 +51,9 @@ export const useSupabasePatients = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
-      const dbPatient = convertToDbPatient(patientData, userId);
-      const { data, error } = await supabase
-        .from('patients')
-        .insert([dbPatient])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Type assertion for the returned data
-      const typedData: DatabasePatient = {
-        ...data,
-        status: data.status as 'active' | 'inactive',
-        payment_type: data.payment_type as 'particular' | 'convenio'
-      };
-
-      const newPatient = convertToAppPatient(typedData, []);
+      const newPatientData = await PatientService.addPatient(patientData, userId);
+      const newPatient = convertToAppPatient(newPatientData, []);
+      
       setPatients(prev => [...prev, newPatient]);
       
       toast({
@@ -149,14 +75,7 @@ export const useSupabasePatients = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
-      const dbPatient = convertToDbPatient(patientData, userId);
-      const { error } = await supabase
-        .from('patients')
-        .update({ ...dbPatient, updated_at: new Date().toISOString() })
-        .eq('id', patientId)
-        .eq('user_id', userId);
-
-      if (error) throw error;
+      await PatientService.updatePatient(patientId, patientData, userId);
 
       setPatients(prev => prev.map(patient =>
         patient.id === patientId
@@ -184,31 +103,11 @@ export const useSupabasePatients = (userId: string | undefined) => {
 
     try {
       // Add contact record
-      const { error: contactError } = await supabase
-        .from('contact_records')
-        .insert([{
-          patient_id: patientId,
-          user_id: userId,
-          date: contactRecord.date.toISOString(),
-          method: contactRecord.method,
-          notes: contactRecord.notes,
-          successful: contactRecord.successful
-        }]);
-
-      if (contactError) throw contactError;
+      await ContactService.addContactRecord(patientId, contactRecord, userId);
 
       // Update next contact date if provided
       if (nextContactDate) {
-        const { error: updateError } = await supabase
-          .from('patients')
-          .update({ 
-            next_contact_date: nextContactDate.toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', patientId)
-          .eq('user_id', userId);
-
-        if (updateError) throw updateError;
+        await PatientService.updateNextContactDate(patientId, nextContactDate, userId);
       }
 
       // Reload patients to get updated data
@@ -233,14 +132,7 @@ export const useSupabasePatients = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
-      const { error } = await supabase
-        .from('patients')
-        .delete()
-        .eq('id', patientId)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
+      await PatientService.deletePatient(patientId, userId);
       setPatients(prev => prev.filter(patient => patient.id !== patientId));
       
       toast({
@@ -262,16 +154,9 @@ export const useSupabasePatients = (userId: string | undefined) => {
     if (!userId) return 0;
 
     try {
-      const dbPatients = patientsData.map(patient => convertToDbPatient(patient, userId));
-      const { data, error } = await supabase
-        .from('patients')
-        .insert(dbPatients)
-        .select();
-
-      if (error) throw error;
-
+      const importedCount = await PatientService.bulkAddPatients(patientsData, userId);
       await loadPatients();
-      return data.length;
+      return importedCount;
     } catch (error) {
       console.error('Erro na importação em massa:', error);
       toast({
@@ -287,14 +172,7 @@ export const useSupabasePatients = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
-      const { error } = await supabase
-        .from('patients')
-        .delete()
-        .in('id', patientIds)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
+      await PatientService.bulkDeletePatients(patientIds, userId);
       setPatients(prev => prev.filter(patient => !patientIds.includes(patient.id)));
       
       toast({
@@ -316,21 +194,15 @@ export const useSupabasePatients = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
-      const localData = localStorage.getItem('dental_patients');
-      if (!localData) return;
+      const localPatients = getMigrationData();
+      if (localPatients.length === 0) return;
 
-      const localPatients = JSON.parse(localData);
       console.log('🔄 Migrando dados do localStorage para Supabase...');
       
-      const importedCount = await bulkAddPatients(localPatients.map((p: any) => ({
-        ...p,
-        lastVisit: new Date(p.lastVisit),
-        nextContactDate: new Date(p.nextContactDate),
-        paymentType: p.paymentType || 'particular'
-      })));
+      const importedCount = await bulkAddPatients(localPatients);
 
       if (importedCount > 0) {
-        localStorage.removeItem('dental_patients');
+        clearMigrationData();
         toast({
           title: "Migração concluída",
           description: `${importedCount} pacientes migrados para o servidor seguro`,
