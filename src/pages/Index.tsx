@@ -20,7 +20,7 @@ import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 const Index = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const { userProfile, organizationSettings, loading: orgLoading, createOrganization, joinOrganization, updateProfile, updateOrganizationSettings } = useOrganization(user?.id);
-  const { patients, loading: patientsLoading, addPatient, updatePatient, addContactRecord, deletePatient, bulkImportPatients, bulkDeletePatients } = useSupabasePatients(userProfile?.organization_id);
+  const { patients, loading: patientsLoading, addPatient, updatePatient, addContactRecord, deletePatient, bulkAddPatients, bulkDeletePatients } = useSupabasePatients(userProfile?.organization_id);
 
   // State variables
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -302,7 +302,7 @@ const Index = () => {
                 patients={patients}
                 onUpdateProfile={updateProfile}
                 onUpdateSettings={updateOrganizationSettings}
-                onBulkImport={bulkImportPatients}
+                onBulkImport={bulkAddPatients}
                 onDeletePatient={deletePatient}
                 onBulkDelete={bulkDeletePatients}
               />
