@@ -74,7 +74,12 @@ export class OrganizationService {
       .single();
 
     if (error) return null;
-    return data;
+    
+    // Type assertion to ensure role is typed correctly
+    return {
+      ...data,
+      role: data.role as 'admin' | 'user'
+    } as UserProfile;
   }
 
   static async updateUserProfile(userId: string, updates: Partial<Pick<UserProfile, 'name'>>) {
