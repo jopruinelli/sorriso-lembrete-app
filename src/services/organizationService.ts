@@ -64,21 +64,29 @@ export class OrganizationService {
   }
 
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
-    const { data, error } = await supabase
+    // Use a direct query without JOIN to avoid RLS recursion
+    const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
-      .select(`
-        *,
-        organizations (*)
-      `)
+      .select('*')
       .eq('user_id', userId)
       .single();
 
-    if (error) return null;
-    
-    // Type assertion to ensure role is typed correctly
+    if (profileError || !profileData) return null;
+
+    // Separately fetch organization data
+    const { data: orgData, error: orgError } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', profileData.organization_id)
+      .single();
+
+    if (orgError || !orgData) return null;
+
+    // Combine the data manually
     return {
-      ...data,
-      role: data.role as 'admin' | 'user'
+      ...profileData,
+      role: profileData.role as 'admin' | 'user',
+      organizations: orgData
     } as UserProfile;
   }
 

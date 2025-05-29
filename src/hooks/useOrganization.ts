@@ -28,6 +28,9 @@ export const useOrganization = (userId: string | undefined) => {
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
+      // Não mostrar toast de erro aqui, pois é normal não ter perfil na primeira vez
+      setUserProfile(null);
+      setOrganizationSettings(null);
     } finally {
       setLoading(false);
     }
