@@ -19,12 +19,19 @@ export const useOrganization = (userId: string | undefined) => {
     }
 
     try {
+      console.log('Loading user profile for userId:', userId);
       const profile = await OrganizationService.getUserProfile(userId);
+      console.log('User profile loaded:', profile);
       setUserProfile(profile);
 
       if (profile?.organization_id) {
+        console.log('Loading organization settings for org:', profile.organization_id);
         const settings = await OrganizationService.getOrganizationSettings(profile.organization_id);
+        console.log('Organization settings loaded:', settings);
         setOrganizationSettings(settings);
+      } else {
+        console.log('No organization_id found, clearing settings');
+        setOrganizationSettings(null);
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);

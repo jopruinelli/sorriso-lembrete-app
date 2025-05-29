@@ -64,30 +64,47 @@ export class OrganizationService {
   }
 
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
-    // Use a direct query without JOIN to avoid RLS recursion
-    const { data: profileData, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    try {
+      // Use a direct query without JOIN to avoid RLS recursion
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (profileError || !profileData) return null;
+      // If no profile exists, return null (this is normal for new users)
+      if (profileError || !profileData) {
+        console.log('No user profile found for user:', userId);
+        return null;
+      }
 
-    // Separately fetch organization data
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
-      .select('*')
-      .eq('id', profileData.organization_id)
-      .single();
+      // Separately fetch organization data
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', profileData.organization_id)
+        .maybeSingle();
 
-    if (orgError || !orgData) return null;
+      // If organization doesn't exist, still return the profile without org data
+      if (orgError || !orgData) {
+        console.log('No organization found for profile:', profileData.organization_id);
+        return {
+          ...profileData,
+          role: profileData.role as 'admin' | 'user',
+          organizations: undefined
+        } as UserProfile;
+      }
 
-    // Combine the data manually
-    return {
-      ...profileData,
-      role: profileData.role as 'admin' | 'user',
-      organizations: orgData
-    } as UserProfile;
+      // Combine the data manually
+      return {
+        ...profileData,
+        role: profileData.role as 'admin' | 'user',
+        organizations: orgData
+      } as UserProfile;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
   }
 
   static async updateUserProfile(userId: string, updates: Partial<Pick<UserProfile, 'name'>>) {
@@ -100,14 +117,22 @@ export class OrganizationService {
   }
 
   static async getOrganizationSettings(organizationId: string): Promise<OrganizationSettings | null> {
-    const { data, error } = await supabase
-      .from('organization_settings')
-      .select('*')
-      .eq('organization_id', organizationId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('organization_settings')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .maybeSingle();
 
-    if (error) return null;
-    return data;
+      if (error) {
+        console.log('Error fetching organization settings:', error);
+        return null;
+      }
+      return data;
+    } catch (error) {
+      console.error('Error fetching organization settings:', error);
+      return null;
+    }
   }
 
   static async updateOrganizationSettings(organizationId: string, updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message'>>) {

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -145,7 +146,7 @@ const Index = () => {
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
-                <p className="text-dental-secondary">{userProfile.organizations?.name}</p>
+                <p className="text-dental-secondary">{userProfile.organizations?.name || 'Organização não encontrada'}</p>
               </div>
               <div className="flex items-center gap-3">
                 <Button
