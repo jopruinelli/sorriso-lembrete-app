@@ -18,8 +18,9 @@ export const convertToAppPatient = (dbPatient: DatabasePatient, contactHistory: 
 });
 
 // Convert app format to database format
-export const convertToDbPatient = (appPatient: Omit<Patient, 'id' | 'contactHistory'>, userId: string): Omit<DatabasePatient, 'id' | 'created_at' | 'updated_at'> => ({
+export const convertToDbPatient = (appPatient: Omit<Patient, 'id' | 'contactHistory'>, userId: string, organizationId: string): Omit<DatabasePatient, 'id' | 'created_at' | 'updated_at'> => ({
   user_id: userId,
+  organization_id: organizationId,
   name: appPatient.name,
   phone: appPatient.phone,
   secondary_phone: appPatient.secondaryPhone,

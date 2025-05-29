@@ -5,11 +5,11 @@ import { DatabasePatient } from '@/types/supabase';
 import { convertToDbPatient, assertDatabasePatient } from '@/utils/patientConverters';
 
 export class PatientService {
-  static async loadPatients(userId: string) {
+  static async loadPatients(organizationId: string) {
     const { data: patientsData, error } = await supabase
       .from('patients')
       .select('*')
-      .eq('user_id', userId)
+      .eq('organization_id', organizationId)
       .order('next_contact_date', { ascending: true });
 
     if (error) throw error;
@@ -17,8 +17,8 @@ export class PatientService {
     return patientsData?.map(patient => assertDatabasePatient(patient)) || [];
   }
 
-  static async addPatient(patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string) {
-    const dbPatient = convertToDbPatient(patientData, userId);
+  static async addPatient(patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string, organizationId: string) {
+    const dbPatient = convertToDbPatient(patientData, userId, organizationId);
     const { data, error } = await supabase
       .from('patients')
       .insert([dbPatient])
@@ -30,29 +30,29 @@ export class PatientService {
     return assertDatabasePatient(data);
   }
 
-  static async updatePatient(patientId: string, patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string) {
-    const dbPatient = convertToDbPatient(patientData, userId);
+  static async updatePatient(patientId: string, patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string, organizationId: string) {
+    const dbPatient = convertToDbPatient(patientData, userId, organizationId);
     const { error } = await supabase
       .from('patients')
       .update({ ...dbPatient, updated_at: new Date().toISOString() })
       .eq('id', patientId)
-      .eq('user_id', userId);
+      .eq('organization_id', organizationId);
 
     if (error) throw error;
   }
 
-  static async deletePatient(patientId: string, userId: string) {
+  static async deletePatient(patientId: string, organizationId: string) {
     const { error } = await supabase
       .from('patients')
       .delete()
       .eq('id', patientId)
-      .eq('user_id', userId);
+      .eq('organization_id', organizationId);
 
     if (error) throw error;
   }
 
-  static async bulkAddPatients(patientsData: Omit<Patient, 'id' | 'contactHistory'>[], userId: string) {
-    const dbPatients = patientsData.map(patient => convertToDbPatient(patient, userId));
+  static async bulkAddPatients(patientsData: Omit<Patient, 'id' | 'contactHistory'>[], userId: string, organizationId: string) {
+    const dbPatients = patientsData.map(patient => convertToDbPatient(patient, userId, organizationId));
     const { data, error } = await supabase
       .from('patients')
       .insert(dbPatients)
@@ -63,17 +63,17 @@ export class PatientService {
     return data?.length || 0;
   }
 
-  static async bulkDeletePatients(patientIds: string[], userId: string) {
+  static async bulkDeletePatients(patientIds: string[], organizationId: string) {
     const { error } = await supabase
       .from('patients')
       .delete()
       .in('id', patientIds)
-      .eq('user_id', userId);
+      .eq('organization_id', organizationId);
 
     if (error) throw error;
   }
 
-  static async updateNextContactDate(patientId: string, nextContactDate: Date, userId: string) {
+  static async updateNextContactDate(patientId: string, nextContactDate: Date, organizationId: string) {
     const { error } = await supabase
       .from('patients')
       .update({ 
@@ -81,7 +81,7 @@ export class PatientService {
         updated_at: new Date().toISOString()
       })
       .eq('id', patientId)
-      .eq('user_id', userId);
+      .eq('organization_id', organizationId);
 
     if (error) throw error;
   }

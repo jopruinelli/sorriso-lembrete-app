@@ -21,4 +21,4 @@ export interface ContactRecord {
   successful: boolean;
 }
 
-export type ContactPeriod = '1month' | '6months' | '1year' | 'custom';
+export type ContactPeriod = '1month' | '3months' | '6months' | '1year' | 'custom';

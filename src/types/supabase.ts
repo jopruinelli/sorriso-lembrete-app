@@ -2,6 +2,7 @@
 export interface DatabasePatient {
   id: string;
   user_id: string;
+  organization_id?: string;
   name: string;
   phone: string;
   secondary_phone?: string;
@@ -19,6 +20,7 @@ export interface DatabaseContactRecord {
   id: string;
   patient_id: string;
   user_id: string;
+  organization_id?: string;
   date: string;
   method: 'phone' | 'whatsapp' | 'in-person' | 'other';
   notes?: string;

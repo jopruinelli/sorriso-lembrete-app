@@ -16,6 +16,7 @@ export type Database = {
           id: string
           method: string
           notes: string | null
+          organization_id: string | null
           patient_id: string
           successful: boolean
           user_id: string
@@ -26,6 +27,7 @@ export type Database = {
           id?: string
           method: string
           notes?: string | null
+          organization_id?: string | null
           patient_id: string
           successful?: boolean
           user_id: string
@@ -36,11 +38,19 @@ export type Database = {
           id?: string
           method?: string
           notes?: string | null
+          organization_id?: string | null
           patient_id?: string
           successful?: boolean
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contact_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contact_records_patient_id_fkey"
             columns: ["patient_id"]
@@ -49,6 +59,59 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      organization_settings: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          updated_at: string
+          whatsapp_default_message: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          updated_at?: string
+          whatsapp_default_message?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          updated_at?: string
+          whatsapp_default_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       patients: {
         Row: {
@@ -59,6 +122,7 @@ export type Database = {
           name: string
           next_contact_date: string
           next_contact_reason: string
+          organization_id: string | null
           payment_type: string
           phone: string
           secondary_phone: string | null
@@ -74,6 +138,7 @@ export type Database = {
           name: string
           next_contact_date: string
           next_contact_reason: string
+          organization_id?: string | null
           payment_type?: string
           phone: string
           secondary_phone?: string | null
@@ -89,6 +154,7 @@ export type Database = {
           name?: string
           next_contact_date?: string
           next_contact_reason?: string
+          organization_id?: string | null
           payment_type?: string
           phone?: string
           secondary_phone?: string | null
@@ -96,7 +162,53 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "patients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

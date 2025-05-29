@@ -3,11 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { ContactRecord } from '@/types/patient';
 
 export class ContactService {
-  static async loadContactRecords(userId: string) {
+  static async loadContactRecords(organizationId: string) {
     const { data: contactsData, error } = await supabase
       .from('contact_records')
       .select('*')
-      .eq('user_id', userId)
+      .eq('organization_id', organizationId)
       .order('date', { ascending: false });
 
     if (error) throw error;
@@ -30,12 +30,13 @@ export class ContactService {
     return contactsByPatient;
   }
 
-  static async addContactRecord(patientId: string, contactRecord: Omit<ContactRecord, 'id'>, userId: string) {
+  static async addContactRecord(patientId: string, contactRecord: Omit<ContactRecord, 'id'>, userId: string, organizationId: string) {
     const { error } = await supabase
       .from('contact_records')
       .insert([{
         patient_id: patientId,
         user_id: userId,
+        organization_id: organizationId,
         date: contactRecord.date.toISOString(),
         method: contactRecord.method,
         notes: contactRecord.notes,

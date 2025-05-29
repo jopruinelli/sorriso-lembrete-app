@@ -5,16 +5,15 @@ import { useToast } from '@/hooks/use-toast';
 import { convertToAppPatient } from '@/utils/patientConverters';
 import { PatientService } from '@/services/patientService';
 import { ContactService } from '@/services/contactService';
-import { getMigrationData, clearMigrationData } from '@/utils/migrationUtils';
 
-export const useSupabasePatients = (userId: string | undefined) => {
+export const useSupabasePatients = (organizationId: string | undefined) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   // Load patients from Supabase
   const loadPatients = async () => {
-    if (!userId) {
+    if (!organizationId) {
       setPatients([]);
       setLoading(false);
       return;
@@ -23,8 +22,8 @@ export const useSupabasePatients = (userId: string | undefined) => {
     try {
       // Load patients and contact records in parallel
       const [patientsData, contactsByPatient] = await Promise.all([
-        PatientService.loadPatients(userId),
-        ContactService.loadContactRecords(userId)
+        PatientService.loadPatients(organizationId),
+        ContactService.loadContactRecords(organizationId)
       ]);
 
       // Convert and combine data
@@ -47,11 +46,11 @@ export const useSupabasePatients = (userId: string | undefined) => {
   };
 
   // Add patient to Supabase
-  const addPatient = async (patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
-    if (!userId) return;
+  const addPatient = async (patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string) => {
+    if (!organizationId) return;
 
     try {
-      const newPatientData = await PatientService.addPatient(patientData, userId);
+      const newPatientData = await PatientService.addPatient(patientData, userId, organizationId);
       const newPatient = convertToAppPatient(newPatientData, []);
       
       setPatients(prev => [...prev, newPatient]);
@@ -71,11 +70,11 @@ export const useSupabasePatients = (userId: string | undefined) => {
   };
 
   // Update patient in Supabase
-  const updatePatient = async (patientId: string, patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
-    if (!userId) return;
+  const updatePatient = async (patientId: string, patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string) => {
+    if (!organizationId) return;
 
     try {
-      await PatientService.updatePatient(patientId, patientData, userId);
+      await PatientService.updatePatient(patientId, patientData, userId, organizationId);
 
       setPatients(prev => prev.map(patient =>
         patient.id === patientId
@@ -98,16 +97,16 @@ export const useSupabasePatients = (userId: string | undefined) => {
   };
 
   // Add contact record
-  const addContactRecord = async (patientId: string, contactRecord: Omit<ContactRecord, 'id'>, nextContactDate?: Date) => {
-    if (!userId) return;
+  const addContactRecord = async (patientId: string, contactRecord: Omit<ContactRecord, 'id'>, userId: string, nextContactDate?: Date) => {
+    if (!organizationId) return;
 
     try {
       // Add contact record
-      await ContactService.addContactRecord(patientId, contactRecord, userId);
+      await ContactService.addContactRecord(patientId, contactRecord, userId, organizationId);
 
       // Update next contact date if provided
       if (nextContactDate) {
-        await PatientService.updateNextContactDate(patientId, nextContactDate, userId);
+        await PatientService.updateNextContactDate(patientId, nextContactDate, organizationId);
       }
 
       // Reload patients to get updated data
@@ -129,10 +128,10 @@ export const useSupabasePatients = (userId: string | undefined) => {
 
   // Delete patient
   const deletePatient = async (patientId: string) => {
-    if (!userId) return;
+    if (!organizationId) return;
 
     try {
-      await PatientService.deletePatient(patientId, userId);
+      await PatientService.deletePatient(patientId, organizationId);
       setPatients(prev => prev.filter(patient => patient.id !== patientId));
       
       toast({
@@ -150,11 +149,11 @@ export const useSupabasePatients = (userId: string | undefined) => {
   };
 
   // Bulk operations
-  const bulkAddPatients = async (patientsData: Omit<Patient, 'id' | 'contactHistory'>[]) => {
-    if (!userId) return 0;
+  const bulkAddPatients = async (patientsData: Omit<Patient, 'id' | 'contactHistory'>[], userId: string) => {
+    if (!organizationId) return 0;
 
     try {
-      const importedCount = await PatientService.bulkAddPatients(patientsData, userId);
+      const importedCount = await PatientService.bulkAddPatients(patientsData, userId, organizationId);
       await loadPatients();
       return importedCount;
     } catch (error) {
@@ -169,10 +168,10 @@ export const useSupabasePatients = (userId: string | undefined) => {
   };
 
   const bulkDeletePatients = async (patientIds: string[]) => {
-    if (!userId) return;
+    if (!organizationId) return;
 
     try {
-      await PatientService.bulkDeletePatients(patientIds, userId);
+      await PatientService.bulkDeletePatients(patientIds, organizationId);
       setPatients(prev => prev.filter(patient => !patientIds.includes(patient.id)));
       
       toast({
@@ -189,37 +188,11 @@ export const useSupabasePatients = (userId: string | undefined) => {
     }
   };
 
-  // Migrate from localStorage
-  const migrateFromLocalStorage = async () => {
-    if (!userId) return;
-
-    try {
-      const localPatients = getMigrationData();
-      if (localPatients.length === 0) return;
-
-      console.log('🔄 Migrando dados do localStorage para Supabase...');
-      
-      const importedCount = await bulkAddPatients(localPatients);
-
-      if (importedCount > 0) {
-        clearMigrationData();
-        toast({
-          title: "Migração concluída",
-          description: `${importedCount} pacientes migrados para o servidor seguro`,
-        });
-      }
-    } catch (error) {
-      console.error('Erro na migração:', error);
-    }
-  };
-
   useEffect(() => {
-    if (userId) {
+    if (organizationId) {
       loadPatients();
-      // Try to migrate from localStorage on first load
-      setTimeout(migrateFromLocalStorage, 1000);
     }
-  }, [userId]);
+  }, [organizationId]);
 
   return {
     patients,

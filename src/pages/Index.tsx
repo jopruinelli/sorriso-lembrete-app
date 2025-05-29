@@ -1,34 +1,37 @@
+
 import React, { useState, useMemo } from 'react';
 import { PatientCard } from '@/components/PatientCard';
 import { PatientForm } from '@/components/PatientForm';
 import { ContactForm } from '@/components/ContactForm';
 import { FilterBar } from '@/components/FilterBar';
-import { ExcelImport } from '@/components/ExcelImport';
-import { AdminControls } from '@/components/AdminControls';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { AuthGuard } from '@/components/AuthGuard';
+import { OnboardingFlow } from '@/components/OnboardingFlow';
+import { SettingsModal } from '@/components/SettingsModal';
+import { UserAvatar } from '@/components/UserAvatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { Patient, ContactRecord } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Users, History, UserX, Phone, MessageSquare, Calendar, FileSpreadsheet, Settings, Shield } from 'lucide-react';
+import { Plus, Users, History, UserX, Phone, MessageSquare, Calendar, Settings, Shield, AlertTriangle } from 'lucide-react';
 import { format, isAfter, isBefore, startOfMonth, endOfMonth, addMonths, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
-  const { user } = useAuth();
-  const { patients, loading, addPatient, bulkAddPatients, updatePatient, addContactRecord, deletePatient, bulkDeletePatients } = useSupabasePatients(user?.id);
+  const { user, signOut } = useAuth();
+  const { userProfile, organizationSettings, loading: orgLoading, createOrganization, joinOrganization, updateProfile, updateOrganizationSettings } = useOrganization(user?.id);
+  const { patients, loading: patientsLoading, addPatient, bulkAddPatients, updatePatient, addContactRecord, deletePatient, bulkDeletePatients } = useSupabasePatients(userProfile?.organization_id);
   const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState('active');
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
-  const [showExcelImport, setShowExcelImport] = useState(false);
-  const [showAdminControls, setShowAdminControls] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>();
   const [contactingPatient, setContactingPatient] = useState<Patient | undefined>();
   
@@ -53,17 +56,14 @@ const Index = () => {
 
   const filteredPatients = useMemo(() => {
     console.log('Aplicando filtros. Total de pacientes:', patients.length);
-    console.log('Pacientes completos:', patients);
     
     let filtered = patients;
 
     // Filtrar por status
     if (activeTab === 'active') {
       filtered = filtered.filter(patient => patient.status === 'active');
-      console.log('Pacientes ativos após filtro de status:', filtered.length);
     } else if (activeTab === 'inactive') {
       filtered = filtered.filter(patient => patient.status === 'inactive');
-      console.log('Pacientes inativos após filtro de status:', filtered.length);
     }
 
     // Filtrar por termo de busca
@@ -72,64 +72,42 @@ const Index = () => {
         patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.phone.includes(searchTerm)
       );
-      console.log('Pacientes após filtro de busca:', filtered.length);
     }
 
     // Filtrar por período (apenas para pacientes ativos)
     if (activeTab === 'active') {
       const now = new Date();
-      console.log('Data atual para filtros:', now);
       
       if (periodFilter === 'thisMonth') {
         const thisMonth = { start: startOfMonth(now), end: endOfMonth(now) };
-        filtered = filtered.filter(patient => {
-          const inRange = patient.nextContactDate >= thisMonth.start && patient.nextContactDate <= thisMonth.end;
-          console.log(`${patient.name} - próximo contato: ${patient.nextContactDate}, está no mês atual: ${inRange}`);
-          return inRange;
-        });
+        filtered = filtered.filter(patient => 
+          patient.nextContactDate >= thisMonth.start && patient.nextContactDate <= thisMonth.end
+        );
       } else if (periodFilter === 'nextMonth') {
         const nextMonth = { start: startOfMonth(addMonths(now, 1)), end: endOfMonth(addMonths(now, 1)) };
-        filtered = filtered.filter(patient => {
-          const inRange = patient.nextContactDate >= nextMonth.start && patient.nextContactDate <= nextMonth.end;
-          console.log(`${patient.name} - próximo contato: ${patient.nextContactDate}, está no próximo mês: ${inRange}`);
-          return inRange;
-        });
+        filtered = filtered.filter(patient => 
+          patient.nextContactDate >= nextMonth.start && patient.nextContactDate <= nextMonth.end
+        );
       } else if (periodFilter === 'overdue') {
-        filtered = filtered.filter(patient => {
-          const isOverdue = isBefore(patient.nextContactDate, now);
-          console.log(`${patient.name} - próximo contato: ${patient.nextContactDate}, está atrasado: ${isOverdue}`);
-          return isOverdue;
-        });
+        filtered = filtered.filter(patient => isBefore(patient.nextContactDate, now));
       }
 
       // Filtro adicional para mostrar apenas atrasados
       if (showOverdueOnly) {
-        filtered = filtered.filter(patient => {
-          const isOverdue = isBefore(patient.nextContactDate, now);
-          console.log(`${patient.name} - filtro apenas atrasados, está atrasado: ${isOverdue}`);
-          return isOverdue;
-        });
+        filtered = filtered.filter(patient => isBefore(patient.nextContactDate, now));
       }
 
-      // Ordenar por data do próximo contato quando não há filtros específicos
-      if (periodFilter === 'all' && !showOverdueOnly) {
-        filtered.sort((a, b) => a.nextContactDate.getTime() - b.nextContactDate.getTime());
-      } else {
-        // Para outros filtros, manter ordenação por urgência (atrasados primeiro)
-        filtered.sort((a, b) => {
-          const aOverdue = isBefore(a.nextContactDate, now);
-          const bOverdue = isBefore(b.nextContactDate, now);
-          
-          if (aOverdue && !bOverdue) return -1;
-          if (!aOverdue && bOverdue) return 1;
-          
-          return a.nextContactDate.getTime() - b.nextContactDate.getTime();
-        });
-      }
+      // Ordenar por data do próximo contato
+      filtered.sort((a, b) => {
+        const aOverdue = isBefore(a.nextContactDate, now);
+        const bOverdue = isBefore(b.nextContactDate, now);
+        
+        if (aOverdue && !bOverdue) return -1;
+        if (!aOverdue && bOverdue) return 1;
+        
+        return a.nextContactDate.getTime() - b.nextContactDate.getTime();
+      });
     }
-
-    console.log('Pacientes finais após todos os filtros:', filtered.length);
-    console.log('Lista final:', filtered.map(p => ({ nome: p.name, proximoContato: p.nextContactDate })));
     
     return filtered;
   }, [patients, activeTab, searchTerm, periodFilter, showOverdueOnly]);
@@ -149,19 +127,13 @@ const Index = () => {
   }, [patients]);
 
   const handleSavePatient = (patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
+    if (!user?.id) return;
+
     const action = () => {
       if (editingPatient) {
-        updatePatient(editingPatient.id, patientData);
-        toast({
-          title: "Paciente atualizado",
-          description: "Os dados do paciente foram salvos com sucesso.",
-        });
+        updatePatient(editingPatient.id, patientData, user.id);
       } else {
-        addPatient(patientData);
-        toast({
-          title: "Paciente adicionado",
-          description: "Novo paciente foi cadastrado com sucesso.",
-        });
+        addPatient(patientData, user.id);
       }
       setShowPatientForm(false);
       setEditingPatient(undefined);
@@ -188,30 +160,22 @@ const Index = () => {
   };
 
   const handleSaveContact = (contactRecord: Omit<ContactRecord, 'id'>, nextContactDate?: Date) => {
-    if (contactingPatient) {
-      addContactRecord(contactingPatient.id, contactRecord, nextContactDate);
-      toast({
-        title: "Contato registrado",
-        description: `Contato com ${contactingPatient.name} foi registrado com sucesso.`,
-      });
+    if (contactingPatient && user?.id) {
+      addContactRecord(contactingPatient.id, contactRecord, user.id, nextContactDate);
     }
     setShowContactForm(false);
     setContactingPatient(undefined);
   };
 
   const handleBulkImport = (importedPatients: Omit<Patient, 'id' | 'contactHistory'>[]) => {
+    if (!user?.id) return;
+
     setConfirmDialog({
       isOpen: true,
       title: 'Confirmar importação',
       message: `Tem certeza que deseja importar ${importedPatients.length} pacientes? Esta ação não pode ser desfeita.`,
       onConfirm: () => {
-        console.log('🚀 Iniciando importação de', importedPatients.length, 'pacientes');
-        const importedCount = bulkAddPatients(importedPatients);
-        toast({
-          title: "Importação concluída",
-          description: `${importedCount} pacientes foram importados com sucesso.`,
-        });
-        setShowExcelImport(false);
+        bulkAddPatients(importedPatients, user.id);
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       }
     });
@@ -226,10 +190,6 @@ const Index = () => {
       variant: 'destructive',
       onConfirm: () => {
         deletePatient(patientId);
-        toast({
-          title: "Paciente excluído",
-          description: "O paciente foi removido com sucesso.",
-        });
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       }
     });
@@ -243,15 +203,50 @@ const Index = () => {
       variant: 'destructive',
       onConfirm: () => {
         bulkDeletePatients(patientIds);
-        toast({
-          title: "Pacientes excluídos",
-          description: `${patientIds.length} pacientes foram removidos com sucesso.`,
-        });
-        setShowAdminControls(false);
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       }
     });
   };
+
+  const handleOverdueClick = () => {
+    setActiveTab('active');
+    setPeriodFilter('overdue');
+    // Scroll suave até a lista
+    setTimeout(() => {
+      const listElement = document.getElementById('patient-list');
+      if (listElement) {
+        listElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  // Loading state
+  const loading = orgLoading || patientsLoading;
+
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-dental-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-dental-secondary">Carregando dados seguros...</p>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  // Show onboarding if user has no profile
+  if (!userProfile) {
+    return (
+      <AuthGuard>
+        <OnboardingFlow
+          onCreateOrganization={createOrganization}
+          onJoinOrganization={joinOrganization}
+        />
+      </AuthGuard>
+    );
+  }
 
   const renderContactHistory = () => {
     const allContacts = patients
@@ -365,42 +360,28 @@ const Index = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <AuthGuard>
-        <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-dental-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-dental-secondary">Carregando dados seguros...</p>
-          </div>
-        </div>
-      </AuthGuard>
-    );
-  }
-
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent">
         <div className="container mx-auto px-4 py-6 max-w-md">
           {/* Header */}
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
               <Shield className="w-6 h-6 text-dental-primary" />
-              <h1 className="text-2xl font-bold text-dental-primary">
-                Gestão de Pacientes
-              </h1>
-              <Button
-                onClick={() => setShowAdminControls(true)}
-                size="sm"
-                variant="ghost"
-                className="ml-2 p-1"
-              >
-                <Settings className="w-4 h-4 text-dental-secondary" />
-              </Button>
+              <div>
+                <h1 className="text-xl font-bold text-dental-primary">
+                  Gestão de Pacientes
+                </h1>
+                <p className="text-xs text-dental-secondary">
+                  {(userProfile as any)?.organizations?.name}
+                </p>
+              </div>
             </div>
-            <p className="text-dental-secondary text-sm">
-              Sistema seguro e privado
-            </p>
+            <UserAvatar
+              userProfile={userProfile}
+              onSettingsClick={() => setShowSettings(true)}
+              onSignOut={signOut}
+            />
           </div>
 
           {/* Stats Cards */}
@@ -411,9 +392,15 @@ const Index = () => {
                 <div className="text-xs font-semibold text-dental-primary">Pacientes Ativos</div>
               </CardContent>
             </Card>
-            <Card className="bg-red-50 border-red-200">
+            <Card 
+              className="bg-red-50 border-red-200 cursor-pointer hover:bg-red-100 transition-colors"
+              onClick={handleOverdueClick}
+            >
               <CardContent className="p-3 text-center">
-                <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
+                <div className="flex items-center justify-center gap-1">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
+                </div>
                 <div className="text-xs font-medium text-red-600">Atrasados</div>
               </CardContent>
             </Card>
@@ -439,25 +426,14 @@ const Index = () => {
             <TabsContent value="active" className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-bold text-dental-primary">Pacientes Ativos</h2>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setShowExcelImport(true)}
-                    size="sm"
-                    variant="outline"
-                    className="border-dental-primary text-dental-primary hover:bg-dental-background"
-                  >
-                    <FileSpreadsheet className="w-4 h-4 mr-1" />
-                    Importar
-                  </Button>
-                  <Button
-                    onClick={() => setShowPatientForm(true)}
-                    size="sm"
-                    className="bg-dental-primary hover:bg-dental-secondary"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Novo
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setShowPatientForm(true)}
+                  size="sm"
+                  className="bg-dental-primary hover:bg-dental-secondary"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Novo
+                </Button>
               </div>
 
               <FilterBar
@@ -469,45 +445,36 @@ const Index = () => {
                 onShowOverdueOnlyChange={setShowOverdueOnly}
               />
 
-              {filteredPatients.length === 0 ? (
-                <Card className="border-dental-primary/20">
-                  <CardContent className="p-6 text-center text-dental-secondary">
-                    <Users className="w-12 h-12 mx-auto mb-3 text-dental-accent" />
-                    <p>Nenhum paciente encontrado</p>
-                    <div className="flex gap-2 justify-center mt-3">
+              <div id="patient-list" className="space-y-3">
+                {filteredPatients.length === 0 ? (
+                  <Card className="border-dental-primary/20">
+                    <CardContent className="p-6 text-center text-dental-secondary">
+                      <Users className="w-12 h-12 mx-auto mb-3 text-dental-accent" />
+                      <p>Nenhum paciente encontrado</p>
                       <Button
                         onClick={() => setShowPatientForm(true)}
-                        className="bg-dental-primary hover:bg-dental-secondary"
+                        className="mt-3 bg-dental-primary hover:bg-dental-secondary"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Adicionar paciente
                       </Button>
-                      <Button
-                        onClick={() => setShowExcelImport(true)}
-                        variant="outline"
-                        className="border-dental-primary text-dental-primary hover:bg-dental-background"
-                      >
-                        <FileSpreadsheet className="w-4 h-4 mr-2" />
-                        Importar planilha
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {filteredPatients.map(patient => (
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredPatients.map(patient => (
                     <PatientCard
                       key={patient.id}
                       patient={patient}
+                      organizationSettings={organizationSettings}
                       onEdit={(patient) => {
                         setEditingPatient(patient);
                         setShowPatientForm(true);
                       }}
                       onContact={handleContactPatient}
                     />
-                  ))}
-                </div>
-              )}
+                  ))
+                )}
+              </div>
             </TabsContent>
 
             <TabsContent value="history">
@@ -552,19 +519,18 @@ const Index = () => {
           />
         )}
 
-        {showExcelImport && (
-          <ExcelImport
-            onImport={handleBulkImport}
-            onCancel={() => setShowExcelImport(false)}
-          />
-        )}
-
-        {showAdminControls && (
-          <AdminControls
+        {showSettings && (
+          <SettingsModal
+            isOpen={showSettings}
+            onClose={() => setShowSettings(false)}
+            userProfile={userProfile}
+            organizationSettings={organizationSettings}
             patients={patients}
+            onUpdateProfile={updateProfile}
+            onUpdateSettings={updateOrganizationSettings}
+            onBulkImport={handleBulkImport}
             onDeletePatient={handleDeletePatient}
             onBulkDelete={handleBulkDelete}
-            onClose={() => setShowAdminControls(false)}
           />
         )}
 
