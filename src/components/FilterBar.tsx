@@ -4,23 +4,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter } from 'lucide-react';
+import { ContactPeriod } from '@/types/patient';
 
 interface FilterBarProps {
+  statusFilter: 'all' | 'active' | 'inactive';
+  setStatusFilter: (status: 'all' | 'active' | 'inactive') => void;
+  contactPeriodFilter: ContactPeriod | 'all';
+  setContactPeriodFilter: (period: ContactPeriod | 'all') => void;
   searchTerm: string;
-  onSearchChange: (term: string) => void;
-  periodFilter: string;
-  onPeriodFilterChange: (period: string) => void;
-  showOverdueOnly: boolean;
-  onShowOverdueOnlyChange: (show: boolean) => void;
+  setSearchTerm: (term: string) => void;
+  paymentFilter: 'all' | 'particular' | 'convenio';
+  setPaymentFilter: (payment: 'all' | 'particular' | 'convenio') => void;
+  overdueFilter: boolean;
+  setOverdueFilter: (overdue: boolean) => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
+  statusFilter,
+  setStatusFilter,
+  contactPeriodFilter,
+  setContactPeriodFilter,
   searchTerm,
-  onSearchChange,
-  periodFilter,
-  onPeriodFilterChange,
-  showOverdueOnly,
-  onShowOverdueOnlyChange
+  setSearchTerm,
+  paymentFilter,
+  setPaymentFilter,
+  overdueFilter,
+  setOverdueFilter
 }) => {
   return (
     <div className="space-y-3 mb-4">
@@ -29,29 +38,52 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <Input
           placeholder="Buscar por nome ou telefone..."
           value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 border-dental-primary/30 focus:border-dental-primary"
         />
       </div>
 
-      <div className="flex gap-2">
-        <Select value={periodFilter} onValueChange={onPeriodFilterChange}>
-          <SelectTrigger className="flex-1 border-dental-primary/30">
+      <div className="flex gap-2 flex-wrap">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40 border-dental-primary/30">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="active">Ativos</SelectItem>
+            <SelectItem value="inactive">Inativos</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={contactPeriodFilter} onValueChange={setContactPeriodFilter}>
+          <SelectTrigger className="w-40 border-dental-primary/30">
             <Filter className="w-4 h-4 mr-2 text-dental-primary" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os períodos</SelectItem>
-            <SelectItem value="thisMonth">Este mês</SelectItem>
-            <SelectItem value="nextMonth">Próximo mês</SelectItem>
-            <SelectItem value="overdue">Atrasados</SelectItem>
+            <SelectItem value="1month">1 mês</SelectItem>
+            <SelectItem value="3months">3 meses</SelectItem>
+            <SelectItem value="6months">6 meses</SelectItem>
+            <SelectItem value="1year">1 ano</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+          <SelectTrigger className="w-40 border-dental-primary/30">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os pagamentos</SelectItem>
+            <SelectItem value="particular">Particular</SelectItem>
+            <SelectItem value="convenio">Convênio</SelectItem>
           </SelectContent>
         </Select>
 
         <Button
-          variant={showOverdueOnly ? "default" : "outline"}
-          onClick={() => onShowOverdueOnlyChange(!showOverdueOnly)}
-          className={showOverdueOnly 
+          variant={overdueFilter ? "default" : "outline"}
+          onClick={() => setOverdueFilter(!overdueFilter)}
+          className={overdueFilter 
             ? "bg-dental-primary hover:bg-dental-secondary whitespace-nowrap" 
             : "border-dental-primary text-dental-primary hover:bg-dental-background whitespace-nowrap"
           }

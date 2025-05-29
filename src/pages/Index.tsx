@@ -15,11 +15,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Users, Calendar, Settings, UserPlus } from 'lucide-react';
 import { isAfter, format, parseISO, startOfDay } from 'date-fns';
+import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 
 const Index = () => {
-  const { user, loading: authLoading } = useAuth();
-  const { userProfile, organizationSettings, loading: orgLoading, createOrganization, joinOrganization } = useOrganization(user?.id);
-  const { patients, loading: patientsLoading, addPatient, updatePatient, addContactRecord, deletePatient } = useSupabasePatients(userProfile?.organization_id);
+  const { user, loading: authLoading, signOut } = useSupabaseAuth();
+  const { userProfile, organizationSettings, loading: orgLoading, createOrganization, joinOrganization, updateProfile, updateOrganizationSettings } = useOrganization(user?.id);
+  const { patients, loading: patientsLoading, addPatient, updatePatient, addContactRecord, deletePatient, bulkImportPatients, bulkDeletePatients } = useSupabasePatients(userProfile?.organization_id);
 
   // State variables
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -150,7 +151,11 @@ const Index = () => {
                   <Settings className="w-4 h-4 mr-2" />
                   Configurações
                 </Button>
-                <UserAvatar userProfile={userProfile} />
+                <UserAvatar 
+                  userProfile={userProfile}
+                  onSettingsClick={() => setShowSettings(true)}
+                  onSignOut={signOut}
+                />
               </div>
             </div>
 
@@ -269,7 +274,7 @@ const Index = () => {
             {showPatientForm && (
               <PatientForm
                 patient={editingPatient}
-                onSubmit={editingPatient ? handleUpdatePatient : handleAddPatient}
+                onSave={editingPatient ? handleUpdatePatient : handleAddPatient}
                 onCancel={() => {
                   setShowPatientForm(false);
                   setEditingPatient(null);
@@ -280,7 +285,7 @@ const Index = () => {
             {showContactForm && selectedPatient && (
               <ContactForm
                 patient={selectedPatient}
-                onSubmit={handleAddContact}
+                onSave={handleAddContact}
                 onCancel={() => {
                   setShowContactForm(false);
                   setSelectedPatient(null);
@@ -294,6 +299,12 @@ const Index = () => {
                 onClose={() => setShowSettings(false)}
                 userProfile={userProfile}
                 organizationSettings={organizationSettings}
+                patients={patients}
+                onUpdateProfile={updateProfile}
+                onUpdateSettings={updateOrganizationSettings}
+                onBulkImport={bulkImportPatients}
+                onDeletePatient={deletePatient}
+                onBulkDelete={bulkDeletePatients}
               />
             )}
           </div>

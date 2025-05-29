@@ -14,6 +14,7 @@ export interface UserProfile {
   role: 'admin' | 'user';
   created_at: string;
   updated_at: string;
+  organizations?: Organization; // Adicionar como opcional para incluir dados da organização
 }
 
 export interface OrganizationSettings {
