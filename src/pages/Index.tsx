@@ -112,6 +112,12 @@ const Index = () => {
     setSearchTerm('');
   };
 
+  // Wrapper function for bulk import that includes userId
+  const handleBulkImport = async (patientsData: Omit<Patient, 'id' | 'contactHistory'>[]) => {
+    if (!user?.id) return;
+    await bulkAddPatients(patientsData, user.id);
+  };
+
   if (authLoading || orgLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
@@ -302,7 +308,7 @@ const Index = () => {
                 patients={patients}
                 onUpdateProfile={updateProfile}
                 onUpdateSettings={updateOrganizationSettings}
-                onBulkImport={bulkAddPatients}
+                onBulkImport={handleBulkImport}
                 onDeletePatient={deletePatient}
                 onBulkDelete={bulkDeletePatients}
               />
