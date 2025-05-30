@@ -9,17 +9,23 @@ import { ContactService } from '@/services/contactService';
 export const useSupabasePatients = (organizationId: string | undefined) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const { toast } = useToast();
 
   // Load patients from Supabase
   const loadPatients = async () => {
     if (!organizationId) {
+      console.log('ℹ️ No organizationId provided, clearing patients');
       setPatients([]);
+      setHasError(false);
       setLoading(false);
       return;
     }
 
     try {
+      console.log('📥 Loading patients for organization:', organizationId);
+      setHasError(false);
+      
       // Load patients and contact records in parallel
       const [patientsData, contactsByPatient] = await Promise.all([
         PatientService.loadPatients(organizationId),
@@ -32,14 +38,26 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
       );
 
       setPatients(convertedPatients);
-      console.log('📥 Pacientes carregados do Supabase:', convertedPatients.length);
+      console.log('✅ Patients loaded successfully:', convertedPatients.length);
     } catch (error) {
-      console.error('Erro ao carregar pacientes:', error);
-      toast({
-        title: "Erro ao carregar dados",
-        description: "Falha ao carregar pacientes do servidor",
-        variant: "destructive",
-      });
+      console.error('❌ Error loading patients:', error);
+      setHasError(true);
+      
+      // Não mostrar toast se for erro de RLS/policy (esperado para usuários sem organização)
+      const errorMessage = error?.message?.toLowerCase() || '';
+      const isRLSError = errorMessage.includes('policy') || 
+                        errorMessage.includes('row-level security') ||
+                        errorMessage.includes('permission');
+      
+      if (!isRLSError) {
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Falha ao carregar pacientes do servidor",
+          variant: "destructive",
+        });
+      } else {
+        console.log('🔧 RLS/Permission error detected, failing silently');
+      }
     } finally {
       setLoading(false);
     }
@@ -47,7 +65,14 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
 
   // Add patient to Supabase
   const addPatient = async (patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string) => {
-    if (!organizationId) return;
+    if (!organizationId) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar vinculado a uma organização",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const newPatientData = await PatientService.addPatient(patientData, userId, organizationId);
@@ -60,7 +85,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
         description: "Paciente salvo com segurança no servidor",
       });
     } catch (error) {
-      console.error('Erro ao adicionar paciente:', error);
+      console.error('❌ Error adding patient:', error);
       toast({
         title: "Erro ao salvar",
         description: "Falha ao salvar paciente no servidor",
@@ -87,7 +112,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
         description: "Dados atualizados com segurança",
       });
     } catch (error) {
-      console.error('Erro ao atualizar paciente:', error);
+      console.error('❌ Error updating patient:', error);
       toast({
         title: "Erro ao atualizar",
         description: "Falha ao atualizar dados no servidor",
@@ -117,7 +142,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
         description: "Contato salvo com segurança no servidor",
       });
     } catch (error) {
-      console.error('Erro ao registrar contato:', error);
+      console.error('❌ Error adding contact record:', error);
       toast({
         title: "Erro ao registrar",
         description: "Falha ao registrar contato no servidor",
@@ -139,7 +164,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
         description: "Paciente removido com segurança",
       });
     } catch (error) {
-      console.error('Erro ao excluir paciente:', error);
+      console.error('❌ Error deleting patient:', error);
       toast({
         title: "Erro ao excluir",
         description: "Falha ao excluir paciente do servidor",
@@ -157,7 +182,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
       await loadPatients();
       return importedCount;
     } catch (error) {
-      console.error('Erro na importação em massa:', error);
+      console.error('❌ Error in bulk import:', error);
       toast({
         title: "Erro na importação",
         description: "Falha ao importar pacientes",
@@ -179,7 +204,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
         description: "Pacientes removidos com segurança",
       });
     } catch (error) {
-      console.error('Erro na exclusão em massa:', error);
+      console.error('❌ Error in bulk delete:', error);
       toast({
         title: "Erro na exclusão",
         description: "Falha ao excluir pacientes",
@@ -188,20 +213,34 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
     }
   };
 
+  const retryLoadPatients = () => {
+    setLoading(true);
+    setHasError(false);
+    loadPatients();
+  };
+
   useEffect(() => {
+    console.log('🔄 useSupabasePatients effect, organizationId:', organizationId);
     if (organizationId) {
       loadPatients();
+    } else {
+      // Se não tem organizationId, limpar dados imediatamente
+      setPatients([]);
+      setLoading(false);
+      setHasError(false);
     }
   }, [organizationId]);
 
   return {
     patients,
     loading,
+    hasError,
     addPatient,
     updatePatient,
     addContactRecord,
     deletePatient,
     bulkAddPatients,
-    bulkDeletePatients
+    bulkDeletePatients,
+    retryLoadPatients
   };
 };

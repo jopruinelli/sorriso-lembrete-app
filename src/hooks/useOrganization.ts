@@ -8,38 +8,107 @@ export const useOrganization = (userId: string | undefined) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [organizationSettings, setOrganizationSettings] = useState<OrganizationSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const [hasError, setHasError] = useState(false);
   const { toast } = useToast();
 
-  const loadUserProfile = async () => {
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 1000;
+
+  const resetState = () => {
+    setUserProfile(null);
+    setOrganizationSettings(null);
+    setHasError(false);
+    setRetryCount(0);
+  };
+
+  const loadUserProfile = async (attempt = 0) => {
     if (!userId) {
-      setUserProfile(null);
-      setOrganizationSettings(null);
+      console.log('🔄 No userId provided, resetting state');
+      resetState();
       setLoading(false);
       return;
     }
 
     try {
-      console.log('Loading user profile for userId:', userId);
+      console.log(`🔄 Loading user profile for userId: ${userId} (attempt ${attempt + 1}/${MAX_RETRIES + 1})`);
+      
+      // Circuit breaker: se já tentou muitas vezes, falha rápido
+      if (attempt > MAX_RETRIES) {
+        console.log('🚨 Max retries exceeded, failing fast');
+        setHasError(true);
+        setLoading(false);
+        return;
+      }
+
       const profile = await OrganizationService.getUserProfile(userId);
-      console.log('User profile loaded:', profile);
+      console.log('✅ User profile loaded:', profile);
+      
       setUserProfile(profile);
+      setHasError(false);
+      setRetryCount(0);
 
       if (profile?.organization_id) {
-        console.log('Loading organization settings for org:', profile.organization_id);
-        const settings = await OrganizationService.getOrganizationSettings(profile.organization_id);
-        console.log('Organization settings loaded:', settings);
-        setOrganizationSettings(settings);
+        console.log('🔄 Loading organization settings for org:', profile.organization_id);
+        try {
+          const settings = await OrganizationService.getOrganizationSettings(profile.organization_id);
+          console.log('✅ Organization settings loaded:', settings);
+          setOrganizationSettings(settings);
+        } catch (settingsError) {
+          console.warn('⚠️ Failed to load organization settings, but continuing:', settingsError);
+          // Não falhar se as configurações não carregarem
+          setOrganizationSettings(null);
+        }
       } else {
-        console.log('No organization_id found, clearing settings');
+        console.log('ℹ️ No organization_id found, clearing settings');
         setOrganizationSettings(null);
       }
+      
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
-      // Não mostrar toast de erro aqui, pois é normal não ter perfil na primeira vez
-      setUserProfile(null);
-      setOrganizationSettings(null);
+      console.error(`❌ Error loading profile (attempt ${attempt + 1}):`, error);
+      
+      // Se é um erro de RLS ou recursão, não mostrar toast irritante
+      const errorMessage = error?.message || '';
+      const isRLSError = errorMessage.includes('infinite recursion') || 
+                        errorMessage.includes('row-level security') ||
+                        errorMessage.includes('policy');
+      
+      if (isRLSError) {
+        console.log('🔧 RLS/Policy error detected, failing silently for now');
+        setHasError(true);
+        setUserProfile(null);
+        setOrganizationSettings(null);
+      } else if (attempt < MAX_RETRIES) {
+        // Retry com backoff exponencial
+        const delay = RETRY_DELAY * Math.pow(2, attempt);
+        console.log(`🔄 Retrying in ${delay}ms...`);
+        setRetryCount(attempt + 1);
+        
+        setTimeout(() => {
+          loadUserProfile(attempt + 1);
+        }, delay);
+        return; // Não definir loading como false ainda
+      } else {
+        // Máximo de tentativas atingido
+        console.log('🚨 All retries exhausted');
+        setHasError(true);
+        setUserProfile(null);
+        setOrganizationSettings(null);
+        
+        // Só mostrar toast se não for erro de RLS
+        if (!isRLSError) {
+          toast({
+            title: "Problema temporário",
+            description: "Não foi possível carregar os dados. Você pode continuar e tentar novamente.",
+            variant: "destructive",
+          });
+        }
+      }
     } finally {
-      setLoading(false);
+      // Só definir loading como false se não estamos fazendo retry
+      if (attempt >= MAX_RETRIES || hasError) {
+        setLoading(false);
+      }
     }
   };
 
@@ -47,6 +116,7 @@ export const useOrganization = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
+      console.log('🏢 Creating organization:', orgName);
       await OrganizationService.createOrganization(orgName, userId, userName);
       await loadUserProfile();
       toast({
@@ -54,7 +124,7 @@ export const useOrganization = (userId: string | undefined) => {
         description: "Sua organização foi criada com sucesso",
       });
     } catch (error) {
-      console.error('Erro ao criar organização:', error);
+      console.error('❌ Error creating organization:', error);
       toast({
         title: "Erro ao criar organização",
         description: "Falha ao criar a organização",
@@ -67,6 +137,7 @@ export const useOrganization = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
+      console.log('🤝 Joining organization:', orgName);
       await OrganizationService.joinOrganization(orgName, userId, userName);
       await loadUserProfile();
       toast({
@@ -74,7 +145,7 @@ export const useOrganization = (userId: string | undefined) => {
         description: "Você agora faz parte da organização",
       });
     } catch (error) {
-      console.error('Erro ao ingressar na organização:', error);
+      console.error('❌ Error joining organization:', error);
       toast({
         title: "Erro ao ingressar",
         description: "Organização não encontrada ou erro ao ingressar",
@@ -94,7 +165,7 @@ export const useOrganization = (userId: string | undefined) => {
         description: "Suas informações foram atualizadas",
       });
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
+      console.error('❌ Error updating profile:', error);
       toast({
         title: "Erro ao atualizar",
         description: "Falha ao atualizar o perfil",
@@ -114,7 +185,7 @@ export const useOrganization = (userId: string | undefined) => {
         description: "As configurações da organização foram salvas",
       });
     } catch (error) {
-      console.error('Erro ao atualizar configurações:', error);
+      console.error('❌ Error updating organization settings:', error);
       toast({
         title: "Erro ao atualizar",
         description: "Falha ao atualizar as configurações",
@@ -123,7 +194,17 @@ export const useOrganization = (userId: string | undefined) => {
     }
   };
 
+  // Função para retry manual
+  const retryLoadProfile = () => {
+    setLoading(true);
+    setHasError(false);
+    setRetryCount(0);
+    loadUserProfile();
+  };
+
   useEffect(() => {
+    console.log('🔄 useOrganization effect triggered, userId:', userId);
+    setLoading(true);
     loadUserProfile();
   }, [userId]);
 
@@ -131,9 +212,12 @@ export const useOrganization = (userId: string | undefined) => {
     userProfile,
     organizationSettings,
     loading,
+    hasError,
+    retryCount,
     createOrganization,
     joinOrganization,
     updateProfile,
-    updateOrganizationSettings
+    updateOrganizationSettings,
+    retryLoadProfile
   };
 };
