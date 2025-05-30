@@ -19,7 +19,7 @@ export class OrganizationService {
     
     try {
       // Create organization
-      const { data: orgData, error: orgError } = await this.withTimeout(
+      const orgResult = await this.withTimeout(
         supabase
           .from('organizations')
           .insert([{ name }])
@@ -27,49 +27,49 @@ export class OrganizationService {
           .single()
       );
 
-      if (orgError) {
-        console.error('❌ Error creating organization:', orgError);
-        throw orgError;
+      if (orgResult.error) {
+        console.error('❌ Error creating organization:', orgResult.error);
+        throw orgResult.error;
       }
 
-      console.log('✅ Organization created:', orgData);
+      console.log('✅ Organization created:', orgResult.data);
 
       // Create user profile as admin
-      const { error: profileError } = await this.withTimeout(
+      const profileResult = await this.withTimeout(
         supabase
           .from('user_profiles')
           .insert([{
             user_id: userId,
-            organization_id: orgData.id,
+            organization_id: orgResult.data.id,
             name: userName,
             role: 'admin'
           }])
       );
 
-      if (profileError) {
-        console.error('❌ Error creating user profile:', profileError);
-        throw profileError;
+      if (profileResult.error) {
+        console.error('❌ Error creating user profile:', profileResult.error);
+        throw profileResult.error;
       }
 
       console.log('✅ User profile created as admin');
 
       // Create default organization settings
-      const { error: settingsError } = await this.withTimeout(
+      const settingsResult = await this.withTimeout(
         supabase
           .from('organization_settings')
           .insert([{
-            organization_id: orgData.id,
+            organization_id: orgResult.data.id,
             whatsapp_default_message: 'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!'
           }])
       );
 
-      if (settingsError) {
-        console.error('❌ Error creating organization settings:', settingsError);
-        throw settingsError;
+      if (settingsResult.error) {
+        console.error('❌ Error creating organization settings:', settingsResult.error);
+        throw settingsResult.error;
       }
 
       console.log('✅ Organization settings created');
-      return orgData;
+      return orgResult.data;
     } catch (error) {
       console.error('❌ OrganizationService.createOrganization failed:', error);
       throw error;
@@ -81,7 +81,7 @@ export class OrganizationService {
     
     try {
       // Find organization by name
-      const { data: orgData, error: orgError } = await this.withTimeout(
+      const orgResult = await this.withTimeout(
         supabase
           .from('organizations')
           .select('*')
@@ -89,32 +89,32 @@ export class OrganizationService {
           .single()
       );
 
-      if (orgError) {
-        console.error('❌ Organization not found:', orgError);
+      if (orgResult.error) {
+        console.error('❌ Organization not found:', orgResult.error);
         throw new Error('Organização não encontrada');
       }
 
-      console.log('✅ Organization found:', orgData);
+      console.log('✅ Organization found:', orgResult.data);
 
       // Create user profile
-      const { error: profileError } = await this.withTimeout(
+      const profileResult = await this.withTimeout(
         supabase
           .from('user_profiles')
           .insert([{
             user_id: userId,
-            organization_id: orgData.id,
+            organization_id: orgResult.data.id,
             name: userName,
             role: 'user'
           }])
       );
 
-      if (profileError) {
-        console.error('❌ Error creating user profile:', profileError);
-        throw profileError;
+      if (profileResult.error) {
+        console.error('❌ Error creating user profile:', profileResult.error);
+        throw profileResult.error;
       }
 
       console.log('✅ User profile created as user');
-      return orgData;
+      return orgResult.data;
     } catch (error) {
       console.error('❌ OrganizationService.joinOrganization failed:', error);
       throw error;
@@ -126,7 +126,7 @@ export class OrganizationService {
     
     try {
       // Use a direct query with explicit timeout
-      const { data: profileData, error: profileError } = await this.withTimeout(
+      const profileResult = await this.withTimeout(
         supabase
           .from('user_profiles')
           .select('*')
@@ -136,11 +136,11 @@ export class OrganizationService {
       );
 
       // Se há erro, log e retorne null graciosamente
-      if (profileError) {
-        console.warn('⚠️ Error fetching user profile (returning null):', profileError);
+      if (profileResult.error) {
+        console.warn('⚠️ Error fetching user profile (returning null):', profileResult.error);
         
         // Se é erro de RLS/policy, falhar silenciosamente
-        const errorMessage = profileError.message?.toLowerCase() || '';
+        const errorMessage = profileResult.error.message?.toLowerCase() || '';
         if (errorMessage.includes('infinite recursion') || 
             errorMessage.includes('policy') ||
             errorMessage.includes('row-level security')) {
@@ -149,45 +149,45 @@ export class OrganizationService {
         }
         
         // Para outros erros, ainda retorna null mas loga
-        console.warn('⚠️ Non-RLS error, returning null:', profileError);
+        console.warn('⚠️ Non-RLS error, returning null:', profileResult.error);
         return null;
       }
 
       // If no profile exists, return null (this is normal for new users)
-      if (!profileData) {
+      if (!profileResult.data) {
         console.log('ℹ️ No user profile found for user:', userId);
         return null;
       }
 
-      console.log('✅ User profile found:', profileData);
+      console.log('✅ User profile found:', profileResult.data);
 
       // Separately fetch organization data with timeout
-      const { data: orgData, error: orgError } = await this.withTimeout(
+      const orgResult = await this.withTimeout(
         supabase
           .from('organizations')
           .select('*')
-          .eq('id', profileData.organization_id)
+          .eq('id', profileResult.data.organization_id)
           .maybeSingle(),
         5000 // Timeout menor para org
       );
 
       // If organization doesn't exist, still return the profile without org data
-      if (orgError || !orgData) {
-        console.log('⚠️ No organization found for profile (continuing without org data):', profileData.organization_id);
+      if (orgResult.error || !orgResult.data) {
+        console.log('⚠️ No organization found for profile (continuing without org data):', profileResult.data.organization_id);
         return {
-          ...profileData,
-          role: profileData.role as 'admin' | 'user',
+          ...profileResult.data,
+          role: profileResult.data.role as 'admin' | 'user',
           organizations: undefined
         } as UserProfile;
       }
 
-      console.log('✅ Organization data loaded:', orgData);
+      console.log('✅ Organization data loaded:', orgResult.data);
 
       // Combine the data manually
       return {
-        ...profileData,
-        role: profileData.role as 'admin' | 'user',
-        organizations: orgData
+        ...profileResult.data,
+        role: profileResult.data.role as 'admin' | 'user',
+        organizations: orgResult.data
       } as UserProfile;
     } catch (error) {
       console.error('❌ Error in getUserProfile:', error);
@@ -207,16 +207,16 @@ export class OrganizationService {
   static async updateUserProfile(userId: string, updates: Partial<Pick<UserProfile, 'name'>>) {
     console.log('📝 OrganizationService.updateUserProfile:', { userId, updates });
     
-    const { error } = await this.withTimeout(
+    const result = await this.withTimeout(
       supabase
         .from('user_profiles')
         .update(updates)
         .eq('user_id', userId)
     );
 
-    if (error) {
-      console.error('❌ Error updating user profile:', error);
-      throw error;
+    if (result.error) {
+      console.error('❌ Error updating user profile:', result.error);
+      throw result.error;
     }
     
     console.log('✅ User profile updated');
@@ -226,7 +226,7 @@ export class OrganizationService {
     console.log('⚙️ OrganizationService.getOrganizationSettings:', organizationId);
     
     try {
-      const { data, error } = await this.withTimeout(
+      const result = await this.withTimeout(
         supabase
           .from('organization_settings')
           .select('*')
@@ -234,13 +234,13 @@ export class OrganizationService {
           .maybeSingle()
       );
 
-      if (error) {
-        console.log('⚠️ Error fetching organization settings:', error);
+      if (result.error) {
+        console.log('⚠️ Error fetching organization settings:', result.error);
         return null;
       }
       
-      console.log('✅ Organization settings loaded:', data);
-      return data;
+      console.log('✅ Organization settings loaded:', result.data);
+      return result.data;
     } catch (error) {
       console.error('❌ Error in getOrganizationSettings:', error);
       return null;
@@ -250,16 +250,16 @@ export class OrganizationService {
   static async updateOrganizationSettings(organizationId: string, updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message'>>) {
     console.log('📝 OrganizationService.updateOrganizationSettings:', { organizationId, updates });
     
-    const { error } = await this.withTimeout(
+    const result = await this.withTimeout(
       supabase
         .from('organization_settings')
         .update(updates)
         .eq('organization_id', organizationId)
     );
 
-    if (error) {
-      console.error('❌ Error updating organization settings:', error);
-      throw error;
+    if (result.error) {
+      console.error('❌ Error updating organization settings:', result.error);
+      throw result.error;
     }
     
     console.log('✅ Organization settings updated');
@@ -268,13 +268,13 @@ export class OrganizationService {
   static async deleteUserAccount(userId: string) {
     console.log('🗑️ OrganizationService.deleteUserAccount:', userId);
     
-    const { error } = await this.withTimeout(
+    const result = await this.withTimeout(
       supabase.auth.admin.deleteUser(userId)
     );
     
-    if (error) {
-      console.error('❌ Error deleting user account:', error);
-      throw error;
+    if (result.error) {
+      console.error('❌ Error deleting user account:', result.error);
+      throw result.error;
     }
     
     console.log('✅ User account deleted');
