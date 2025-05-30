@@ -39,10 +39,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
           <CardContent className="space-y-4">
             <Button
               onClick={signInWithGoogle}
-              className="w-full bg-dental-primary hover:bg-dental-secondary flex items-center gap-2"
+              disabled={loading}
+              className="w-full bg-dental-primary hover:bg-dental-secondary flex items-center gap-2 disabled:opacity-50"
             >
               <Chrome className="w-4 h-4" />
-              Entrar com Google
+              {loading ? 'Conectando...' : 'Entrar com Google'}
             </Button>
             <p className="text-xs text-dental-secondary text-center">
               Acesso restrito para usuários autorizados

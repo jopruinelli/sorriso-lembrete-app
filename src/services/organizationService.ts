@@ -1,10 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Organization, UserProfile, OrganizationSettings } from '@/types/organization';
-import type { PostgrestResponse } from '@supabase/supabase-js';
 
 export class OrganizationService {
-  private static REQUEST_TIMEOUT = 10000; // 10 segundos
+  private static REQUEST_TIMEOUT = 15000; // Increased timeout
 
   private static withTimeout<T>(promise: Promise<T>, timeoutMs = this.REQUEST_TIMEOUT): Promise<T> {
     return Promise.race([
@@ -26,7 +25,7 @@ export class OrganizationService {
           .insert([{ name }])
           .select()
           .single()
-      ) as PostgrestResponse<Organization>;
+      );
 
       if (orgResult.error) {
         console.error('❌ Error creating organization:', orgResult.error);
@@ -45,7 +44,7 @@ export class OrganizationService {
             name: userName,
             role: 'admin'
           }])
-      ) as PostgrestResponse<any>;
+      );
 
       if (profileResult.error) {
         console.error('❌ Error creating user profile:', profileResult.error);
@@ -62,7 +61,7 @@ export class OrganizationService {
             organization_id: orgResult.data.id,
             whatsapp_default_message: 'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!'
           }])
-      ) as PostgrestResponse<any>;
+      );
 
       if (settingsResult.error) {
         console.error('❌ Error creating organization settings:', settingsResult.error);
@@ -88,7 +87,7 @@ export class OrganizationService {
           .select('*')
           .eq('name', organizationName)
           .single()
-      ) as PostgrestResponse<Organization>;
+      );
 
       if (orgResult.error) {
         console.error('❌ Organization not found:', orgResult.error);
@@ -107,7 +106,7 @@ export class OrganizationService {
             name: userName,
             role: 'user'
           }])
-      ) as PostgrestResponse<any>;
+      );
 
       if (profileResult.error) {
         console.error('❌ Error creating user profile:', profileResult.error);
@@ -126,35 +125,22 @@ export class OrganizationService {
     console.log('👤 OrganizationService.getUserProfile:', userId);
     
     try {
-      // Use a direct query with explicit timeout
+      // Simplified approach - just get the profile first
       const profileResult = await this.withTimeout(
         supabase
           .from('user_profiles')
           .select('*')
           .eq('user_id', userId)
           .maybeSingle(),
-        8000 // Timeout menor para profile
-      ) as PostgrestResponse<UserProfile>;
+        10000
+      );
 
-      // Se há erro, log e retorne null graciosamente
       if (profileResult.error) {
-        console.warn('⚠️ Error fetching user profile (returning null):', profileResult.error);
-        
-        // Se é erro de RLS/policy, falhar silenciosamente
-        const errorMessage = profileResult.error.message?.toLowerCase() || '';
-        if (errorMessage.includes('infinite recursion') || 
-            errorMessage.includes('policy') ||
-            errorMessage.includes('row-level security')) {
-          console.log('🔧 RLS error detected, returning null gracefully');
-          return null;
-        }
-        
-        // Para outros erros, ainda retorna null mas loga
-        console.warn('⚠️ Non-RLS error, returning null:', profileResult.error);
+        console.warn('⚠️ Error fetching user profile:', profileResult.error);
         return null;
       }
 
-      // If no profile exists, return null (this is normal for new users)
+      // If no profile exists, return null
       if (!profileResult.data) {
         console.log('ℹ️ No user profile found for user:', userId);
         return null;
@@ -162,45 +148,27 @@ export class OrganizationService {
 
       console.log('✅ User profile found:', profileResult.data);
 
-      // Separately fetch organization data with timeout
+      // Get organization data separately
       const orgResult = await this.withTimeout(
         supabase
           .from('organizations')
           .select('*')
           .eq('id', profileResult.data.organization_id)
           .maybeSingle(),
-        5000 // Timeout menor para org
-      ) as PostgrestResponse<Organization>;
+        8000
+      );
 
-      // If organization doesn't exist, still return the profile without org data
-      if (orgResult.error || !orgResult.data) {
-        console.log('⚠️ No organization found for profile (continuing without org data):', profileResult.data.organization_id);
-        return {
-          ...profileResult.data,
-          role: profileResult.data.role as 'admin' | 'user',
-          organizations: undefined
-        } as UserProfile;
-      }
-
-      console.log('✅ Organization data loaded:', orgResult.data);
-
-      // Combine the data manually
-      return {
+      // Combine the data
+      const profile: UserProfile = {
         ...profileResult.data,
         role: profileResult.data.role as 'admin' | 'user',
-        organizations: orgResult.data
-      } as UserProfile;
+        organizations: orgResult.data || undefined
+      };
+
+      console.log('✅ Complete profile assembled:', profile);
+      return profile;
     } catch (error) {
       console.error('❌ Error in getUserProfile:', error);
-      
-      // Para erros de timeout ou conexão, retornar null graciosamente
-      if (error?.message?.includes('timeout') || error?.message?.includes('fetch')) {
-        console.log('🔧 Network/timeout error, returning null gracefully');
-        return null;
-      }
-      
-      // Para outros erros, still return null but re-throw if needed
-      console.warn('⚠️ Unexpected error in getUserProfile, returning null:', error);
       return null;
     }
   }
@@ -213,7 +181,7 @@ export class OrganizationService {
         .from('user_profiles')
         .update(updates)
         .eq('user_id', userId)
-    ) as PostgrestResponse<any>;
+    );
 
     if (result.error) {
       console.error('❌ Error updating user profile:', result.error);
@@ -233,7 +201,7 @@ export class OrganizationService {
           .select('*')
           .eq('organization_id', organizationId)
           .maybeSingle()
-      ) as PostgrestResponse<OrganizationSettings>;
+      );
 
       if (result.error) {
         console.log('⚠️ Error fetching organization settings:', result.error);
@@ -256,7 +224,7 @@ export class OrganizationService {
         .from('organization_settings')
         .update(updates)
         .eq('organization_id', organizationId)
-    ) as PostgrestResponse<any>;
+    );
 
     if (result.error) {
       console.error('❌ Error updating organization settings:', result.error);

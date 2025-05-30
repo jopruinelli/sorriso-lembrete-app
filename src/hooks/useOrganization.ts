@@ -8,21 +8,16 @@ export const useOrganization = (userId: string | undefined) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [organizationSettings, setOrganizationSettings] = useState<OrganizationSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
   const [hasError, setHasError] = useState(false);
   const { toast } = useToast();
-
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY = 1000;
 
   const resetState = () => {
     setUserProfile(null);
     setOrganizationSettings(null);
     setHasError(false);
-    setRetryCount(0);
   };
 
-  const loadUserProfile = async (attempt = 0) => {
+  const loadUserProfile = async () => {
     if (!userId) {
       console.log('🔄 No userId provided, resetting state');
       resetState();
@@ -31,22 +26,13 @@ export const useOrganization = (userId: string | undefined) => {
     }
 
     try {
-      console.log(`🔄 Loading user profile for userId: ${userId} (attempt ${attempt + 1}/${MAX_RETRIES + 1})`);
+      console.log(`🔄 Loading user profile for userId: ${userId}`);
+      setHasError(false);
       
-      // Circuit breaker: se já tentou muitas vezes, falha rápido
-      if (attempt > MAX_RETRIES) {
-        console.log('🚨 Max retries exceeded, failing fast');
-        setHasError(true);
-        setLoading(false);
-        return;
-      }
-
       const profile = await OrganizationService.getUserProfile(userId);
       console.log('✅ User profile loaded:', profile);
       
       setUserProfile(profile);
-      setHasError(false);
-      setRetryCount(0);
 
       if (profile?.organization_id) {
         console.log('🔄 Loading organization settings for org:', profile.organization_id);
@@ -56,7 +42,6 @@ export const useOrganization = (userId: string | undefined) => {
           setOrganizationSettings(settings);
         } catch (settingsError) {
           console.warn('⚠️ Failed to load organization settings, but continuing:', settingsError);
-          // Não falhar se as configurações não carregarem
           setOrganizationSettings(null);
         }
       } else {
@@ -65,50 +50,26 @@ export const useOrganization = (userId: string | undefined) => {
       }
       
     } catch (error) {
-      console.error(`❌ Error loading profile (attempt ${attempt + 1}):`, error);
+      console.error(`❌ Error loading profile:`, error);
+      setHasError(true);
+      setUserProfile(null);
+      setOrganizationSettings(null);
       
-      // Se é um erro de RLS ou recursão, não mostrar toast irritante
+      // Only show toast for unexpected errors, not RLS errors
       const errorMessage = error?.message || '';
       const isRLSError = errorMessage.includes('infinite recursion') || 
                         errorMessage.includes('row-level security') ||
                         errorMessage.includes('policy');
       
-      if (isRLSError) {
-        console.log('🔧 RLS/Policy error detected, failing silently for now');
-        setHasError(true);
-        setUserProfile(null);
-        setOrganizationSettings(null);
-      } else if (attempt < MAX_RETRIES) {
-        // Retry com backoff exponencial
-        const delay = RETRY_DELAY * Math.pow(2, attempt);
-        console.log(`🔄 Retrying in ${delay}ms...`);
-        setRetryCount(attempt + 1);
-        
-        setTimeout(() => {
-          loadUserProfile(attempt + 1);
-        }, delay);
-        return; // Não definir loading como false ainda
-      } else {
-        // Máximo de tentativas atingido
-        console.log('🚨 All retries exhausted');
-        setHasError(true);
-        setUserProfile(null);
-        setOrganizationSettings(null);
-        
-        // Só mostrar toast se não for erro de RLS
-        if (!isRLSError) {
-          toast({
-            title: "Problema temporário",
-            description: "Não foi possível carregar os dados. Você pode continuar e tentar novamente.",
-            variant: "destructive",
-          });
-        }
+      if (!isRLSError) {
+        toast({
+          title: "Problema temporário",
+          description: "Não foi possível carregar os dados. Você pode continuar e tentar novamente.",
+          variant: "destructive",
+        });
       }
     } finally {
-      // Só definir loading como false se não estamos fazendo retry
-      if (attempt >= MAX_RETRIES || hasError) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
@@ -194,11 +155,9 @@ export const useOrganization = (userId: string | undefined) => {
     }
   };
 
-  // Função para retry manual
   const retryLoadProfile = () => {
     setLoading(true);
     setHasError(false);
-    setRetryCount(0);
     loadUserProfile();
   };
 
@@ -213,7 +172,6 @@ export const useOrganization = (userId: string | undefined) => {
     organizationSettings,
     loading,
     hasError,
-    retryCount,
     createOrganization,
     joinOrganization,
     updateProfile,
