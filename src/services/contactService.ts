@@ -3,18 +3,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { ContactRecord } from '@/types/patient';
 
 export class ContactService {
-  static async loadContactRecords(organizationId: string) {
-    const { data: contactsData, error } = await supabase
+  static async loadContactRecords(organizationId: string): Promise<Record<string, ContactRecord[]>> {
+    console.log('📥 ContactService.loadContactRecords:', organizationId);
+    
+    const { data, error } = await supabase
       .from('contact_records')
       .select('*')
       .eq('organization_id', organizationId)
       .order('date', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error loading contact records:', error);
+      throw error;
+    }
+
+    console.log('✅ Contact records loaded:', data?.length || 0);
 
     // Group contacts by patient
     const contactsByPatient: Record<string, ContactRecord[]> = {};
-    contactsData?.forEach(contact => {
+    data?.forEach(contact => {
       if (!contactsByPatient[contact.patient_id]) {
         contactsByPatient[contact.patient_id] = [];
       }
@@ -30,7 +37,9 @@ export class ContactService {
     return contactsByPatient;
   }
 
-  static async addContactRecord(patientId: string, contactRecord: Omit<ContactRecord, 'id'>, userId: string, organizationId: string) {
+  static async addContactRecord(patientId: string, contactRecord: Omit<ContactRecord, 'id'>, userId: string, organizationId: string): Promise<void> {
+    console.log('➕ ContactService.addContactRecord:', { patientId, userId, organizationId });
+    
     const { error } = await supabase
       .from('contact_records')
       .insert([{
@@ -41,8 +50,14 @@ export class ContactService {
         method: contactRecord.method,
         notes: contactRecord.notes,
         successful: contactRecord.successful
-      }]);
+      }])
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error adding contact record:', error);
+      throw error;
+    }
+
+    console.log('✅ Contact record added');
   }
 }
