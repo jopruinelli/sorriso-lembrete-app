@@ -3,118 +3,100 @@ import { supabase } from '@/integrations/supabase/client';
 import { Organization, UserProfile, OrganizationSettings } from '@/types/organization';
 
 export class OrganizationService {
-  private static REQUEST_TIMEOUT = 15000; // Increased timeout
-
-  private static withTimeout<T>(promise: Promise<T>, timeoutMs = this.REQUEST_TIMEOUT): Promise<T> {
-    return Promise.race([
-      promise,
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
-      )
-    ]);
-  }
-
-  static async createOrganization(name: string, userId: string, userName: string) {
+  static async createOrganization(name: string, userId: string, userName: string): Promise<Organization> {
     console.log('🏢 OrganizationService.createOrganization:', { name, userId, userName });
     
     try {
       // Create organization
-      const orgResult = await this.withTimeout(
-        supabase
-          .from('organizations')
-          .insert([{ name }])
-          .select()
-          .single()
-      );
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .insert([{ name }])
+        .select()
+        .single();
 
-      if (orgResult.error) {
-        console.error('❌ Error creating organization:', orgResult.error);
-        throw orgResult.error;
+      if (orgError) {
+        console.error('❌ Error creating organization:', orgError);
+        throw orgError;
       }
 
-      console.log('✅ Organization created:', orgResult.data);
+      console.log('✅ Organization created:', orgData);
 
       // Create user profile as admin
-      const profileResult = await this.withTimeout(
-        supabase
-          .from('user_profiles')
-          .insert([{
-            user_id: userId,
-            organization_id: orgResult.data.id,
-            name: userName,
-            role: 'admin'
-          }])
-      );
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert([{
+          user_id: userId,
+          organization_id: orgData.id,
+          name: userName,
+          role: 'admin'
+        }])
+        .select();
 
-      if (profileResult.error) {
-        console.error('❌ Error creating user profile:', profileResult.error);
-        throw profileResult.error;
+      if (profileError) {
+        console.error('❌ Error creating user profile:', profileError);
+        throw profileError;
       }
 
       console.log('✅ User profile created as admin');
 
       // Create default organization settings
-      const settingsResult = await this.withTimeout(
-        supabase
-          .from('organization_settings')
-          .insert([{
-            organization_id: orgResult.data.id,
-            whatsapp_default_message: 'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!'
-          }])
-      );
+      const { error: settingsError } = await supabase
+        .from('organization_settings')
+        .insert([{
+          organization_id: orgData.id,
+          whatsapp_default_message: 'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!'
+        }])
+        .select();
 
-      if (settingsResult.error) {
-        console.error('❌ Error creating organization settings:', settingsResult.error);
-        throw settingsResult.error;
+      if (settingsError) {
+        console.error('❌ Error creating organization settings:', settingsError);
+        throw settingsError;
       }
 
       console.log('✅ Organization settings created');
-      return orgResult.data;
+      return orgData;
     } catch (error) {
       console.error('❌ OrganizationService.createOrganization failed:', error);
       throw error;
     }
   }
 
-  static async joinOrganization(organizationName: string, userId: string, userName: string) {
+  static async joinOrganization(organizationName: string, userId: string, userName: string): Promise<Organization> {
     console.log('🤝 OrganizationService.joinOrganization:', { organizationName, userId, userName });
     
     try {
       // Find organization by name
-      const orgResult = await this.withTimeout(
-        supabase
-          .from('organizations')
-          .select('*')
-          .eq('name', organizationName)
-          .single()
-      );
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('name', organizationName)
+        .single();
 
-      if (orgResult.error) {
-        console.error('❌ Organization not found:', orgResult.error);
+      if (orgError) {
+        console.error('❌ Organization not found:', orgError);
         throw new Error('Organização não encontrada');
       }
 
-      console.log('✅ Organization found:', orgResult.data);
+      console.log('✅ Organization found:', orgData);
 
       // Create user profile
-      const profileResult = await this.withTimeout(
-        supabase
-          .from('user_profiles')
-          .insert([{
-            user_id: userId,
-            organization_id: orgResult.data.id,
-            name: userName,
-            role: 'user'
-          }])
-      );
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert([{
+          user_id: userId,
+          organization_id: orgData.id,
+          name: userName,
+          role: 'user'
+        }])
+        .select();
 
-      if (profileResult.error) {
-        console.error('❌ Error creating user profile:', profileResult.error);
-        throw profileResult.error;
+      if (profileError) {
+        console.error('❌ Error creating user profile:', profileError);
+        throw profileError;
       }
 
       console.log('✅ User profile created as user');
-      return orgResult.data;
+      return orgData;
     } catch (error) {
       console.error('❌ OrganizationService.joinOrganization failed:', error);
       throw error;
@@ -125,44 +107,38 @@ export class OrganizationService {
     console.log('👤 OrganizationService.getUserProfile:', userId);
     
     try {
-      // Simplified approach - just get the profile first
-      const profileResult = await this.withTimeout(
-        supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle(),
-        10000
-      );
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      if (profileResult.error) {
-        console.warn('⚠️ Error fetching user profile:', profileResult.error);
+      if (profileError) {
+        console.warn('⚠️ Error fetching user profile:', profileError);
         return null;
       }
 
       // If no profile exists, return null
-      if (!profileResult.data) {
+      if (!profileData) {
         console.log('ℹ️ No user profile found for user:', userId);
         return null;
       }
 
-      console.log('✅ User profile found:', profileResult.data);
+      console.log('✅ User profile found:', profileData);
 
       // Get organization data separately
-      const orgResult = await this.withTimeout(
-        supabase
-          .from('organizations')
-          .select('*')
-          .eq('id', profileResult.data.organization_id)
-          .maybeSingle(),
-        8000
-      );
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', profileData.organization_id)
+        .maybeSingle();
 
       // Combine the data
       const profile: UserProfile = {
-        ...profileResult.data,
-        role: profileResult.data.role as 'admin' | 'user',
-        organizations: orgResult.data || undefined
+        ...profileData,
+        role: profileData.role as 'admin' | 'user',
+        organizations: orgData || undefined
       };
 
       console.log('✅ Complete profile assembled:', profile);
@@ -173,19 +149,18 @@ export class OrganizationService {
     }
   }
 
-  static async updateUserProfile(userId: string, updates: Partial<Pick<UserProfile, 'name'>>) {
+  static async updateUserProfile(userId: string, updates: Partial<Pick<UserProfile, 'name'>>): Promise<void> {
     console.log('📝 OrganizationService.updateUserProfile:', { userId, updates });
     
-    const result = await this.withTimeout(
-      supabase
-        .from('user_profiles')
-        .update(updates)
-        .eq('user_id', userId)
-    );
+    const { error } = await supabase
+      .from('user_profiles')
+      .update(updates)
+      .eq('user_id', userId)
+      .select();
 
-    if (result.error) {
-      console.error('❌ Error updating user profile:', result.error);
-      throw result.error;
+    if (error) {
+      console.error('❌ Error updating user profile:', error);
+      throw error;
     }
     
     console.log('✅ User profile updated');
@@ -195,55 +170,50 @@ export class OrganizationService {
     console.log('⚙️ OrganizationService.getOrganizationSettings:', organizationId);
     
     try {
-      const result = await this.withTimeout(
-        supabase
-          .from('organization_settings')
-          .select('*')
-          .eq('organization_id', organizationId)
-          .maybeSingle()
-      );
+      const { data, error } = await supabase
+        .from('organization_settings')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .maybeSingle();
 
-      if (result.error) {
-        console.log('⚠️ Error fetching organization settings:', result.error);
+      if (error) {
+        console.log('⚠️ Error fetching organization settings:', error);
         return null;
       }
       
-      console.log('✅ Organization settings loaded:', result.data);
-      return result.data;
+      console.log('✅ Organization settings loaded:', data);
+      return data;
     } catch (error) {
       console.error('❌ Error in getOrganizationSettings:', error);
       return null;
     }
   }
 
-  static async updateOrganizationSettings(organizationId: string, updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message'>>) {
+  static async updateOrganizationSettings(organizationId: string, updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message'>>): Promise<void> {
     console.log('📝 OrganizationService.updateOrganizationSettings:', { organizationId, updates });
     
-    const result = await this.withTimeout(
-      supabase
-        .from('organization_settings')
-        .update(updates)
-        .eq('organization_id', organizationId)
-    );
+    const { error } = await supabase
+      .from('organization_settings')
+      .update(updates)
+      .eq('organization_id', organizationId)
+      .select();
 
-    if (result.error) {
-      console.error('❌ Error updating organization settings:', result.error);
-      throw result.error;
+    if (error) {
+      console.error('❌ Error updating organization settings:', error);
+      throw error;
     }
     
     console.log('✅ Organization settings updated');
   }
 
-  static async deleteUserAccount(userId: string) {
+  static async deleteUserAccount(userId: string): Promise<void> {
     console.log('🗑️ OrganizationService.deleteUserAccount:', userId);
     
-    const result = await this.withTimeout(
-      supabase.auth.admin.deleteUser(userId)
-    );
+    const { error } = await supabase.auth.admin.deleteUser(userId);
     
-    if (result.error) {
-      console.error('❌ Error deleting user account:', result.error);
-      throw result.error;
+    if (error) {
+      console.error('❌ Error deleting user account:', error);
+      throw error;
     }
     
     console.log('✅ User account deleted');
