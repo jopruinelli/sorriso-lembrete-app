@@ -34,14 +34,19 @@ export class PatientService {
   }
 
   static async addPatient(patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string, organizationId: string): Promise<DatabasePatient> {
-    console.log('➕ PatientService.addPatient:', { patientData: patientData.name, userId, organizationId });
+    console.log('➕ PatientService.addPatient:', { patientName: patientData.name, userId, organizationId });
     
     if (!organizationId) {
       throw new Error('Organization ID is required');
     }
 
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
     try {
       const dbPatient = convertToDbPatient(patientData, userId, organizationId);
+      console.log('📋 Patient data to insert:', dbPatient);
       
       const { data, error } = await supabase
         .from('patients')
@@ -51,10 +56,16 @@ export class PatientService {
 
       if (error) {
         console.error('❌ Error adding patient:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
 
-      console.log('✅ Patient added:', data);
+      console.log('✅ Patient added successfully:', data);
       return assertDatabasePatient(data);
     } catch (error) {
       console.error('❌ PatientService.addPatient failed:', error);

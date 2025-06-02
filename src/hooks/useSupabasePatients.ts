@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Patient, ContactRecord } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
@@ -65,16 +64,30 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
 
   // Add patient to Supabase
   const addPatient = async (patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string) => {
+    console.log('🚀 Starting addPatient:', { patientName: patientData.name, userId, organizationId });
+    
     if (!organizationId) {
+      console.error('❌ No organizationId available');
       toast({
         title: "Erro",
-        description: "Você precisa estar vinculado a uma organização",
+        description: "Você precisa estar vinculado a uma organização para adicionar pacientes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!userId) {
+      console.error('❌ No userId available');
+      toast({
+        title: "Erro",
+        description: "Usuário não identificado",
         variant: "destructive",
       });
       return;
     }
 
     try {
+      console.log('📝 Calling PatientService.addPatient...');
       const newPatientData = await PatientService.addPatient(patientData, userId, organizationId);
       const newPatient = convertToAppPatient(newPatientData, []);
       
@@ -84,11 +97,24 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
         title: "Paciente adicionado",
         description: "Paciente salvo com segurança no servidor",
       });
+      
+      console.log('✅ Patient added successfully to state');
     } catch (error) {
       console.error('❌ Error adding patient:', error);
+      
+      // Mensagem de erro mais específica baseada no tipo de erro
+      let errorMessage = "Falha ao salvar paciente no servidor";
+      const errorString = error?.message?.toLowerCase() || '';
+      
+      if (errorString.includes('policy') || errorString.includes('row-level security')) {
+        errorMessage = "Você não tem permissão para adicionar pacientes nesta organização";
+      } else if (errorString.includes('organization_id')) {
+        errorMessage = "Erro de configuração da organização. Tente fazer logout e login novamente";
+      }
+      
       toast({
         title: "Erro ao salvar",
-        description: "Falha ao salvar paciente no servidor",
+        description: errorMessage,
         variant: "destructive",
       });
     }
