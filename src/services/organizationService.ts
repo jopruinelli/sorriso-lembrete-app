@@ -65,14 +65,14 @@ export class OrganizationService {
     console.log('🤝 OrganizationService.joinOrganization:', { organizationName, userId, userName });
     
     try {
-      // Find organization by name
+      // Find organization by name (use .maybeSingle() to avoid errors)
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('*')
         .eq('name', organizationName)
-        .single();
+        .maybeSingle();
 
-      if (orgError) {
+      if (orgError || !orgData) {
         console.error('❌ Organization not found:', orgError);
         throw new Error('Organização não encontrada');
       }
@@ -107,10 +107,13 @@ export class OrganizationService {
     console.log('👤 OrganizationService.getUserProfile:', userId);
     
     try {
-      // Get user profile
+      // Get user profile with organization data
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select(`
+          *,
+          organizations (*)
+        `)
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -119,30 +122,16 @@ export class OrganizationService {
         return null;
       }
 
-      // If no profile exists, return null
       if (!profileData) {
         console.log('ℹ️ No user profile found for user:', userId);
         return null;
       }
 
       console.log('✅ User profile found:', profileData);
-
-      // Get organization data separately
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', profileData.organization_id)
-        .maybeSingle();
-
-      // Combine the data
-      const profile: UserProfile = {
+      return {
         ...profileData,
-        role: profileData.role as 'admin' | 'user',
-        organizations: orgData || undefined
+        role: profileData.role as 'admin' | 'user'
       };
-
-      console.log('✅ Complete profile assembled:', profile);
-      return profile;
     } catch (error) {
       console.error('❌ Error in getUserProfile:', error);
       return null;

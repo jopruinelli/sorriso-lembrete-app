@@ -6,58 +6,77 @@ export class ContactService {
   static async loadContactRecords(organizationId: string): Promise<Record<string, ContactRecord[]>> {
     console.log('📥 ContactService.loadContactRecords:', organizationId);
     
-    const { data, error } = await supabase
-      .from('contact_records')
-      .select('*')
-      .eq('organization_id', organizationId)
-      .order('date', { ascending: false });
-
-    if (error) {
-      console.error('❌ Error loading contact records:', error);
-      throw error;
+    if (!organizationId) {
+      console.log('⚠️ No organizationId provided');
+      return {};
     }
 
-    console.log('✅ Contact records loaded:', data?.length || 0);
+    try {
+      const { data, error } = await supabase
+        .from('contact_records')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .order('date', { ascending: false });
 
-    // Group contacts by patient
-    const contactsByPatient: Record<string, ContactRecord[]> = {};
-    data?.forEach(contact => {
-      if (!contactsByPatient[contact.patient_id]) {
-        contactsByPatient[contact.patient_id] = [];
+      if (error) {
+        console.error('❌ Error loading contact records:', error);
+        throw error;
       }
-      contactsByPatient[contact.patient_id].push({
-        id: contact.id,
-        date: new Date(contact.date),
-        method: contact.method as ContactRecord['method'],
-        notes: contact.notes || '',
-        successful: contact.successful
-      });
-    });
 
-    return contactsByPatient;
+      console.log('✅ Contact records loaded:', data?.length || 0);
+
+      // Group contacts by patient
+      const contactsByPatient: Record<string, ContactRecord[]> = {};
+      data?.forEach(contact => {
+        if (!contactsByPatient[contact.patient_id]) {
+          contactsByPatient[contact.patient_id] = [];
+        }
+        contactsByPatient[contact.patient_id].push({
+          id: contact.id,
+          date: new Date(contact.date),
+          method: contact.method as ContactRecord['method'],
+          notes: contact.notes || '',
+          successful: contact.successful
+        });
+      });
+
+      return contactsByPatient;
+    } catch (error) {
+      console.error('❌ ContactService.loadContactRecords failed:', error);
+      throw error;
+    }
   }
 
   static async addContactRecord(patientId: string, contactRecord: Omit<ContactRecord, 'id'>, userId: string, organizationId: string): Promise<void> {
     console.log('➕ ContactService.addContactRecord:', { patientId, userId, organizationId });
     
-    const { error } = await supabase
-      .from('contact_records')
-      .insert([{
-        patient_id: patientId,
-        user_id: userId,
-        organization_id: organizationId,
-        date: contactRecord.date.toISOString(),
-        method: contactRecord.method,
-        notes: contactRecord.notes,
-        successful: contactRecord.successful
-      }])
-      .select();
-
-    if (error) {
-      console.error('❌ Error adding contact record:', error);
-      throw error;
+    if (!organizationId) {
+      throw new Error('Organization ID is required');
     }
 
-    console.log('✅ Contact record added');
+    try {
+      const { error } = await supabase
+        .from('contact_records')
+        .insert([{
+          patient_id: patientId,
+          user_id: userId,
+          organization_id: organizationId,
+          date: contactRecord.date.toISOString(),
+          method: contactRecord.method,
+          notes: contactRecord.notes,
+          successful: contactRecord.successful
+        }])
+        .select();
+
+      if (error) {
+        console.error('❌ Error adding contact record:', error);
+        throw error;
+      }
+
+      console.log('✅ Contact record added');
+    } catch (error) {
+      console.error('❌ ContactService.addContactRecord failed:', error);
+      throw error;
+    }
   }
 }
