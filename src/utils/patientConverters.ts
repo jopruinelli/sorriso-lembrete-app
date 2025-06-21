@@ -14,6 +14,14 @@ export const convertToDbPatient = (
     hasAllRequired: !!(patient.name && patient.phone && userId && organizationId)
   });
 
+  if (!organizationId) {
+    throw new Error('Organization ID is required for patient creation');
+  }
+
+  if (!userId) {
+    throw new Error('User ID is required for patient creation');
+  }
+
   const dbPatient = {
     name: patient.name,
     phone: patient.phone,

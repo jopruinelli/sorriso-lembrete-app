@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Patient, ContactRecord } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
@@ -95,7 +96,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
       
       toast({
         title: "Paciente adicionado",
-        description: "Paciente salvo com segurança no servidor",
+        description: `Paciente ${patientData.name} salvo com segurança na organização`,
       });
       
       console.log('✅ Patient added successfully to state');
@@ -110,6 +111,8 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
         errorMessage = "Você não tem permissão para adicionar pacientes nesta organização";
       } else if (errorString.includes('organization_id')) {
         errorMessage = "Erro de configuração da organização. Tente fazer logout e login novamente";
+      } else if (errorString.includes('não pertence')) {
+        errorMessage = "Sua conta não está vinculada a uma organização válida";
       }
       
       toast({

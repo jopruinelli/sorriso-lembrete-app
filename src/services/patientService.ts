@@ -45,6 +45,23 @@ export class PatientService {
     }
 
     try {
+      // Verificar se o usuário tem acesso à organização
+      console.log('🔍 Verificando acesso à organização...');
+      const { data: hasAccess, error: accessError } = await supabase
+        .rpc('user_belongs_to_organization', { org_id: organizationId });
+
+      if (accessError) {
+        console.error('❌ Error checking organization access:', accessError);
+        throw new Error('Erro ao verificar acesso à organização');
+      }
+
+      if (!hasAccess) {
+        console.error('❌ User does not belong to organization');
+        throw new Error('Usuário não pertence a esta organização');
+      }
+
+      console.log('✅ User has access to organization');
+
       const dbPatient = convertToDbPatient(patientData, userId, organizationId);
       console.log('📋 Patient data to insert:', dbPatient);
       

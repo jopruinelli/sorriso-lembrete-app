@@ -223,6 +223,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      user_belongs_to_organization: {
+        Args: { org_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
