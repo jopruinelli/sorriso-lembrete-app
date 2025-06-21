@@ -12,7 +12,10 @@ interface AuthGuardProps {
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { user, loading, signInWithGoogle, signOut } = useAuth();
 
+  console.log('🔒 AuthGuard render:', { user: user?.email, loading });
+
   if (loading) {
+    console.log('⏳ AuthGuard: showing loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-dental-primary/20">
@@ -26,6 +29,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   if (!user) {
+    console.log('🚫 AuthGuard: no user, showing login');
     return (
       <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-dental-primary/20">
@@ -54,6 +58,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
+  console.log('✅ AuthGuard: user authenticated, showing children');
   return (
     <div>
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2">

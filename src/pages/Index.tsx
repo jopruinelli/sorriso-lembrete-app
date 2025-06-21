@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -22,6 +21,14 @@ const Index = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const { userProfile, organizationSettings, loading: orgLoading, createOrganization, joinOrganization, updateProfile, updateOrganizationSettings } = useOrganization(user?.id);
   const { patients, loading: patientsLoading, addPatient, updatePatient, addContactRecord, deletePatient, bulkAddPatients, bulkDeletePatients } = useSupabasePatients(userProfile?.organization_id);
+
+  console.log('📱 Index component render:', { 
+    user: user?.email, 
+    authLoading, 
+    orgLoading, 
+    userProfile: userProfile?.name,
+    organizationId: userProfile?.organization_id
+  });
 
   // State variables
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -120,6 +127,7 @@ const Index = () => {
   };
 
   if (authLoading || orgLoading) {
+    console.log('⏳ Index: showing loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-dental-primary/20">
