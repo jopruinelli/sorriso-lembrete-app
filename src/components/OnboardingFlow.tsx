@@ -8,26 +8,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building2, Users, UserPlus } from 'lucide-react';
 
 interface OnboardingFlowProps {
-  onCreateOrganization: (orgName: string, userName: string) => void;
-  onJoinOrganization: (orgName: string, userName: string) => void;
+  onCreateOrganization: (orgName: string) => void;
+  onJoinOrganization: (orgName: string) => void;
+  userEmail?: string;
 }
 
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   onCreateOrganization,
-  onJoinOrganization
+  onJoinOrganization,
+  userEmail
 }) => {
   const [orgName, setOrgName] = useState('');
-  const [userName, setUserName] = useState('');
   const [activeTab, setActiveTab] = useState('create');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orgName.trim() || !userName.trim()) return;
+    if (!orgName.trim()) return;
 
     if (activeTab === 'create') {
-      onCreateOrganization(orgName.trim(), userName.trim());
+      onCreateOrganization(orgName.trim());
     } else {
-      onJoinOrganization(orgName.trim(), userName.trim());
+      onJoinOrganization(orgName.trim());
     }
   };
 
@@ -39,6 +40,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             Bem-vindo ao Sistema
           </CardTitle>
           <p className="text-dental-secondary">
+            Conectado como: {userEmail}
+          </p>
+          <p className="text-dental-secondary text-sm">
             Configure sua organização para começar
           </p>
         </CardHeader>
@@ -62,7 +66,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   Criar Nova Organização
                 </h3>
                 <p className="text-sm text-dental-secondary">
-                  Crie uma nova organização e convide outros usuários
+                  Crie uma nova organização e gerencie usuários
                 </p>
               </div>
               
@@ -73,24 +77,14 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     id="orgName"
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
-                    placeholder="Ex: Clínica Sorriso"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="userName">Seu Nome</Label>
-                  <Input
-                    id="userName"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    placeholder="Seu nome completo"
+                    placeholder="Ex: JMCorp"
                     required
                   />
                 </div>
                 <Button 
                   type="submit" 
                   className="w-full bg-dental-primary hover:bg-dental-secondary"
-                  disabled={!orgName.trim() || !userName.trim()}
+                  disabled={!orgName.trim()}
                 >
                   Criar Organização
                 </Button>
@@ -104,7 +98,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   Ingressar em Organização
                 </h3>
                 <p className="text-sm text-dental-secondary">
-                  Entre em uma organização existente
+                  Solicite acesso a uma organização existente
                 </p>
               </div>
 
@@ -115,28 +109,21 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     id="orgNameJoin"
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
-                    placeholder="Nome exato da organização"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="userNameJoin">Seu Nome</Label>
-                  <Input
-                    id="userNameJoin"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    placeholder="Seu nome completo"
+                    placeholder="Nome exato da organização (ex: JMCorp)"
                     required
                   />
                 </div>
                 <Button 
                   type="submit" 
                   className="w-full bg-dental-primary hover:bg-dental-secondary"
-                  disabled={!orgName.trim() || !userName.trim()}
+                  disabled={!orgName.trim()}
                 >
-                  Ingressar na Organização
+                  Solicitar Acesso
                 </Button>
               </form>
+              <p className="text-xs text-dental-secondary text-center">
+                Sua solicitação será enviada para aprovação do administrador
+              </p>
             </TabsContent>
           </Tabs>
         </CardContent>

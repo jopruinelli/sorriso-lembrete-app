@@ -12,9 +12,10 @@ export interface UserProfile {
   organization_id: string;
   name: string;
   role: 'admin' | 'user';
+  status?: 'pending' | 'approved' | 'rejected';
   created_at: string;
   updated_at: string;
-  organizations?: Organization; // Adicionar como opcional para incluir dados da organização
+  organizations?: Organization;
 }
 
 export interface OrganizationSettings {

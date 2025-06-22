@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { UserProfile, OrganizationSettings } from '@/types/organization';
 import { OrganizationService } from '@/services/organizationService';
 import { useToast } from '@/hooks/use-toast';
+import { User } from '@supabase/supabase-js';
 
-export const useOrganization = (userId: string | undefined) => {
+export const useOrganization = (user: User | null) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [organizationSettings, setOrganizationSettings] = useState<OrganizationSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,18 +19,18 @@ export const useOrganization = (userId: string | undefined) => {
   };
 
   const loadUserProfile = async () => {
-    if (!userId) {
-      console.log('🔄 No userId provided, resetting state');
+    if (!user?.id) {
+      console.log('🔄 No user provided, resetting state');
       resetState();
       setLoading(false);
       return;
     }
 
     try {
-      console.log(`🔄 Loading user profile for userId: ${userId}`);
+      console.log(`🔄 Loading user profile for userId: ${user.id}`);
       setHasError(false);
       
-      const profile = await OrganizationService.getUserProfile(userId);
+      const profile = await OrganizationService.getUserProfile(user.id);
       console.log('✅ User profile loaded:', profile);
       
       setUserProfile(profile);
@@ -73,12 +74,17 @@ export const useOrganization = (userId: string | undefined) => {
     }
   };
 
-  const createOrganization = async (orgName: string, userName: string) => {
-    if (!userId) return;
+  const createOrganization = async (orgName: string) => {
+    if (!user?.id || !user?.user_metadata?.full_name) return;
 
     try {
       console.log('🏢 Creating organization:', orgName);
-      await OrganizationService.createOrganization(orgName, userId, userName);
+      const userName = user.user_metadata.full_name || user.email?.split('@')[0] || 'Usuário';
+      
+      // Verificar se é admin (jopruinelli@gmail.com)
+      const isMainAdmin = user.email === 'jopruinelli@gmail.com';
+      
+      await OrganizationService.createOrganization(orgName, user.id, userName, isMainAdmin);
       await loadUserProfile();
       toast({
         title: "Organização criada",
@@ -94,16 +100,18 @@ export const useOrganization = (userId: string | undefined) => {
     }
   };
 
-  const joinOrganization = async (orgName: string, userName: string) => {
-    if (!userId) return;
+  const joinOrganization = async (orgName: string) => {
+    if (!user?.id || !user?.user_metadata?.full_name) return;
 
     try {
       console.log('🤝 Joining organization:', orgName);
-      await OrganizationService.joinOrganization(orgName, userId, userName);
+      const userName = user.user_metadata.full_name || user.email?.split('@')[0] || 'Usuário';
+      
+      await OrganizationService.joinOrganization(orgName, user.id, userName);
       await loadUserProfile();
       toast({
-        title: "Ingressou na organização",
-        description: "Você agora faz parte da organização",
+        title: "Solicitação enviada",
+        description: "Sua solicitação foi enviada para aprovação",
       });
     } catch (error) {
       console.error('❌ Error joining organization:', error);
@@ -162,10 +170,10 @@ export const useOrganization = (userId: string | undefined) => {
   };
 
   useEffect(() => {
-    console.log('🔄 useOrganization effect triggered, userId:', userId);
+    console.log('🔄 useOrganization effect triggered, user:', user?.email);
     setLoading(true);
     loadUserProfile();
-  }, [userId]);
+  }, [user?.id]);
 
   return {
     userProfile,

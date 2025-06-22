@@ -1,10 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Organization, UserProfile, OrganizationSettings } from '@/types/organization';
 
 export class OrganizationService {
-  static async createOrganization(name: string, userId: string, userName: string): Promise<Organization> {
-    console.log('🏢 OrganizationService.createOrganization:', { name, userId, userName });
+  static async createOrganization(name: string, userId: string, userName: string, isMainAdmin: boolean = false): Promise<Organization> {
+    console.log('🏢 OrganizationService.createOrganization:', { name, userId, userName, isMainAdmin });
     
     try {
       // Create organization
@@ -28,7 +27,8 @@ export class OrganizationService {
           user_id: userId,
           organization_id: orgData.id,
           name: userName,
-          role: 'admin'
+          role: 'admin',
+          status: 'approved' // Auto-aprovado para quem cria a organização
         }])
         .select();
 
@@ -65,7 +65,7 @@ export class OrganizationService {
     console.log('🤝 OrganizationService.joinOrganization:', { organizationName, userId, userName });
     
     try {
-      // Find organization by name (use .maybeSingle() to avoid errors)
+      // Find organization by name
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('*')
@@ -79,14 +79,15 @@ export class OrganizationService {
 
       console.log('✅ Organization found:', orgData);
 
-      // Create user profile
+      // Create user profile with pending status
       const { error: profileError } = await supabase
         .from('user_profiles')
         .insert([{
           user_id: userId,
           organization_id: orgData.id,
           name: userName,
-          role: 'user'
+          role: 'user',
+          status: 'pending' // Aguardando aprovação
         }])
         .select();
 
@@ -95,10 +96,77 @@ export class OrganizationService {
         throw profileError;
       }
 
-      console.log('✅ User profile created as user');
+      console.log('✅ User profile created as pending user');
       return orgData;
     } catch (error) {
       console.error('❌ OrganizationService.joinOrganization failed:', error);
+      throw error;
+    }
+  }
+
+  static async getPendingUsers(organizationId: string): Promise<UserProfile[]> {
+    console.log('👥 OrganizationService.getPendingUsers:', organizationId);
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching pending users:', error);
+        throw error;
+      }
+
+      console.log('✅ Pending users loaded:', data);
+      return data || [];
+    } catch (error) {
+      console.error('❌ Error in getPendingUsers:', error);
+      throw error;
+    }
+  }
+
+  static async approveUser(userId: string): Promise<void> {
+    console.log('✅ OrganizationService.approveUser:', userId);
+    
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ status: 'approved' })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('❌ Error approving user:', error);
+        throw error;
+      }
+
+      console.log('✅ User approved successfully');
+    } catch (error) {
+      console.error('❌ Error in approveUser:', error);
+      throw error;
+    }
+  }
+
+  static async rejectUser(userId: string): Promise<void> {
+    console.log('❌ OrganizationService.rejectUser:', userId);
+    
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('status', 'pending');
+
+      if (error) {
+        console.error('❌ Error rejecting user:', error);
+        throw error;
+      }
+
+      console.log('✅ User rejected successfully');
+    } catch (error) {
+      console.error('❌ Error in rejectUser:', error);
       throw error;
     }
   }
