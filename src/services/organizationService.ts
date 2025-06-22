@@ -55,19 +55,55 @@ export class OrganizationService {
     console.log('🤝 OrganizationService.joinOrganization:', { organizationName, userId, userName });
     
     try {
-      // Find organization by name
+      // Debug: First let's see all organizations
+      const { data: allOrgs, error: allOrgsError } = await supabase
+        .from('organizations')
+        .select('*');
+      
+      console.log('🔍 All organizations in database:', allOrgs);
+      if (allOrgsError) {
+        console.error('❌ Error fetching all organizations:', allOrgsError);
+      }
+
+      // Find organization by name (case-insensitive search)
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('*')
-        .eq('name', organizationName)
+        .ilike('name', organizationName)
         .maybeSingle();
 
-      if (orgError || !orgData) {
-        console.error('❌ Organization not found:', orgError);
-        throw new Error('Organização não encontrada');
+      console.log('🔍 Organization search result:', { orgData, orgError, searchTerm: organizationName });
+
+      if (orgError) {
+        console.error('❌ Error searching for organization:', orgError);
+        throw orgError;
+      }
+
+      if (!orgData) {
+        console.error('❌ Organization not found:', organizationName);
+        console.log('Available organizations:', allOrgs?.map(org => org.name) || []);
+        throw new Error(`Organização "${organizationName}" não encontrada. Verifique se o nome está correto.`);
       }
 
       console.log('✅ Organization found:', orgData);
+
+      // Check if user is already in this organization
+      const { data: existingProfile, error: existingError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('organization_id', orgData.id)
+        .maybeSingle();
+
+      if (existingError) {
+        console.error('❌ Error checking existing profile:', existingError);
+        throw existingError;
+      }
+
+      if (existingProfile) {
+        console.log('ℹ️ User already has profile in this organization:', existingProfile);
+        throw new Error('Você já está vinculado a esta organização.');
+      }
 
       // Create user profile with pending status
       const { error: profileError } = await supabase
