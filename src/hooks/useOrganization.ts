@@ -124,10 +124,10 @@ export const useOrganization = (user: User | null) => {
   };
 
   const updateProfile = async (updates: Partial<Pick<UserProfile, 'name'>>) => {
-    if (!userId) return;
+    if (!user?.id) return;
 
     try {
-      await OrganizationService.updateUserProfile(userId, updates);
+      await OrganizationService.updateUserProfile(user.id, updates);
       await loadUserProfile();
       toast({
         title: "Perfil atualizado",

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Organization, UserProfile, OrganizationSettings } from '@/types/organization';
 
@@ -121,7 +122,10 @@ export class OrganizationService {
       }
 
       console.log('✅ Pending users loaded:', data);
-      return data || [];
+      return (data || []).map(user => ({
+        ...user,
+        role: user.role as 'admin' | 'user'
+      }));
     } catch (error) {
       console.error('❌ Error in getPendingUsers:', error);
       throw error;

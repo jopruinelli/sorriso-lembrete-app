@@ -13,13 +13,13 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { Patient, ContactRecord, ContactPeriod } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Users, Calendar, Settings, UserPlus } from 'lucide-react';
+import { AlertCircle, Users, Calendar, Settings, UserPlus, Clock } from 'lucide-react';
 import { isAfter, format, parseISO, startOfDay } from 'date-fns';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
-  const { userProfile, organizationSettings, loading: orgLoading, createOrganization, joinOrganization, updateProfile, updateOrganizationSettings } = useOrganization(user?.id);
+  const { userProfile, organizationSettings, loading: orgLoading, createOrganization, joinOrganization, updateProfile, updateOrganizationSettings } = useOrganization(user);
   const { patients, loading: patientsLoading, addPatient, updatePatient, addContactRecord, deletePatient, bulkAddPatients, bulkDeletePatients } = useSupabasePatients(userProfile?.organization_id);
 
   console.log('📱 Index component render:', { 
@@ -142,11 +142,31 @@ const Index = () => {
 
   return (
     <AuthGuard>
-      {!userProfile ? (
-        <OnboardingFlow 
-          onCreateOrganization={createOrganization}
-          onJoinOrganization={joinOrganization}
-        />
+      {!userProfile || userProfile.status === 'pending' ? (
+        userProfile?.status === 'pending' ? (
+          <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
+            <Card className="w-full max-w-md">
+              <CardContent className="p-6 text-center">
+                <Clock className="w-12 h-12 mx-auto text-dental-secondary mb-4" />
+                <h2 className="text-xl font-semibold text-dental-primary mb-2">
+                  Aguardando Aprovação
+                </h2>
+                <p className="text-dental-secondary mb-4">
+                  Sua solicitação de acesso foi enviada e está aguardando aprovação do administrador.
+                </p>
+                <Button onClick={signOut} variant="outline">
+                  Fazer logout
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <OnboardingFlow 
+            onCreateOrganization={createOrganization}
+            onJoinOrganization={joinOrganization}
+            userEmail={user?.email}
+          />
+        )
       ) : (
         <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent">
           <div className="container mx-auto px-4 py-6">
