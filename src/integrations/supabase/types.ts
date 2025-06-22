@@ -179,6 +179,7 @@ export type Database = {
           name: string
           organization_id: string
           role: string
+          status: string
           updated_at: string
           user_id: string
         }
@@ -188,6 +189,7 @@ export type Database = {
           name: string
           organization_id: string
           role?: string
+          status?: string
           updated_at?: string
           user_id: string
         }
@@ -197,6 +199,7 @@ export type Database = {
           name?: string
           organization_id?: string
           role?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }

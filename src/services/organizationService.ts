@@ -122,21 +122,21 @@ export class OrganizationService {
 
       console.log('✅ Pending users loaded:', data);
       
-      // Safely map the data without deep type instantiation
+      // Manually create UserProfile objects to avoid type instantiation issues
       const pendingUsers: UserProfile[] = [];
       if (data) {
-        for (const user of data) {
+        data.forEach(user => {
           pendingUsers.push({
             id: user.id,
             user_id: user.user_id,
             organization_id: user.organization_id,
             name: user.name,
             role: user.role as 'admin' | 'user',
-            status: user.status as 'pending' | 'approved' | 'rejected',
+            status: (user as any).status as 'pending' | 'approved' | 'rejected',
             created_at: user.created_at,
             updated_at: user.updated_at
           });
-        }
+        });
       }
       
       return pendingUsers;
@@ -152,7 +152,7 @@ export class OrganizationService {
     try {
       const { error } = await supabase
         .from('user_profiles')
-        .update({ status: 'approved' })
+        .update({ status: 'approved' } as any)
         .eq('user_id', userId);
 
       if (error) {
@@ -216,7 +216,8 @@ export class OrganizationService {
       console.log('✅ User profile found:', profileData);
       return {
         ...profileData,
-        role: profileData.role as 'admin' | 'user'
+        role: profileData.role as 'admin' | 'user',
+        status: (profileData as any).status as 'pending' | 'approved' | 'rejected'
       };
     } catch (error) {
       console.error('❌ Error in getUserProfile:', error);
