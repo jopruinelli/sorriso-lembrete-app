@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Organization, UserProfile, OrganizationSettings } from '@/types/organization';
 
@@ -122,10 +121,25 @@ export class OrganizationService {
       }
 
       console.log('✅ Pending users loaded:', data);
-      return (data || []).map(user => ({
-        ...user,
-        role: user.role as 'admin' | 'user'
-      }));
+      
+      // Safely map the data without deep type instantiation
+      const pendingUsers: UserProfile[] = [];
+      if (data) {
+        for (const user of data) {
+          pendingUsers.push({
+            id: user.id,
+            user_id: user.user_id,
+            organization_id: user.organization_id,
+            name: user.name,
+            role: user.role as 'admin' | 'user',
+            status: user.status as 'pending' | 'approved' | 'rejected',
+            created_at: user.created_at,
+            updated_at: user.updated_at
+          });
+        }
+      }
+      
+      return pendingUsers;
     } catch (error) {
       console.error('❌ Error in getPendingUsers:', error);
       throw error;
