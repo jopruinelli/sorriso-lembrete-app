@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { UserProfile } from '@/types/organization';
-import { OrganizationService } from '@/services/organizationService';
+import { UserApprovalService } from '@/services/userApprovalService';
 import { useToast } from '@/hooks/use-toast';
 import { Users, UserCheck, UserX, Clock } from 'lucide-react';
 
@@ -27,7 +27,7 @@ export const UserApprovalModal: React.FC<UserApprovalModalProps> = ({
   const loadPendingUsers = async () => {
     try {
       setLoading(true);
-      const users = await OrganizationService.getPendingUsers(organizationId);
+      const users = await UserApprovalService.getPendingUsers(organizationId);
       setPendingUsers(users);
     } catch (error) {
       console.error('Error loading pending users:', error);
@@ -43,7 +43,7 @@ export const UserApprovalModal: React.FC<UserApprovalModalProps> = ({
 
   const handleApprove = async (userId: string) => {
     try {
-      await OrganizationService.approveUser(userId);
+      await UserApprovalService.approveUser(userId);
       toast({
         title: "Usuário aprovado",
         description: "O usuário foi aprovado com sucesso",
@@ -61,7 +61,7 @@ export const UserApprovalModal: React.FC<UserApprovalModalProps> = ({
 
   const handleReject = async (userId: string) => {
     try {
-      await OrganizationService.rejectUser(userId);
+      await UserApprovalService.rejectUser(userId);
       toast({
         title: "Usuário rejeitado",
         description: "A solicitação foi rejeitada",

@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { UserProfile, OrganizationSettings } from '@/types/organization';
 import { OrganizationService } from '@/services/organizationService';
+import { UserProfileService } from '@/services/userProfileService';
+import { OrganizationSettingsService } from '@/services/organizationSettingsService';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
 
@@ -30,7 +32,7 @@ export const useOrganization = (user: User | null) => {
       console.log(`🔄 Loading user profile for userId: ${user.id}`);
       setHasError(false);
       
-      const profile = await OrganizationService.getUserProfile(user.id);
+      const profile = await UserProfileService.getUserProfile(user.id);
       console.log('✅ User profile loaded:', profile);
       
       setUserProfile(profile);
@@ -38,7 +40,7 @@ export const useOrganization = (user: User | null) => {
       if (profile?.organization_id) {
         console.log('🔄 Loading organization settings for org:', profile.organization_id);
         try {
-          const settings = await OrganizationService.getOrganizationSettings(profile.organization_id);
+          const settings = await OrganizationSettingsService.getOrganizationSettings(profile.organization_id);
           console.log('✅ Organization settings loaded:', settings);
           setOrganizationSettings(settings);
         } catch (settingsError) {
@@ -127,7 +129,7 @@ export const useOrganization = (user: User | null) => {
     if (!user?.id) return;
 
     try {
-      await OrganizationService.updateUserProfile(user.id, updates);
+      await UserProfileService.updateUserProfile(user.id, updates);
       await loadUserProfile();
       toast({
         title: "Perfil atualizado",
@@ -147,7 +149,7 @@ export const useOrganization = (user: User | null) => {
     if (!userProfile?.organization_id) return;
 
     try {
-      await OrganizationService.updateOrganizationSettings(userProfile.organization_id, updates);
+      await OrganizationSettingsService.updateOrganizationSettings(userProfile.organization_id, updates);
       await loadUserProfile();
       toast({
         title: "Configurações atualizadas",
