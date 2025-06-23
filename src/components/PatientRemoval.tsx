@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Patient } from '@/types/patient';
-import { Search, Trash2, X } from 'lucide-react';
+import { Search, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -66,11 +66,8 @@ export const PatientRemoval: React.FC<PatientRemovalProps> = ({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-dental-primary flex items-center justify-between">
-            <span>Remoção de Pacientes</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
+          <DialogTitle className="text-dental-primary">
+            Remoção de Pacientes
           </DialogTitle>
         </DialogHeader>
 
