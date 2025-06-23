@@ -59,22 +59,6 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   console.log('✅ AuthGuard: user authenticated, showing children');
-  return (
-    <div>
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-        <span className="text-sm text-dental-secondary bg-white/80 px-2 py-1 rounded">
-          {user.email}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={signOut}
-          className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
-        >
-          Sair
-        </Button>
-      </div>
-      {children}
-    </div>
-  );
+  // Remove o cabeçalho fixo para usuários aprovados - a funcionalidade está no UserAvatar
+  return <>{children}</>;
 };

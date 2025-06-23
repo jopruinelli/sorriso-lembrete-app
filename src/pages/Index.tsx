@@ -145,6 +145,21 @@ const Index = () => {
       {!userProfile || userProfile.status === 'pending' ? (
         userProfile?.status === 'pending' ? (
           <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
+            {/* Cabeçalho com e-mail e botão sair para usuários pending */}
+            <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+              <span className="text-sm text-dental-secondary bg-white/80 px-2 py-1 rounded">
+                {user?.email}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={signOut}
+                className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
+              >
+                Sair
+              </Button>
+            </div>
+            
             <Card className="w-full max-w-md">
               <CardContent className="p-6 text-center">
                 <Clock className="w-12 h-12 mx-auto text-dental-secondary mb-4" />
@@ -170,7 +185,7 @@ const Index = () => {
       ) : (
         <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent">
           <div className="container mx-auto px-4 py-6">
-            {/* Header */}
+            {/* Header - sem cabeçalho fixo duplicado */}
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
