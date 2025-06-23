@@ -40,11 +40,11 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
             {userProfile?.role === 'admin' ? 'Admin' : 'Usuário'}
           </Badge>
         </div>
-        <DropdownMenuItem onClick={onSettingsClick}>
+        <DropdownMenuItem onSelect={onSettingsClick}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Configurações</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onSignOut}>
+        <DropdownMenuItem onSelect={onSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>
