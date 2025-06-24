@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,9 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExcelImport } from '@/components/ExcelImport';
 import { PatientRemoval } from '@/components/PatientRemoval';
+import { UserManagement } from '@/components/UserManagement';
 import { UserProfile, OrganizationSettings } from '@/types/organization';
 import { Patient } from '@/types/patient';
-import { Building2, User, MessageSquare, FileSpreadsheet, Trash2 } from 'lucide-react';
+import { Building2, User, MessageSquare, FileSpreadsheet, Trash2, Users } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -84,15 +84,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     );
   }
 
+  const isAdmin = userProfile?.role === 'admin';
+  const tabsCount = isAdmin ? 6 : 5;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-dental-primary">Configurações</DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="organization" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className={`grid w-full grid-cols-${tabsCount}`}>
             <TabsTrigger value="organization" className="text-xs">
               <Building2 className="w-4 h-4 mr-1" />
               Organização
@@ -113,6 +116,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <Trash2 className="w-4 h-4 mr-1" />
               Remover
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="users" className="text-xs">
+                <Users className="w-4 h-4 mr-1" />
+                Usuários
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="organization" className="space-y-4">
@@ -259,6 +268,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="users" className="space-y-4">
+              <UserManagement 
+                organizationId={userProfile?.organization_id || ''}
+                currentUserId={userProfile?.user_id || ''}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>
