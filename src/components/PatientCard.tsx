@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Patient } from '@/types/patient';
 import { OrganizationSettings } from '@/types/organization';
-import { Phone, MessageSquare, Calendar, Edit, Clock, AlertTriangle } from 'lucide-react';
+import { Phone, MessageSquare, Calendar, Edit, Clock, AlertTriangle, User } from 'lucide-react';
 import { format, isBefore, isAfter, startOfToday, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -103,6 +103,19 @@ export const PatientCard: React.FC<PatientCardProps> = ({
 
           <div className="text-sm text-dental-secondary">
             <strong>Motivo:</strong> {patient.nextContactReason}
+          </div>
+        </div>
+
+        {/* Informações de atualização */}
+        <div className="mb-3 p-2 bg-gray-50 rounded text-xs text-gray-600 border-t">
+          <div className="flex items-center gap-1">
+            <User className="w-3 h-3" />
+            <span>
+              Última atualização: {format(patient.updated_at || patient.created_at, 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+            </span>
+            {patient.updated_by && (
+              <span className="ml-2">por {patient.updated_by}</span>
+            )}
           </div>
         </div>
 
