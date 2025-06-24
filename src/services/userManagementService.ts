@@ -21,25 +21,28 @@ export class UserManagementService {
         throw error;
       }
 
-      console.log('✅ Organization users loaded:', data);
+      console.log('✅ Raw organization users data:', data);
       
-      // Manually create UserProfile objects
-      const users: UserProfile[] = [];
-      if (data) {
-        data.forEach(user => {
-          users.push({
-            id: user.id,
-            user_id: user.user_id,
-            organization_id: user.organization_id,
-            name: user.name,
-            role: user.role as 'admin' | 'user',
-            status: user.status as 'pending' | 'approved' | 'rejected' || 'approved',
-            created_at: user.created_at,
-            updated_at: user.updated_at,
-            organizations: user.organizations
-          });
-        });
+      // Verificar se temos dados
+      if (!data || data.length === 0) {
+        console.log('⚠️ No users found for organization:', organizationId);
+        return [];
       }
+
+      // Mapear os dados para UserProfile
+      const users: UserProfile[] = data.map(user => ({
+        id: user.id,
+        user_id: user.user_id,
+        organization_id: user.organization_id,
+        name: user.name,
+        role: user.role as 'admin' | 'user',
+        status: user.status as 'pending' | 'approved' | 'rejected',
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        organizations: user.organizations
+      }));
+
+      console.log('✅ Mapped organization users:', users);
       
       return users;
     } catch (error) {

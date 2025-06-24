@@ -23,12 +23,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const { toast } = useToast();
 
   const loadUsers = async () => {
+    console.log('🔄 Loading users for organization:', organizationId);
+    console.log('🔄 Current user ID:', currentUserId);
+    
     try {
       setLoading(true);
       const organizationUsers = await UserManagementService.getOrganizationUsers(organizationId);
+      console.log('✅ Users loaded successfully:', organizationUsers);
       setUsers(organizationUsers);
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('❌ Error loading users:', error);
       toast({
         title: "Erro",
         description: "Falha ao carregar usuários da organização",
@@ -133,7 +137,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   };
 
   useEffect(() => {
-    loadUsers();
+    if (organizationId) {
+      loadUsers();
+    } else {
+      console.log('⚠️ No organizationId provided');
+    }
   }, [organizationId]);
 
   if (loading) {
@@ -153,7 +161,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             Gerenciamento de Usuários
           </CardTitle>
           <CardDescription>
-            Gerencie todos os usuários da sua organização
+            Gerencie todos os usuários da sua organização (Total: {users.length})
           </CardDescription>
         </CardHeader>
       </Card>
@@ -164,6 +172,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             <Users className="w-12 h-12 mx-auto text-dental-secondary mb-4" />
             <p className="text-dental-secondary">
               Nenhum usuário encontrado na organização
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Organization ID: {organizationId}
             </p>
           </CardContent>
         </Card>
