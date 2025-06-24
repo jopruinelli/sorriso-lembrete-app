@@ -33,7 +33,7 @@ export class UserManagementService {
             organization_id: user.organization_id,
             name: user.name,
             role: user.role as 'admin' | 'user',
-            status: (user as any).status as 'pending' | 'approved' | 'rejected',
+            status: user.status as 'pending' | 'approved' | 'rejected' || 'approved',
             created_at: user.created_at,
             updated_at: user.updated_at,
             organizations: user.organizations
@@ -54,7 +54,7 @@ export class UserManagementService {
     try {
       const { error } = await supabase
         .from('user_profiles')
-        .update({ status: 'approved' } as any)
+        .update({ status: 'approved' })
         .eq('user_id', userId);
 
       if (error) {
@@ -75,7 +75,7 @@ export class UserManagementService {
     try {
       const { error } = await supabase
         .from('user_profiles')
-        .update({ status: 'rejected' } as any)
+        .update({ status: 'rejected' })
         .eq('user_id', userId);
 
       if (error) {
