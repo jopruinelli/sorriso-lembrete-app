@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,13 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    const patientData = { 
+      ...formData,
+      created_at: new Date(),
+      updated_at: new Date(),
+      updated_by: undefined
+    };
+    onSave(patientData);
   };
 
   const handleChange = (field: string, value: any) => {

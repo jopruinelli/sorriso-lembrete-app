@@ -214,7 +214,10 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
       nextContactDate: row.proximoContatoDate!,
       nextContactReason: row.motivoProximoContato!,
       status: row.status as 'active' | 'inactive',
-      paymentType: row.tipoAtendimento as 'particular' | 'convenio'
+      paymentType: row.tipoAtendimento as 'particular' | 'convenio',
+      created_at: new Date(),
+      updated_at: new Date(),
+      updated_by: undefined
     }));
 
     console.log('📤 Pacientes finais a serem importados:', patients);

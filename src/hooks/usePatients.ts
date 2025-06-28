@@ -24,7 +24,10 @@ const samplePatients: Patient[] = [
         notes: 'Consulta realizada, próxima limpeza em 6 meses',
         successful: true
       }
-    ]
+    ],
+    created_at: new Date('2024-09-15'),
+    updated_at: new Date('2024-09-15'),
+    updated_by: undefined
   },
   {
     id: '2',
@@ -35,7 +38,10 @@ const samplePatients: Patient[] = [
     nextContactDate: new Date('2024-12-10'),
     status: 'active',
     paymentType: 'particular',
-    contactHistory: []
+    contactHistory: [],
+    created_at: new Date('2024-05-10'),
+    updated_at: new Date('2024-05-10'),
+    updated_by: undefined
   },
   {
     id: '3',
@@ -46,7 +52,10 @@ const samplePatients: Patient[] = [
     nextContactDate: new Date('2024-11-20'),
     status: 'active',
     paymentType: 'particular',
-    contactHistory: []
+    contactHistory: [],
+    created_at: new Date('2024-08-20'),
+    updated_at: new Date('2024-08-20'),
+    updated_by: undefined
   }
 ];
 
