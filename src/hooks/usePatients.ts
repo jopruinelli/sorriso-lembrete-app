@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Patient, ContactRecord } from '@/types/patient';
+import { Patient, ContactRecord, PatientCreateData } from '@/types/patient';
 
 const STORAGE_KEY = 'dental_patients';
 
@@ -75,7 +75,9 @@ export const usePatients = () => {
         contactHistory: patient.contactHistory.map((contact: any) => ({
           ...contact,
           date: new Date(contact.date)
-        }))
+        })),
+        created_at: patient.created_at ? new Date(patient.created_at) : new Date(),
+        updated_at: patient.updated_at ? new Date(patient.updated_at) : undefined
       }));
       console.log('📥 Pacientes carregados do localStorage:', patientsWithDates);
       setPatients(patientsWithDates);
@@ -94,11 +96,14 @@ export const usePatients = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPatients));
   };
 
-  const addPatient = (patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
+  const addPatient = (patientData: PatientCreateData) => {
     const newPatient: Patient = {
       ...patientData,
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // ID mais único
-      contactHistory: []
+      contactHistory: [],
+      created_at: new Date(),
+      updated_at: undefined,
+      updated_by: undefined
     };
     console.log('➕ Adicionando novo paciente:', newPatient);
     const updatedPatients = [...patients, newPatient];
@@ -106,13 +111,16 @@ export const usePatients = () => {
     savePatients(updatedPatients);
   };
 
-  const bulkAddPatients = (patientsData: Omit<Patient, 'id' | 'contactHistory'>[]) => {
+  const bulkAddPatients = (patientsData: PatientCreateData[]) => {
     console.log('📥 Iniciando importação em massa de', patientsData.length, 'pacientes');
     
     const newPatients: Patient[] = patientsData.map((patientData, index) => ({
       ...patientData,
       id: (Date.now() + index).toString() + Math.random().toString(36).substr(2, 9),
-      contactHistory: []
+      contactHistory: [],
+      created_at: new Date(),
+      updated_at: undefined,
+      updated_by: undefined
     }));
     
     console.log('✅ Pacientes criados para importação:', newPatients.map(p => ({ id: p.id, nome: p.name })));
@@ -125,10 +133,10 @@ export const usePatients = () => {
     return newPatients.length;
   };
 
-  const updatePatient = (patientId: string, patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
+  const updatePatient = (patientId: string, patientData: PatientCreateData) => {
     const updatedPatients = patients.map(patient =>
       patient.id === patientId
-        ? { ...patient, ...patientData }
+        ? { ...patient, ...patientData, updated_at: new Date() }
         : patient
     );
     console.log('✏️ Atualizando paciente:', patientId, patientData);

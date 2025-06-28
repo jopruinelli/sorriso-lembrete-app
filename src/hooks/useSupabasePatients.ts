@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Patient, ContactRecord } from '@/types/patient';
+import { Patient, ContactRecord, PatientCreateData } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
 import { convertToAppPatient } from '@/utils/patientConverters';
 import { PatientService } from '@/services/patientService';
@@ -64,7 +63,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
   };
 
   // Add patient to Supabase
-  const addPatient = async (patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string) => {
+  const addPatient = async (patientData: PatientCreateData, userId: string) => {
     console.log('🚀 Starting addPatient:', { patientName: patientData.name, userId, organizationId });
     
     if (!organizationId) {
@@ -124,7 +123,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
   };
 
   // Update patient in Supabase
-  const updatePatient = async (patientId: string, patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string) => {
+  const updatePatient = async (patientId: string, patientData: PatientCreateData, userId: string) => {
     if (!organizationId) return;
 
     try {
@@ -203,7 +202,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
   };
 
   // Bulk operations
-  const bulkAddPatients = async (patientsData: Omit<Patient, 'id' | 'contactHistory'>[], userId: string) => {
+  const bulkAddPatients = async (patientsData: PatientCreateData[], userId: string) => {
     if (!organizationId) return 0;
 
     try {

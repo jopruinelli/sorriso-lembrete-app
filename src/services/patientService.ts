@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Patient } from '@/types/patient';
+import { PatientCreateData, Patient } from '@/types/patient';
 import { DatabasePatient } from '@/types/supabase';
 import { convertToDbPatient, assertDatabasePatient } from '@/utils/patientConverters';
 
@@ -33,7 +32,7 @@ export class PatientService {
     }
   }
 
-  static async addPatient(patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string, organizationId: string): Promise<DatabasePatient> {
+  static async addPatient(patientData: PatientCreateData, userId: string, organizationId: string): Promise<DatabasePatient> {
     console.log('➕ PatientService.addPatient:', { patientName: patientData.name, userId, organizationId });
     
     if (!organizationId) {
@@ -90,7 +89,7 @@ export class PatientService {
     }
   }
 
-  static async updatePatient(patientId: string, patientData: Omit<Patient, 'id' | 'contactHistory'>, userId: string, organizationId: string): Promise<void> {
+  static async updatePatient(patientId: string, patientData: PatientCreateData, userId: string, organizationId: string): Promise<void> {
     console.log('📝 PatientService.updatePatient:', { patientId, organizationId });
     
     if (!organizationId) {
@@ -145,7 +144,7 @@ export class PatientService {
     }
   }
 
-  static async bulkAddPatients(patientsData: Omit<Patient, 'id' | 'contactHistory'>[], userId: string, organizationId: string): Promise<number> {
+  static async bulkAddPatients(patientsData: PatientCreateData[], userId: string, organizationId: string): Promise<number> {
     console.log('📦 PatientService.bulkAddPatients:', { count: patientsData.length, userId, organizationId });
     
     if (!organizationId) {

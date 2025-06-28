@@ -1,9 +1,9 @@
 
-import { Patient, ContactRecord } from '@/types/patient';
+import { PatientCreateData, ContactRecord } from '@/types/patient';
 import { DatabasePatient } from '@/types/supabase';
 
 export const convertToDbPatient = (
-  patient: Omit<Patient, 'id' | 'contactHistory'>,
+  patient: PatientCreateData,
   userId: string,
   organizationId: string
 ): Omit<DatabasePatient, 'id' | 'created_at' | 'updated_at'> => {
@@ -34,7 +34,7 @@ export const convertToDbPatient = (
     payment_type: patient.paymentType,
     user_id: userId,
     organization_id: organizationId,
-    updated_by: patient.updated_by || null
+    updated_by: null
   };
 
   console.log('📋 DB patient created:', dbPatient);
@@ -44,7 +44,7 @@ export const convertToDbPatient = (
 export const convertToAppPatient = (
   dbPatient: DatabasePatient,
   contactHistory: ContactRecord[] = []
-): Patient => {
+) => {
   return {
     id: dbPatient.id,
     name: dbPatient.name,
