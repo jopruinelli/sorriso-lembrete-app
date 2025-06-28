@@ -16,6 +16,18 @@ export interface Patient {
   updated_by?: string;
 }
 
+export interface PatientCreateData {
+  name: string;
+  phone: string;
+  secondaryPhone?: string;
+  lastVisit: Date;
+  nextContactReason: string;
+  nextContactDate: Date;
+  status: 'active' | 'inactive';
+  inactiveReason?: string;
+  paymentType: 'particular' | 'convenio';
+}
+
 export interface ContactRecord {
   id: string;
   date: Date;

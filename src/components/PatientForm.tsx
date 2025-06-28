@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Patient, ContactPeriod } from '@/types/patient';
+import { Patient, ContactPeriod, PatientCreateData } from '@/types/patient';
 import { CalendarIcon, X } from 'lucide-react';
 import { format, addMonths, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils';
 
 interface PatientFormProps {
   patient?: Patient;
-  onSave: (patient: Omit<Patient, 'id' | 'contactHistory'>) => void;
+  onSave: (patient: PatientCreateData) => void;
   onCancel: () => void;
 }
 
