@@ -53,13 +53,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const patientData = { 
-      ...formData,
-      created_at: new Date(),
-      updated_at: new Date(),
-      updated_by: undefined
-    };
-    onSave(patientData);
+    // Don't add timestamp fields here - they should be handled by the service layer
+    onSave(formData);
   };
 
   const handleChange = (field: string, value: any) => {
