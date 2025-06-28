@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ interface PatientFormProps {
 }
 
 export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PatientCreateData>({
     name: '',
     phone: '',
     secondaryPhone: '',
@@ -54,11 +53,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Don't add timestamp fields here - they should be handled by the service layer
     onSave(formData);
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: keyof PatientCreateData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

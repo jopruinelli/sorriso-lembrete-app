@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -10,7 +11,7 @@ import { ContactForm } from '@/components/ContactForm';
 import { FilterBar } from '@/components/FilterBar';
 import { SettingsModal } from '@/components/SettingsModal';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Patient, ContactRecord, ContactPeriod } from '@/types/patient';
+import { Patient, ContactRecord, ContactPeriod, PatientCreateData } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Users, Calendar, Settings, UserPlus, Clock } from 'lucide-react';
@@ -77,13 +78,13 @@ const Index = () => {
   ).length;
 
   // Handler functions
-  const handleAddPatient = async (patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
+  const handleAddPatient = async (patientData: PatientCreateData) => {
     if (!user?.id) return;
     await addPatient(patientData, user.id);
     setShowPatientForm(false);
   };
 
-  const handleUpdatePatient = async (patientData: Omit<Patient, 'id' | 'contactHistory'>) => {
+  const handleUpdatePatient = async (patientData: PatientCreateData) => {
     if (!editingPatient || !user?.id) return;
     await updatePatient(editingPatient.id, patientData, user.id);
     setEditingPatient(null);
@@ -121,7 +122,7 @@ const Index = () => {
   };
 
   // Wrapper function for bulk import that includes userId
-  const handleBulkImport = async (patientsData: Omit<Patient, 'id' | 'contactHistory'>[]) => {
+  const handleBulkImport = async (patientsData: PatientCreateData[]) => {
     if (!user?.id) return;
     await bulkAddPatients(patientsData, user.id);
   };
