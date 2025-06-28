@@ -1,4 +1,3 @@
-
 export interface DatabasePatient {
   id: string;
   user_id: string;
@@ -14,6 +13,7 @@ export interface DatabasePatient {
   payment_type: 'particular' | 'convenio';
   created_at: string;
   updated_at: string;
+  updated_by?: string;
 }
 
 export interface DatabaseContactRecord {

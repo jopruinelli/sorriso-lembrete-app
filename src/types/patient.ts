@@ -11,6 +11,9 @@ export interface Patient {
   inactiveReason?: string;
   paymentType: 'particular' | 'convenio';
   contactHistory: ContactRecord[];
+  created_at: Date;
+  updated_at?: Date;
+  updated_by?: string;
 }
 
 export interface ContactRecord {

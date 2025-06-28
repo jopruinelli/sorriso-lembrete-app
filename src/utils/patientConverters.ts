@@ -33,7 +33,8 @@ export const convertToDbPatient = (
     inactive_reason: patient.inactiveReason || null,
     payment_type: patient.paymentType,
     user_id: userId,
-    organization_id: organizationId
+    organization_id: organizationId,
+    updated_by: patient.updated_by || null
   };
 
   console.log('📋 DB patient created:', dbPatient);
@@ -55,7 +56,10 @@ export const convertToAppPatient = (
     status: dbPatient.status as 'active' | 'inactive',
     inactiveReason: dbPatient.inactive_reason || undefined,
     paymentType: dbPatient.payment_type as 'particular' | 'convenio',
-    contactHistory
+    contactHistory,
+    created_at: new Date(dbPatient.created_at),
+    updated_at: dbPatient.updated_at ? new Date(dbPatient.updated_at) : undefined,
+    updated_by: dbPatient.updated_by || undefined
   };
 };
 
