@@ -62,6 +62,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os períodos</SelectItem>
+            <SelectItem value="overdue">Atrasados</SelectItem>
             <SelectItem value="1month">1 mês</SelectItem>
             <SelectItem value="3months">3 meses</SelectItem>
             <SelectItem value="6months">6 meses</SelectItem>
