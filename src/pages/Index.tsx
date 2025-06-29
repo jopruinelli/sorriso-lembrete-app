@@ -50,26 +50,49 @@ const Index = () => {
   const filteredPatients = patients.filter(patient => {
     if (statusFilter !== 'all' && patient.status !== statusFilter) return false;
     if (paymentFilter !== 'all' && patient.paymentType !== paymentFilter) return false;
-    if (searchTerm && !patient.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
-        !patient.phone.includes(searchTerm)) return false;
-    
-    if (overdueFilter) {
-      return isAfter(today, startOfDay(patient.nextContactDate));
+    if (
+      searchTerm &&
+      !patient.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !patient.phone.includes(searchTerm)
+    )
+      return false;
+
+    const nextContactDate = startOfDay(patient.nextContactDate);
+    const isPatientOverdue = isAfter(today, nextContactDate);
+
+    // Filtro "Atrasados" no seletor de período
+    if (contactPeriodFilter === 'overdue') {
+      return isPatientOverdue;
     }
-    
+
+    // Botão "Apenas atrasados" só funciona quando o período é "Todos"
+    if (overdueFilter && contactPeriodFilter === 'all') {
+      return isPatientOverdue;
+    }
+
+    // Nas opções de período (1m, 3m, 6m, 1a) ignorar pacientes atrasados
     if (contactPeriodFilter !== 'all') {
-      const nextContactDate = startOfDay(patient.nextContactDate);
-      const daysDiff = Math.ceil((nextContactDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
+      if (isPatientOverdue) return false;
+
+      const daysDiff = Math.ceil(
+        (nextContactDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
       switch (contactPeriodFilter) {
-        case '1month': return daysDiff <= 30;
-        case '3months': return daysDiff <= 90;
-        case '6months': return daysDiff <= 180;
-        case '1year': return daysDiff <= 365;
-        default: return true;
+        case '1month':
+          return daysDiff <= 30;
+        case '3months':
+          return daysDiff <= 90;
+        case '6months':
+          return daysDiff <= 180;
+        case '1year':
+          return daysDiff <= 365;
+        default:
+          return true;
       }
     }
-    
+
+    // "Todos os períodos" sem filtro de atraso exibe todos
     return true;
   });
 
