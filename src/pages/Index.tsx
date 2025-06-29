@@ -38,7 +38,7 @@ const Index = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
-  const [contactPeriodFilter, setContactPeriodFilter] = useState<ContactPeriod | 'all'>('all');
+  const [contactPeriodFilter, setContactPeriodFilter] = useState<ContactPeriod | 'all'>('1month');
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'particular' | 'convenio'>('all');
   const [overdueFilter, setOverdueFilter] = useState(false);
@@ -96,9 +96,17 @@ const Index = () => {
     return true;
   });
 
-  const overdueCount = patients.filter(patient => 
+  const overdueCount = patients.filter(patient =>
     patient.status === 'active' && isAfter(today, startOfDay(patient.nextContactDate))
   ).length;
+
+  const upcomingCount = patients.filter(p => {
+    if (p.status !== 'active') return false;
+    const nextContact = startOfDay(p.nextContactDate);
+    const isPatientOverdue = isAfter(today, nextContact);
+    const inNextMonth = nextContact <= new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return !isPatientOverdue && inNextMonth;
+  }).length;
 
   // Handler functions
   const handleAddPatient = async (patientData: PatientCreateData) => {
@@ -130,6 +138,21 @@ const Index = () => {
     
     setTimeout(() => {
       patientsListRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
+  };
+
+  const handleUpcomingFilterClick = () => {
+    setOverdueFilter(false);
+    setStatusFilter('active');
+    setContactPeriodFilter('1month');
+    setPaymentFilter('all');
+    setSearchTerm('');
+
+    setTimeout(() => {
+      patientsListRef.current?.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
@@ -257,20 +280,14 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleUpcomingFilterClick}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-dental-secondary">Próximos Contatos</CardTitle>
                   <Calendar className="h-4 w-4 text-dental-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-dental-primary">
-                    {patients.filter(p => {
-                      const nextContact = startOfDay(p.nextContactDate);
-                      const inNext7Days = nextContact <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-                      return p.status === 'active' && !isAfter(today, nextContact) && inNext7Days;
-                    }).length}
-                  </div>
-                  <p className="text-xs text-dental-secondary">Próximos 7 dias</p>
+                  <div className="text-2xl font-bold text-dental-primary">{upcomingCount}</div>
+                  <p className="text-xs text-dental-secondary">Próximos 30 dias</p>
                 </CardContent>
               </Card>
             </div>
