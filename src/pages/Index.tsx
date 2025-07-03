@@ -258,14 +258,14 @@ const Index = () => {
 
             {/* Dashboard Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleOverdueFilterClick}>
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleUpcomingFilterClick}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-dental-secondary">Atrasados</CardTitle>
-                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  <CardTitle className="text-sm font-medium text-dental-secondary">Próximos Contatos</CardTitle>
+                  <Calendar className="h-4 w-4 text-dental-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
-                  <p className="text-xs text-dental-secondary">Pacientes com contato em atraso</p>
+                  <div className="text-2xl font-bold text-dental-primary">{upcomingCount}</div>
+                  <p className="text-xs text-dental-secondary">Próximos 30 dias</p>
                 </CardContent>
               </Card>
 
@@ -280,14 +280,14 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleUpcomingFilterClick}>
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleOverdueFilterClick}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-dental-secondary">Próximos Contatos</CardTitle>
-                  <Calendar className="h-4 w-4 text-dental-primary" />
+                  <CardTitle className="text-sm font-medium text-dental-secondary">Atrasados</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-red-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-dental-primary">{upcomingCount}</div>
-                  <p className="text-xs text-dental-secondary">Próximos 30 dias</p>
+                  <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
+                  <p className="text-xs text-dental-secondary">Pacientes com contato em atraso</p>
                 </CardContent>
               </Card>
             </div>
