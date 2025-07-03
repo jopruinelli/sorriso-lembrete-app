@@ -128,6 +128,7 @@ export type Database = {
           secondary_phone: string | null
           status: string
           updated_at: string
+          updated_by: string | null
           user_id: string
         }
         Insert: {
@@ -144,6 +145,7 @@ export type Database = {
           secondary_phone?: string | null
           status?: string
           updated_at?: string
+          updated_by?: string | null
           user_id: string
         }
         Update: {
@@ -160,6 +162,7 @@ export type Database = {
           secondary_phone?: string | null
           status?: string
           updated_at?: string
+          updated_by?: string | null
           user_id?: string
         }
         Relationships: [
