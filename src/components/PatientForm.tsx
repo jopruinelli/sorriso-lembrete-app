@@ -27,7 +27,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     lastVisit: new Date(),
     nextContactReason: '',
     nextContactDate: new Date(),
-    status: 'active' as 'active' | 'inactive',
+    status: 'active' as 'active' | 'inactive' | 'closed',
     inactiveReason: '',
     paymentType: 'particular' as 'particular' | 'convenio'
   });
@@ -267,21 +267,22 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value: 'active' | 'inactive') => handleChange('status', value)}>
+              <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'closed') => handleChange('status', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Ativo</SelectItem>
                   <SelectItem value="inactive">Inativo</SelectItem>
+                  <SelectItem value="closed">Encerrados</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {formData.status === 'inactive' && (
+          {(formData.status === 'inactive' || formData.status === 'closed') && (
             <div>
-              <Label htmlFor="inactiveReason">Motivo da Inativação</Label>
+              <Label htmlFor="inactiveReason">{formData.status === 'closed' ? 'Motivo do Encerramento' : 'Motivo da Inativação'}</Label>
               <Textarea
                 id="inactiveReason"
                 value={formData.inactiveReason}

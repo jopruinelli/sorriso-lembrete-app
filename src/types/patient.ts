@@ -7,7 +7,7 @@ export interface Patient {
   lastVisit: Date;
   nextContactReason: string;
   nextContactDate: Date;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'closed';
   inactiveReason?: string;
   paymentType: 'particular' | 'convenio';
   contactHistory: ContactRecord[];
@@ -23,7 +23,7 @@ export interface PatientCreateData {
   lastVisit: Date;
   nextContactReason: string;
   nextContactDate: Date;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'closed';
   inactiveReason?: string;
   paymentType: 'particular' | 'convenio';
 }

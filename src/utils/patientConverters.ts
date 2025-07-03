@@ -53,7 +53,7 @@ export const convertToAppPatient = (
     lastVisit: new Date(dbPatient.last_visit),
     nextContactReason: dbPatient.next_contact_reason,
     nextContactDate: new Date(dbPatient.next_contact_date),
-    status: dbPatient.status as 'active' | 'inactive',
+    status: dbPatient.status as 'active' | 'inactive' | 'closed',
     inactiveReason: dbPatient.inactive_reason || undefined,
     paymentType: dbPatient.payment_type as 'particular' | 'convenio',
     contactHistory,

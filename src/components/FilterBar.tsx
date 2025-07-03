@@ -7,8 +7,8 @@ import { Search, Filter } from 'lucide-react';
 import { ContactPeriod } from '@/types/patient';
 
 interface FilterBarProps {
-  statusFilter: 'all' | 'active' | 'inactive';
-  setStatusFilter: (status: 'all' | 'active' | 'inactive') => void;
+  statusFilter: 'all' | 'active' | 'inactive' | 'closed';
+  setStatusFilter: (status: 'all' | 'active' | 'inactive' | 'closed') => void;
   contactPeriodFilter: ContactPeriod | 'all';
   setContactPeriodFilter: (period: ContactPeriod | 'all') => void;
   searchTerm: string;
@@ -52,6 +52,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="active">Ativos</SelectItem>
             <SelectItem value="inactive">Inativos</SelectItem>
+            <SelectItem value="closed">Encerrados</SelectItem>
           </SelectContent>
         </Select>
 

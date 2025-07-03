@@ -93,7 +93,7 @@ export const AdminControls: React.FC<AdminControlsProps> = ({
                         <p className="text-sm text-gray-600">{patient.phone}</p>
                         <div className="flex gap-2 mt-1">
                           <Badge variant={patient.status === 'active' ? 'default' : 'secondary'}>
-                            {patient.status === 'active' ? 'Ativo' : 'Inativo'}
+                            {patient.status === 'active' ? 'Ativo' : patient.status === 'inactive' ? 'Inativo' : 'Encerrados'}
                           </Badge>
                           <span className="text-xs text-gray-500">
                             {patient.contactHistory.length} contatos

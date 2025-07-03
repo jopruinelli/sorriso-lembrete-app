@@ -8,7 +8,7 @@ export interface DatabasePatient {
   last_visit: string;
   next_contact_reason: string;
   next_contact_date: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'closed';
   inactive_reason?: string;
   payment_type: 'particular' | 'convenio';
   created_at: string;

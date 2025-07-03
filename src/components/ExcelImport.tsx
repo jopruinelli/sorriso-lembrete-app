@@ -213,7 +213,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
       lastVisit: row.ultimaConsultaDate!,
       nextContactDate: row.proximoContatoDate!,
       nextContactReason: row.motivoProximoContato!,
-      status: row.status as 'active' | 'inactive',
+      status: row.status as 'active' | 'inactive' | 'closed',
       paymentType: row.tipoAtendimento as 'particular' | 'convenio',
       created_at: new Date(),
       updated_at: new Date(),
@@ -269,7 +269,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
                   <p><strong>proximoContato:</strong> Data do próximo contato (DD/MM/AAAA)</p>
                   <p><strong>motivoProximoContato:</strong> Motivo do contato (opcional)</p>
                   <p><strong>tipoAtendimento:</strong> particular ou convenio (opcional, padrão: particular)</p>
-                  <p><strong>status:</strong> active ou inactive (opcional, padrão: active)</p>
+                  <p><strong>status:</strong> active, inactive ou closed (opcional, padrão: active)</p>
                 </div>
                 <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
                   <p className="text-sm text-blue-800 font-medium">

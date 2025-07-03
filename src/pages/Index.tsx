@@ -37,7 +37,7 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'closed'>('active');
   const [contactPeriodFilter, setContactPeriodFilter] = useState<ContactPeriod | 'all'>('1month');
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'particular' | 'convenio'>('all');
