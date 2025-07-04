@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Patient } from '@/types/patient';
 import { OrganizationSettings } from '@/types/organization';
-import { Phone, MessageSquare, Calendar, Edit, Clock, AlertTriangle, User } from 'lucide-react';
+import { ContactHistoryModal } from '@/components/ContactHistoryModal';
+import { Phone, MessageSquare, Calendar, Edit, Clock, AlertTriangle, User, History } from 'lucide-react';
 import { format, isBefore, isAfter, startOfToday, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -22,6 +23,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   onEdit, 
   onContact 
 }) => {
+  const [showContactHistory, setShowContactHistory] = useState(false);
   const today = startOfToday();
   const isOverdue = isBefore(patient.nextContactDate, today);
   const isDueSoon = !isOverdue && isBefore(patient.nextContactDate, addDays(today, 7));
@@ -125,7 +127,12 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               {patient.paymentType === 'particular' ? 'Particular' : 'Convênio'}
             </Badge>
             {patient.contactHistory.length > 0 && (
-              <Badge variant="outline" className="text-xs">
+              <Badge 
+                variant="outline" 
+                className="text-xs cursor-pointer hover:bg-dental-background"
+                onClick={() => setShowContactHistory(true)}
+              >
+                <History className="w-3 h-3 mr-1" />
                 {patient.contactHistory.length} contatos
               </Badge>
             )}
@@ -164,6 +171,12 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             <span>Contato em atraso!</span>
           </div>
         )}
+
+        <ContactHistoryModal
+          patient={patient}
+          isOpen={showContactHistory}
+          onClose={() => setShowContactHistory(false)}
+        />
       </CardContent>
     </Card>
   );
