@@ -327,6 +327,13 @@ const Index = () => {
               setOverdueFilter={setOverdueFilter}
             />
 
+            {/* Patient Count */}
+            <div className="mb-4">
+              <p className="text-sm text-dental-secondary">
+                Mostrando {filteredPatients.length} paciente{filteredPatients.length !== 1 ? 's' : ''} de {patients.length} total
+              </p>
+            </div>
+
             {/* Patients List */}
             <div ref={patientsListRef} className="space-y-4">
               {patientsLoading ? (
