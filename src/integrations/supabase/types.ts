@@ -14,7 +14,7 @@ export type Database = {
           created_at: string
           date: string
           id: string
-          method: string
+          method: string | null
           notes: string | null
           organization_id: string | null
           patient_id: string
@@ -25,7 +25,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          method: string
+          method?: string | null
           notes?: string | null
           organization_id?: string | null
           patient_id: string
@@ -36,7 +36,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          method?: string
+          method?: string | null
           notes?: string | null
           organization_id?: string | null
           patient_id?: string

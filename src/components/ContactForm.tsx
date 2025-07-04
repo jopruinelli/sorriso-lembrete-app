@@ -7,9 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, Phone, MessageSquare, User, Calendar } from 'lucide-react';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { X, Phone, MessageSquare, User, Calendar, CalendarIcon } from 'lucide-react';
 import { format, addMonths, addYears } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface ContactFormProps {
   patient: Patient;
@@ -19,11 +22,10 @@ interface ContactFormProps {
 
 export const ContactForm: React.FC<ContactFormProps> = ({ patient, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
-    method: 'whatsapp' as ContactRecord['method'],
     notes: '',
-    successful: true,
     scheduleNext: true,
-    nextContactPeriod: '6months' as '1month' | '6months' | '1year'
+    nextContactPeriod: '6months' as '1month' | '6months' | '1year',
+    customDate: undefined as Date | undefined
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,24 +33,28 @@ export const ContactForm: React.FC<ContactFormProps> = ({ patient, onSave, onCan
     
     const contactRecord: Omit<ContactRecord, 'id'> = {
       date: new Date(),
-      method: formData.method,
+      method: 'whatsapp', // Default method
       notes: formData.notes,
-      successful: formData.successful
+      successful: true // Default successful
     };
 
     let nextContactDate: Date | undefined;
-    if (formData.scheduleNext && formData.successful) {
-      const today = new Date();
-      switch (formData.nextContactPeriod) {
-        case '1month':
-          nextContactDate = addMonths(today, 1);
-          break;
-        case '6months':
-          nextContactDate = addMonths(today, 6);
-          break;
-        case '1year':
-          nextContactDate = addYears(today, 1);
-          break;
+    if (formData.scheduleNext) {
+      if (formData.customDate) {
+        nextContactDate = formData.customDate;
+      } else {
+        const today = new Date();
+        switch (formData.nextContactPeriod) {
+          case '1month':
+            nextContactDate = addMonths(today, 1);
+            break;
+          case '6months':
+            nextContactDate = addMonths(today, 6);
+            break;
+          case '1year':
+            nextContactDate = addYears(today, 1);
+            break;
+        }
       }
     }
 
@@ -101,49 +107,6 @@ export const ContactForm: React.FC<ContactFormProps> = ({ patient, onSave, onCan
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Método de contato</Label>
-              <Select 
-                value={formData.method} 
-                onValueChange={(value: ContactRecord['method']) => setFormData(prev => ({ ...prev, method: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="whatsapp">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4" />
-                      WhatsApp
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="phone">
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      Ligação
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="in-person">Pessoalmente</SelectItem>
-                  <SelectItem value="other">Outro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Contato foi bem-sucedido?</Label>
-              <Select 
-                value={formData.successful.toString()} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, successful: value === 'true' }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="true">✅ Sim, consegui falar</SelectItem>
-                  <SelectItem value="false">❌ Não atendeu / Não respondeu</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <div>
               <Label htmlFor="notes">Observações do contato</Label>
@@ -156,39 +119,67 @@ export const ContactForm: React.FC<ContactFormProps> = ({ patient, onSave, onCan
               />
             </div>
 
-            {formData.successful && (
-              <div className="space-y-3 p-3 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="scheduleNext"
-                    checked={formData.scheduleNext}
-                    onChange={(e) => setFormData(prev => ({ ...prev, scheduleNext: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <Label htmlFor="scheduleNext">Agendar próximo contato</Label>
-                </div>
-
-                {formData.scheduleNext && (
-                  <div>
-                    <Label>Período para próximo contato</Label>
-                    <Select 
-                      value={formData.nextContactPeriod} 
-                      onValueChange={(value: '1month' | '6months' | '1year') => setFormData(prev => ({ ...prev, nextContactPeriod: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1month">1 mês</SelectItem>
-                        <SelectItem value="6months">6 meses</SelectItem>
-                        <SelectItem value="1year">1 ano</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+            <div className="space-y-3 p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="scheduleNext"
+                  checked={formData.scheduleNext}
+                  onChange={(e) => setFormData(prev => ({ ...prev, scheduleNext: e.target.checked }))}
+                  className="rounded"
+                />
+                <Label htmlFor="scheduleNext">Agendar próximo contato</Label>
               </div>
-            )}
+
+              {formData.scheduleNext && (
+                <div className="space-y-3">
+                  <Label>Período para próximo contato</Label>
+                  <Select 
+                    value={formData.nextContactPeriod} 
+                    onValueChange={(value: '1month' | '6months' | '1year') => {
+                      setFormData(prev => ({ ...prev, nextContactPeriod: value, customDate: undefined }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1month">1 mês</SelectItem>
+                      <SelectItem value="6months">6 meses</SelectItem>
+                      <SelectItem value="1year">1 ano</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <div>
+                    <Label>Ou escolha uma data específica</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.customDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.customDate ? format(formData.customDate, 'dd/MM/yyyy', { locale: ptBR }) : "Escolher data"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={formData.customDate}
+                          onSelect={(date) => setFormData(prev => ({ ...prev, customDate: date }))}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="flex gap-2 pt-4">
               <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
