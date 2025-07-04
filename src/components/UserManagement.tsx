@@ -8,6 +8,7 @@ import { UserProfile } from '@/types/organization';
 import { UserManagementService } from '@/services/userManagementService';
 import { useToast } from '@/hooks/use-toast';
 import { Users, UserCheck, UserX, Trash2, Settings } from 'lucide-react';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface UserManagementProps {
   organizationId: string;
@@ -20,6 +21,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 }) => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [userToRemove, setUserToRemove] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadUsers = async () => {
@@ -95,6 +97,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         variant: "destructive",
       });
     }
+  };
+
+  const confirmRemoveUser = (userId: string) => {
+    setUserToRemove(userId);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!userToRemove) return;
+    await handleRemove(userToRemove);
+    setUserToRemove(null);
+  };
+
+  const handleCancelRemove = () => {
+    setUserToRemove(null);
   };
 
   const handleRoleChange = async (userId: string, newRole: 'admin' | 'user') => {
@@ -236,7 +252,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                     {user.status === 'approved' && user.user_id !== currentUserId && (
                       <Button
-                        onClick={() => handleRemove(user.user_id)}
+                        onClick={() => confirmRemoveUser(user.user_id)}
                         size="sm"
                         variant="destructive"
                       >
@@ -255,6 +271,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             </Card>
           ))}
         </div>
+      )}
+      {userToRemove && (
+        <ConfirmDialog
+          isOpen={true}
+          title="Remover usuário"
+          message="Esta ação é irreversível. Deseja continuar?"
+          confirmText="Remover"
+          cancelText="Cancelar"
+          onConfirm={handleConfirmRemove}
+          onCancel={handleCancelRemove}
+          variant="destructive"
+        />
       )}
     </div>
   );
