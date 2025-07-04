@@ -277,6 +277,9 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
                   </p>
                 </div>
               </div>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={onCancel}>Cancelar</Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
