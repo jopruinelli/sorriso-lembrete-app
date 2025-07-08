@@ -86,104 +86,145 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="organization" className="w-full flex-1 flex flex-col overflow-hidden">
-          <TabsList className={`
+        <Tabs defaultValue="organization" className="w-full flex-1 flex overflow-hidden">
+          <div className={`
             ${isMobile 
-              ? 'grid grid-cols-3 gap-1 mb-4 h-auto p-1' 
-              : 'grid grid-cols-3 md:grid-cols-5 gap-1 mb-6'
+              ? 'flex flex-row overflow-x-auto pb-2 mb-4 border-b' 
+              : 'flex flex-col w-16 hover:w-48 transition-all duration-300 ease-in-out border-r bg-muted/30 group'
             }
-            w-full flex-shrink-0
+            flex-shrink-0
           `}>
-            <TabsTrigger 
-              value="organization" 
-              className={`
-                ${isMobile 
-                  ? 'flex flex-col items-center justify-center p-2 h-auto text-xs' 
-                  : 'flex items-center px-3 py-2 text-sm'
-                }
-              `}
-            >
-              <Building2 className={isMobile ? "w-4 h-4 mb-1" : "w-4 h-4 mr-2"} />
-              <span className={isMobile ? "text-xs leading-tight" : ""}>
-                {isMobile ? "Org." : "Organização"}
-              </span>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="profile" 
-              className={`
-                ${isMobile 
-                  ? 'flex flex-col items-center justify-center p-2 h-auto text-xs' 
-                  : 'flex items-center px-3 py-2 text-sm'
-                }
-              `}
-            >
-              <User className={isMobile ? "w-4 h-4 mb-1" : "w-4 h-4 mr-2"} />
-              <span className={isMobile ? "text-xs leading-tight" : ""}>Perfil</span>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="whatsapp" 
-              className={`
-                ${isMobile 
-                  ? 'flex flex-col items-center justify-center p-2 h-auto text-xs' 
-                  : 'flex items-center px-3 py-2 text-sm'
-                }
-              `}
-            >
-              <MessageSquare className={isMobile ? "w-4 h-4 mb-1" : "w-4 h-4 mr-2"} />
-              <span className={isMobile ? "text-xs leading-tight" : ""}>
-                {isMobile ? "Zap" : "WhatsApp"}
-              </span>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="import" 
-              className={`
-                ${isMobile 
-                  ? 'flex flex-col items-center justify-center p-2 h-auto text-xs' 
-                  : 'flex items-center px-3 py-2 text-sm'
-                }
-              `}
-            >
-              <FileSpreadsheet className={isMobile ? "w-4 h-4 mb-1" : "w-4 h-4 mr-2"} />
-              <span className={isMobile ? "text-xs leading-tight" : ""}>
-                {isMobile ? "Import" : "Importar"}
-              </span>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="removal" 
-              className={`
-                ${isMobile 
-                  ? 'flex flex-col items-center justify-center p-2 h-auto text-xs' 
-                  : 'flex items-center px-3 py-2 text-sm'
-                }
-              `}
-            >
-              <Trash2 className={isMobile ? "w-4 h-4 mb-1" : "w-4 h-4 mr-2"} />
-              <span className={isMobile ? "text-xs leading-tight" : ""}>
-                {isMobile ? "Remove" : "Remover"}
-              </span>
-            </TabsTrigger>
-            
-            {isAdmin && (
+            <TabsList className={`
+              ${isMobile 
+                ? 'flex flex-row gap-1 p-1 bg-transparent min-w-max' 
+                : 'flex flex-col h-full w-full bg-transparent p-1 gap-1'
+              }
+            `}>
               <TabsTrigger 
-                value="users" 
+                value="organization" 
                 className={`
                   ${isMobile 
-                    ? 'flex flex-col items-center justify-center p-2 h-auto text-xs col-span-3' 
-                    : 'flex items-center px-3 py-2 text-sm'
+                    ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+                    : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
                   }
                 `}
+                title="Organização"
               >
-                <Users className={isMobile ? "w-4 h-4 mb-1" : "w-4 h-4 mr-2"} />
-                <span className={isMobile ? "text-xs leading-tight" : ""}>Usuários</span>
+                <Building2 className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+                {isMobile ? (
+                  <span className="text-xs leading-tight">Org.</span>
+                ) : (
+                  <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Organização
+                  </span>
+                )}
               </TabsTrigger>
-            )}
-          </TabsList>
+              
+              <TabsTrigger 
+                value="profile" 
+                className={`
+                  ${isMobile 
+                    ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+                    : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
+                  }
+                `}
+                title="Perfil"
+              >
+                <User className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+                {isMobile ? (
+                  <span className="text-xs leading-tight">Perfil</span>
+                ) : (
+                  <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Perfil
+                  </span>
+                )}
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="whatsapp" 
+                className={`
+                  ${isMobile 
+                    ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+                    : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
+                  }
+                `}
+                title="WhatsApp"
+              >
+                <MessageSquare className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+                {isMobile ? (
+                  <span className="text-xs leading-tight">Zap</span>
+                ) : (
+                  <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    WhatsApp
+                  </span>
+                )}
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="import" 
+                className={`
+                  ${isMobile 
+                    ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+                    : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
+                  }
+                `}
+                title="Importar"
+              >
+                <FileSpreadsheet className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+                {isMobile ? (
+                  <span className="text-xs leading-tight">Import</span>
+                ) : (
+                  <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Importar
+                  </span>
+                )}
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="removal" 
+                className={`
+                  ${isMobile 
+                    ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+                    : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
+                  }
+                `}
+                title="Remover"
+              >
+                <Trash2 className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+                {isMobile ? (
+                  <span className="text-xs leading-tight">Remove</span>
+                ) : (
+                  <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Remover
+                  </span>
+                )}
+              </TabsTrigger>
+              
+              {isAdmin && (
+                <TabsTrigger 
+                  value="users" 
+                  className={`
+                    ${isMobile 
+                      ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+                      : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
+                    }
+                  `}
+                  title="Usuários"
+                >
+                  <Users className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+                  {isMobile ? (
+                    <span className="text-xs leading-tight">Users</span>
+                  ) : (
+                    <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      Usuários
+                    </span>
+                  )}
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-6">
             <TabsContent value="organization" className="space-y-4 mt-0">
               <OrganizationTab userProfile={userProfile} />
             </TabsContent>
