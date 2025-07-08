@@ -13,14 +13,14 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
   return (
     <div className={`
       ${isMobile 
-        ? 'flex flex-row overflow-x-auto pb-2 mb-4 border-b' 
+        ? 'w-full border-b pb-2 mb-4' 
         : 'flex flex-col w-16 hover:w-48 transition-all duration-300 ease-in-out border-r bg-muted/30 group'
       }
       flex-shrink-0
     `}>
       <TabsList className={`
         ${isMobile 
-          ? 'flex flex-row gap-1 p-1 bg-transparent min-w-max' 
+          ? 'grid grid-cols-5 w-full h-auto bg-muted/50 p-1 gap-1' 
           : 'flex flex-col h-full w-full bg-transparent p-1 gap-1'
         }
       `}>
@@ -28,15 +28,15 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
           value="organization" 
           className={`
             ${isMobile 
-              ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+              ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
               : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
             }
           `}
           title="Organização"
         >
-          <Building2 className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+          <Building2 className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
           {isMobile ? (
-            <span className="text-xs leading-tight">Org.</span>
+            <span className="text-xs leading-tight">Org</span>
           ) : (
             <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               Organização
@@ -48,13 +48,13 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
           value="profile" 
           className={`
             ${isMobile 
-              ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+              ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
               : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
             }
           `}
           title="Perfil"
         >
-          <User className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+          <User className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
           {isMobile ? (
             <span className="text-xs leading-tight">Perfil</span>
           ) : (
@@ -68,13 +68,13 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
           value="whatsapp" 
           className={`
             ${isMobile 
-              ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+              ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
               : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
             }
           `}
           title="WhatsApp"
         >
-          <MessageSquare className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+          <MessageSquare className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
           {isMobile ? (
             <span className="text-xs leading-tight">Zap</span>
           ) : (
@@ -88,13 +88,13 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
           value="import" 
           className={`
             ${isMobile 
-              ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+              ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
               : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
             }
           `}
           title="Importar"
         >
-          <FileSpreadsheet className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+          <FileSpreadsheet className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
           {isMobile ? (
             <span className="text-xs leading-tight">Import</span>
           ) : (
@@ -108,13 +108,13 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
           value="removal" 
           className={`
             ${isMobile 
-              ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+              ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
               : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
             }
           `}
           title="Remover"
         >
-          <Trash2 className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+          <Trash2 className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
           {isMobile ? (
             <span className="text-xs leading-tight">Remove</span>
           ) : (
@@ -129,13 +129,13 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
             value="users" 
             className={`
               ${isMobile 
-                ? 'flex flex-col items-center justify-center p-3 h-auto text-xs min-w-[60px]' 
+                ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
                 : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
               }
             `}
             title="Usuários"
           >
-            <Users className={isMobile ? "w-5 h-5 mb-1" : "w-5 h-5 flex-shrink-0"} />
+            <Users className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
             {isMobile ? (
               <span className="text-xs leading-tight">Users</span>
             ) : (

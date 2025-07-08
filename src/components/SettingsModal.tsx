@@ -81,7 +81,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="organization" className="w-full flex-1 flex overflow-hidden">
+        <Tabs defaultValue="organization" className={`w-full flex-1 ${isMobile ? 'flex flex-col' : 'flex'} overflow-hidden`}>
           <SettingsModalSidebar isAdmin={isAdmin} />
           <SettingsModalContent
             userProfile={userProfile}
