@@ -42,9 +42,14 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   };
 
   const formatWhatsAppMessage = (message: string) => {
+    const firstName = patient.name.split(' ')[0];
+    const lastVisitFormatted = format(patient.lastVisit, 'dd/MM/yyyy', { locale: ptBR });
+    
     return message
       .replace('{nome_do_paciente}', patient.name)
-      .replace('{data_proximo_contato}', format(patient.nextContactDate, 'dd/MM/yyyy', { locale: ptBR }));
+      .replace('{primeiro_nome_do_paciente}', firstName)
+      .replace('{data_proximo_contato}', format(patient.nextContactDate, 'dd/MM/yyyy', { locale: ptBR }))
+      .replace('{data_ultima_consulta}', lastVisitFormatted);
   };
 
   const handleWhatsAppClick = (phoneNumber: string) => {
