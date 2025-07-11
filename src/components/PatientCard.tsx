@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Patient } from '@/types/patient';
 import { OrganizationSettings } from '@/types/organization';
 import { ContactHistoryModal } from '@/components/ContactHistoryModal';
-import { Phone, MessageSquare, Calendar, Edit, Clock, AlertTriangle, User, History } from 'lucide-react';
+import { Phone, MessageSquare, Calendar, Edit, Clock, AlertTriangle, User, History, ChevronDown } from 'lucide-react';
 import { format, isBefore, isAfter, startOfToday, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -46,17 +47,54 @@ export const PatientCard: React.FC<PatientCardProps> = ({
       .replace('{data_proximo_contato}', format(patient.nextContactDate, 'dd/MM/yyyy', { locale: ptBR }));
   };
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = (phoneNumber: string) => {
     const defaultMessage = organizationSettings?.whatsapp_default_message || 
       'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!';
     
     const message = formatWhatsAppMessage(defaultMessage);
-    const whatsappUrl = `https://wa.me/55${patient.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/55${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
-  const handlePhoneClick = () => {
-    window.open(`tel:${patient.phone}`, '_self');
+  const handlePhoneClick = (phoneNumber: string) => {
+    window.open(`tel:${phoneNumber}`, '_self');
+  };
+
+  const hasMultipleNumbers = patient.phone && patient.secondaryPhone;
+
+  const PhoneSelector = ({ children, onSelect }: { children: React.ReactNode, onSelect: (phone: string) => void }) => {
+    if (!hasMultipleNumbers) {
+      return <div onClick={() => onSelect(patient.phone)}>{children}</div>;
+    }
+
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          {children}
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-2" align="end">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-dental-primary mb-2">Escolha o número:</p>
+            <button 
+              onClick={() => onSelect(patient.phone)}
+              className="w-full p-2 text-left text-sm hover:bg-dental-background rounded border border-dental-primary/20"
+            >
+              <div className="font-medium">Principal</div>
+              <div className="text-dental-secondary">{patient.phone}</div>
+            </button>
+            {patient.secondaryPhone && (
+              <button 
+                onClick={() => onSelect(patient.secondaryPhone!)}
+                className="w-full p-2 text-left text-sm hover:bg-dental-background rounded border border-dental-primary/20"
+              >
+                <div className="font-medium">Secundário</div>
+                <div className="text-dental-secondary">{patient.secondaryPhone}</div>
+              </button>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
   };
 
   return (
@@ -139,22 +177,28 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
           
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePhoneClick}
-              className="border-dental-primary text-dental-primary hover:bg-dental-background"
-            >
-              <Phone className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleWhatsAppClick}
-              className="border-green-500 text-green-600 hover:bg-green-50"
-            >
-              <MessageSquare className="w-4 h-4" />
-            </Button>
+            <PhoneSelector onSelect={handlePhoneClick}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-dental-primary text-dental-primary hover:bg-dental-background flex items-center gap-1"
+              >
+                <Phone className="w-4 h-4" />
+                {hasMultipleNumbers && <ChevronDown className="w-3 h-3" />}
+              </Button>
+            </PhoneSelector>
+            
+            <PhoneSelector onSelect={handleWhatsAppClick}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-green-500 text-green-600 hover:bg-green-50 flex items-center gap-1"
+              >
+                <MessageSquare className="w-4 h-4" />
+                {hasMultipleNumbers && <ChevronDown className="w-3 h-3" />}
+              </Button>
+            </PhoneSelector>
+            
             <Button
               size="sm"
               onClick={() => onContact(patient)}
