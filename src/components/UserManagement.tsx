@@ -198,29 +198,38 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         <div className="space-y-4">
           {users.map((user) => (
             <Card key={user.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-dental-primary">
-                        {user.name}
-                      </h3>
+              <CardContent className="p-4 md:p-6">
+                <div className="space-y-3">
+                  {/* Header with name and badges */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <h3 className="font-semibold text-dental-primary flex-1">
+                      {user.name}
+                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
                       {getStatusBadge(user.status || 'approved')}
                       {getRoleBadge(user.role)}
+                      {user.user_id === currentUserId && (
+                        <Badge variant="outline" className="text-xs">
+                          Você
+                        </Badge>
+                      )}
                     </div>
-                    <p className="text-sm text-dental-secondary">
-                      ID: {user.user_id}
-                    </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  {/* User ID */}
+                  <p className="text-sm text-dental-secondary truncate">
+                    ID: {user.user_id}
+                  </p>
+
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
                     {/* Role Selection */}
                     {user.status === 'approved' && user.user_id !== currentUserId && (
                       <Select
                         value={user.role}
                         onValueChange={(value: 'admin' | 'user') => handleRoleChange(user.user_id, value)}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-full sm:w-32">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -231,40 +240,41 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     )}
 
                     {/* Action Buttons */}
-                    {user.status === 'pending' && (
-                      <>
+                    <div className="flex gap-2">
+                      {user.status === 'pending' && (
+                        <>
+                          <Button
+                            onClick={() => handleApprove(user.user_id)}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
+                          >
+                            <UserCheck className="w-4 h-4 mr-2 sm:mr-0" />
+                            <span className="sm:hidden">Aprovar</span>
+                          </Button>
+                          <Button
+                            onClick={() => handleReject(user.user_id)}
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1 sm:flex-none"
+                          >
+                            <UserX className="w-4 h-4 mr-2 sm:mr-0" />
+                            <span className="sm:hidden">Rejeitar</span>
+                          </Button>
+                        </>
+                      )}
+
+                      {user.status === 'approved' && user.user_id !== currentUserId && (
                         <Button
-                          onClick={() => handleApprove(user.user_id)}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <UserCheck className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleReject(user.user_id)}
+                          onClick={() => confirmRemoveUser(user.user_id)}
                           size="sm"
                           variant="destructive"
+                          className="flex-1 sm:flex-none"
                         >
-                          <UserX className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 mr-2 sm:mr-0" />
+                          <span className="sm:hidden">Remover</span>
                         </Button>
-                      </>
-                    )}
-
-                    {user.status === 'approved' && user.user_id !== currentUserId && (
-                      <Button
-                        onClick={() => confirmRemoveUser(user.user_id)}
-                        size="sm"
-                        variant="destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-
-                    {user.user_id === currentUserId && (
-                      <Badge variant="outline" className="text-xs">
-                        Você
-                      </Badge>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
