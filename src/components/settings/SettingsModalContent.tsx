@@ -48,9 +48,11 @@ export const SettingsModalContent: React.FC<SettingsModalContentProps> = ({
         />
       </TabsContent>
 
-      <TabsContent value="import" className="space-y-4 mt-0">
-        <ImportTab onShowExcelImport={onShowExcelImport} />
-      </TabsContent>
+      {isAdmin && (
+        <TabsContent value="import" className="space-y-4 mt-0">
+          <ImportTab onShowExcelImport={onShowExcelImport} />
+        </TabsContent>
+      )}
 
       <TabsContent value="removal" className="space-y-4 mt-0">
         <RemovalTab onShowPatientRemoval={onShowPatientRemoval} />

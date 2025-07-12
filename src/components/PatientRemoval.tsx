@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Patient } from '@/types/patient';
 import { Search, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -26,6 +27,16 @@ export const PatientRemoval: React.FC<PatientRemovalProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    type: 'single' | 'bulk';
+    patientId?: string;
+    patientName?: string;
+    count?: number;
+  }>({
+    isOpen: false,
+    type: 'single'
+  });
 
   const filteredPatients = useMemo(() => {
     return patients.filter(patient =>
@@ -52,22 +63,46 @@ export const PatientRemoval: React.FC<PatientRemovalProps> = ({
 
   const handleBulkDelete = () => {
     if (selectedPatients.length > 0) {
-      onBulkDelete(selectedPatients);
-      setSelectedPatients([]);
+      setConfirmDialog({
+        isOpen: true,
+        type: 'bulk',
+        count: selectedPatients.length
+      });
     }
   };
 
   const handleSingleDelete = (patientId: string) => {
-    onDeletePatient(patientId);
-    setSelectedPatients(prev => prev.filter(id => id !== patientId));
+    const patient = patients.find(p => p.id === patientId);
+    setConfirmDialog({
+      isOpen: true,
+      type: 'single',
+      patientId,
+      patientName: patient?.name
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    if (confirmDialog.type === 'single' && confirmDialog.patientId) {
+      onDeletePatient(confirmDialog.patientId);
+      setSelectedPatients(prev => prev.filter(id => id !== confirmDialog.patientId));
+    } else if (confirmDialog.type === 'bulk') {
+      onBulkDelete(selectedPatients);
+      setSelectedPatients([]);
+    }
+    setConfirmDialog({ isOpen: false, type: 'single' });
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDialog({ isOpen: false, type: 'single' });
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 pb-4 border-b">
-        <Trash2 className="w-5 h-5 text-dental-primary" />
-        <h2 className="text-lg font-semibold text-dental-primary">Remoção de Pacientes</h2>
-      </div>
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 pb-4 border-b">
+          <Trash2 className="w-5 h-5 text-dental-primary" />
+          <h2 className="text-lg font-semibold text-dental-primary">Remoção de Pacientes</h2>
+        </div>
 
       <div className="space-y-4">
           {/* Search */}
@@ -148,7 +183,23 @@ export const PatientRemoval: React.FC<PatientRemovalProps> = ({
               {searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
             </div>
           )}
+        </div>
       </div>
-    </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.type === 'single' ? 'Confirmar Exclusão' : 'Confirmar Exclusão em Massa'}
+        message={
+          confirmDialog.type === 'single'
+            ? `Tem certeza que deseja excluir o paciente "${confirmDialog.patientName}"? Esta operação não pode ser desfeita.`
+            : `Tem certeza que deseja excluir ${confirmDialog.count} pacientes selecionados? Esta operação não pode ser desfeita.`
+        }
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+    </>
   );
 };

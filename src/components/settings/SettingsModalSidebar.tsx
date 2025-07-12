@@ -84,25 +84,27 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
           )}
         </TabsTrigger>
         
-        <TabsTrigger 
-          value="import" 
-          className={`
-            ${isMobile 
-              ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
-              : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
-            }
-          `}
-          title="Importar"
-        >
-          <FileSpreadsheet className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
-          {isMobile ? (
-            <span className="text-xs leading-tight">Import</span>
-          ) : (
-            <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Importar
-            </span>
-          )}
-        </TabsTrigger>
+        {isAdmin && (
+          <TabsTrigger 
+            value="import" 
+            className={`
+              ${isMobile 
+                ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
+                : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
+              }
+            `}
+            title="Importar"
+          >
+            <FileSpreadsheet className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
+            {isMobile ? (
+              <span className="text-xs leading-tight">Import</span>
+            ) : (
+              <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Importar
+              </span>
+            )}
+          </TabsTrigger>
+        )}
         
         <TabsTrigger 
           value="removal" 
