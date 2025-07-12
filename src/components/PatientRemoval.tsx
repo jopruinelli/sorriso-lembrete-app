@@ -63,15 +63,13 @@ export const PatientRemoval: React.FC<PatientRemovalProps> = ({
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-dental-primary">
-            Remoção de Pacientes
-          </DialogTitle>
-        </DialogHeader>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 pb-4 border-b">
+        <Trash2 className="w-5 h-5 text-dental-primary" />
+        <h2 className="text-lg font-semibold text-dental-primary">Remoção de Pacientes</h2>
+      </div>
 
-        <div className="space-y-4 flex-1 overflow-hidden">
+      <div className="space-y-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -150,8 +148,7 @@ export const PatientRemoval: React.FC<PatientRemovalProps> = ({
               {searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
             </div>
           )}
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };

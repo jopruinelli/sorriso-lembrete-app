@@ -43,25 +43,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setShowExcelImport(false);
   };
 
-  if (showExcelImport) {
-    return (
-      <ExcelImport
-        onImport={handleImport}
-        onCancel={() => setShowExcelImport(false)}
-      />
-    );
-  }
+  // Renderizar conteúdo específico se alguma função especial estiver ativa
+  const renderSpecialContent = () => {
+    if (showExcelImport) {
+      return (
+        <ExcelImport
+          onImport={handleImport}
+          onCancel={() => setShowExcelImport(false)}
+        />
+      );
+    }
 
-  if (showPatientRemoval) {
-    return (
-      <PatientRemoval
-        patients={patients}
-        onDeletePatient={onDeletePatient}
-        onBulkDelete={onBulkDelete}
-        onClose={() => setShowPatientRemoval(false)}
-      />
-    );
-  }
+    if (showPatientRemoval) {
+      return (
+        <PatientRemoval
+          patients={patients}
+          onDeletePatient={onDeletePatient}
+          onBulkDelete={onBulkDelete}
+          onClose={() => setShowPatientRemoval(false)}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  const specialContent = renderSpecialContent();
 
   const isAdmin = userProfile?.role === 'admin';
   const isMobile = useIsMobile();
@@ -81,18 +88,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="organization" className={`w-full flex-1 ${isMobile ? 'flex flex-col' : 'flex'} overflow-hidden`}>
-          <SettingsModalSidebar isAdmin={isAdmin} />
-          <SettingsModalContent
-            userProfile={userProfile}
-            organizationSettings={organizationSettings}
-            isAdmin={isAdmin}
-            onUpdateProfile={onUpdateProfile}
-            onUpdateSettings={onUpdateSettings}
-            onShowExcelImport={() => setShowExcelImport(true)}
-            onShowPatientRemoval={() => setShowPatientRemoval(true)}
-          />
-        </Tabs>
+        {specialContent ? (
+          <div className="flex-1 overflow-auto p-6">
+            {specialContent}
+          </div>
+        ) : (
+          <Tabs defaultValue="organization" className={`w-full flex-1 ${isMobile ? 'flex flex-col' : 'flex'} overflow-hidden`}>
+            <SettingsModalSidebar isAdmin={isAdmin} />
+            <SettingsModalContent
+              userProfile={userProfile}
+              organizationSettings={organizationSettings}
+              isAdmin={isAdmin}
+              onUpdateProfile={onUpdateProfile}
+              onUpdateSettings={onUpdateSettings}
+              onShowExcelImport={() => setShowExcelImport(true)}
+              onShowPatientRemoval={() => setShowPatientRemoval(true)}
+            />
+          </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );
