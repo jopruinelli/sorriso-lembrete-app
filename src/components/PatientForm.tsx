@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Patient, ContactPeriod, PatientCreateData } from '@/types/patient';
 import { X } from 'lucide-react';
 import { addMonths } from 'date-fns';
+import { PatientFormFields } from './patient-form/PatientFormFields';
+import { PatientFormActions } from './patient-form/PatientFormActions';
 
 interface PatientFormProps {
   patient?: Patient;
@@ -29,7 +26,6 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     inactiveReason: '',
     paymentType: 'particular' as 'particular' | 'convenio'
   });
-
 
   useEffect(() => {
     if (patient) {
@@ -83,6 +79,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     handleChange('nextContactDate', nextDate);
   };
 
+  const isFormValid = formData.name && formData.phone && formData.nextContactReason;
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
@@ -97,179 +94,17 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Nome *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="Nome completo do paciente"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="phone">Telefone *</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="(11) 99999-9999"
-                required
-              />
-            </div>
-          <div>
-            <Label htmlFor="secondaryPhone">Telefone 2</Label>
-            <Input
-              id="secondaryPhone"
-              value={formData.secondaryPhone}
-              onChange={(e) => handleChange('secondaryPhone', e.target.value)}
-              placeholder="(11) 99999-9999"
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label>Data de Nascimento</Label>
-          <DatePicker
-            selected={formData.birthDate}
-            onSelect={(date) => handleChange('birthDate', date)}
-            placeholder="dd/mm/aaaa"
+          <PatientFormFields
+            formData={formData}
+            onChange={handleChange}
+            onPeriodChange={handlePeriodChange}
           />
-        </div>
 
-          <div>
-            <Label>Última Consulta *</Label>
-            <DatePicker
-              selected={formData.lastVisit}
-              onSelect={(date) => handleChange('lastVisit', date)}
-              placeholder="dd/mm/aaaa"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="nextContactReason">Motivo do Próximo Contato *</Label>
-            <Textarea
-              id="nextContactReason"
-              value={formData.nextContactReason}
-              onChange={(e) => handleChange('nextContactReason', e.target.value)}
-              placeholder="Ex: Limpeza, revisão, tratamento..."
-              rows={2}
-              required
-            />
-          </div>
-
-          <div>
-            <Label>Período para Próximo Contato</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handlePeriodChange('1month')}
-                className="text-xs"
-              >
-                1 mês
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handlePeriodChange('3months')}
-                className="text-xs"
-              >
-                3 meses
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handlePeriodChange('6months')}
-                className="text-xs"
-              >
-                6 meses
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handlePeriodChange('1year')}
-                className="text-xs"
-              >
-                1 ano
-              </Button>
-            </div>
-          </div>
-
-          <div>
-            <Label>Data do Próximo Contato *</Label>
-            <DatePicker
-              selected={formData.nextContactDate}
-              onSelect={(date) => handleChange('nextContactDate', date)}
-              placeholder="dd/mm/aaaa"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="paymentType">Tipo de Pagamento</Label>
-              <Select value={formData.paymentType} onValueChange={(value: 'particular' | 'convenio') => handleChange('paymentType', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="particular">Particular</SelectItem>
-                  <SelectItem value="convenio">Convênio</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'closed') => handleChange('status', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Ativo</SelectItem>
-                  <SelectItem value="inactive">Inativo</SelectItem>
-                  <SelectItem value="closed">Encerrados</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {(formData.status === 'inactive' || formData.status === 'closed') && (
-            <div>
-              <Label htmlFor="inactiveReason">{formData.status === 'closed' ? 'Motivo do Encerramento' : 'Motivo da Inativação'}</Label>
-              <Textarea
-                id="inactiveReason"
-                value={formData.inactiveReason}
-                onChange={(e) => handleChange('inactiveReason', e.target.value)}
-                placeholder="Descreva o motivo..."
-                rows={2}
-              />
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              className="flex-1"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 bg-dental-primary hover:bg-dental-secondary"
-              disabled={!formData.name || !formData.phone || !formData.nextContactReason}
-            >
-              {patient ? 'Atualizar' : 'Salvar'}
-            </Button>
-          </div>
+          <PatientFormActions
+            onCancel={onCancel}
+            isEditing={!!patient}
+            disabled={!isFormValid}
+          />
         </form>
       </DialogContent>
     </Dialog>
