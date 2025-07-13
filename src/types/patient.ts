@@ -4,6 +4,7 @@ export interface Patient {
   name: string;
   phone: string;
   secondaryPhone?: string;
+  birthDate?: Date;
   lastVisit: Date;
   nextContactReason: string;
   nextContactDate: Date;
@@ -20,6 +21,7 @@ export interface PatientCreateData {
   name: string;
   phone: string;
   secondaryPhone?: string;
+  birthDate?: Date;
   lastVisit: Date;
   nextContactReason: string;
   nextContactDate: Date;
