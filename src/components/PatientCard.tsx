@@ -117,6 +117,11 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                 Tel. 2: {patient.secondaryPhone}
               </p>
             )}
+            {patient.birthDate && (
+              <p className="text-xs text-dental-secondary">
+                Nascimento: {format(patient.birthDate, 'dd/MM/yyyy', { locale: ptBR })}
+              </p>
+            )}
           </div>
           
           <Button

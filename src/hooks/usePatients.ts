@@ -11,6 +11,7 @@ const samplePatients: Patient[] = [
     name: 'Maria Silva Santos',
     phone: '(11) 99999-1234',
     secondaryPhone: '(11) 3333-5678',
+    birthDate: new Date('1985-05-20'),
     lastVisit: new Date('2024-09-15'),
     nextContactReason: 'Limpeza e revisão semestral',
     nextContactDate: new Date('2025-03-15'),
@@ -33,6 +34,7 @@ const samplePatients: Patient[] = [
     id: '2',
     name: 'João Pedro Costa',
     phone: '(11) 98888-5555',
+    birthDate: new Date('1990-03-10'),
     lastVisit: new Date('2024-05-10'),
     nextContactReason: 'Continuação do tratamento de canal',
     nextContactDate: new Date('2024-12-10'),
@@ -47,6 +49,7 @@ const samplePatients: Patient[] = [
     id: '3',
     name: 'Ana Carolina Lima',
     phone: '(11) 97777-9999',
+    birthDate: new Date('1988-11-30'),
     lastVisit: new Date('2024-08-20'),
     nextContactReason: 'Avaliação pós-cirurgia',
     nextContactDate: new Date('2024-11-20'),
@@ -67,12 +70,13 @@ export const usePatients = () => {
     if (storedPatients) {
       const parsedPatients = JSON.parse(storedPatients);
       // Converter strings de data para objetos Date e adicionar paymentType se não existir
-      const patientsWithDates = parsedPatients.map((patient: any) => ({
+      const patientsWithDates = parsedPatients.map((patient: Record<string, unknown>) => ({
         ...patient,
         lastVisit: new Date(patient.lastVisit),
         nextContactDate: new Date(patient.nextContactDate),
+        birthDate: patient.birthDate ? new Date(patient.birthDate) : undefined,
         paymentType: patient.paymentType || 'particular', // Default para registros existentes
-        contactHistory: patient.contactHistory.map((contact: any) => ({
+        contactHistory: (patient as any).contactHistory.map((contact: Record<string, unknown>) => ({
           ...contact,
           date: new Date(contact.date)
         })),

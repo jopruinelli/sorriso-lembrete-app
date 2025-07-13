@@ -5,6 +5,7 @@ export interface DatabasePatient {
   name: string;
   phone: string;
   secondary_phone?: string;
+  birth_date?: string;
   last_visit: string;
   next_contact_reason: string;
   next_contact_date: string;
