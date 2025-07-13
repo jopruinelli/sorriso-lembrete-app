@@ -169,6 +169,7 @@ const Index = () => {
   };
 
   const handleActivePatientsClick = () => {
+    resetFilters();
     setStatusFilter('active');
 
     setTimeout(() => {
