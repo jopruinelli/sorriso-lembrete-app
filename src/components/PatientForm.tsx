@@ -163,8 +163,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
                   mode="single"
                   selected={formData.lastVisit}
                   onSelect={handleLastVisitSelect}
-                  disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
@@ -244,8 +244,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
                   mode="single"
                   selected={formData.nextContactDate}
                   onSelect={handleNextContactSelect}
-                  disabled={(date) => date < new Date("1900-01-01")}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
