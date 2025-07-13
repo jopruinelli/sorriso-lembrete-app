@@ -108,6 +108,8 @@ const Index = () => {
     return !isPatientOverdue && inNextMonth;
   }).length;
 
+  const activePatientsCount = patients.filter(p => p.status === 'active').length;
+
   const filtersAreDefault =
     statusFilter === 'all' &&
     contactPeriodFilter === 'all' &&
@@ -157,6 +159,17 @@ const Index = () => {
     setContactPeriodFilter('1month');
     setPaymentFilter('all');
     setSearchTerm('');
+
+    setTimeout(() => {
+      patientsListRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
+  };
+
+  const handleActivePatientsClick = () => {
+    setStatusFilter('active');
 
     setTimeout(() => {
       patientsListRef.current?.scrollIntoView({
@@ -264,6 +277,7 @@ const Index = () => {
             </div>
 
             {/* Dashboard Cards */}
+            <p className="text-sm text-dental-secondary mb-2">Pacientes Ativos</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleUpcomingFilterClick}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -276,17 +290,6 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-dental-secondary">Total de Pacientes</CardTitle>
-                  <Users className="h-4 w-4 text-dental-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-dental-primary">{patients.length}</div>
-                  <p className="text-xs text-dental-secondary">Pacientes cadastrados</p>
-                </CardContent>
-              </Card>
-
               <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleOverdueFilterClick}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-dental-secondary">Atrasados</CardTitle>
@@ -295,6 +298,17 @@ const Index = () => {
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
                   <p className="text-xs text-dental-secondary">Pacientes com contato em atraso</p>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleActivePatientsClick}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-dental-secondary">Total de Pacientes</CardTitle>
+                  <Users className="h-4 w-4 text-dental-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-dental-primary">{activePatientsCount}</div>
+                  <p className="text-xs text-dental-secondary">Pacientes Ativos</p>
                 </CardContent>
               </Card>
             </div>
