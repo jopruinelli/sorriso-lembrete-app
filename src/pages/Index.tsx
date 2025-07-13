@@ -37,8 +37,8 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'closed'>('active');
-  const [contactPeriodFilter, setContactPeriodFilter] = useState<ContactPeriod | 'all'>('1month');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'closed'>('all');
+  const [contactPeriodFilter, setContactPeriodFilter] = useState<ContactPeriod | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'particular' | 'convenio'>('all');
   const [overdueFilter, setOverdueFilter] = useState(false);
@@ -108,6 +108,13 @@ const Index = () => {
     return !isPatientOverdue && inNextMonth;
   }).length;
 
+  const filtersAreDefault =
+    statusFilter === 'all' &&
+    contactPeriodFilter === 'all' &&
+    paymentFilter === 'all' &&
+    searchTerm === '' &&
+    !overdueFilter;
+
   // Handler functions
   const handleAddPatient = async (patientData: PatientCreateData) => {
     if (!user?.id) return;
@@ -161,7 +168,7 @@ const Index = () => {
 
   const resetFilters = () => {
     setOverdueFilter(false);
-    setStatusFilter('active');
+    setStatusFilter('all');
     setContactPeriodFilter('all');
     setPaymentFilter('all');
     setSearchTerm('');
@@ -302,8 +309,8 @@ const Index = () => {
                 Adicionar Paciente
               </Button>
               
-              {overdueFilter && (
-                <Button 
+              {!filtersAreDefault && (
+                <Button
                   variant="outline"
                   onClick={resetFilters}
                   className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
