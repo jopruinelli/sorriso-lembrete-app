@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { X, Phone, MessageSquare, User, Calendar, CalendarIcon } from 'lucide-react';
@@ -154,16 +155,12 @@ export const ContactForm: React.FC<ContactFormProps> = ({ patient, onSave, onCan
                     <Label>Ou escolha uma data específica</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !formData.customDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.customDate ? format(formData.customDate, 'dd/MM/yyyy', { locale: ptBR }) : "Escolher data"}
-                        </Button>
+                        <Input
+                          type="date"
+                          value={formData.customDate ? format(formData.customDate, 'yyyy-MM-dd') : ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, customDate: e.target.value ? new Date(e.target.value) : undefined }))}
+                          className="w-full"
+                        />
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <CalendarComponent
@@ -171,6 +168,9 @@ export const ContactForm: React.FC<ContactFormProps> = ({ patient, onSave, onCan
                           selected={formData.customDate}
                           onSelect={(date) => setFormData(prev => ({ ...prev, customDate: date }))}
                           disabled={(date) => date < new Date()}
+                          captionLayout="dropdown"
+                          fromYear={1900}
+                          toYear={new Date().getFullYear() + 10}
                           initialFocus
                           className="pointer-events-auto"
                         />

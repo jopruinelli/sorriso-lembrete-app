@@ -24,6 +24,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     name: '',
     phone: '',
     secondaryPhone: '',
+    birthDate: undefined,
     lastVisit: new Date(),
     nextContactReason: '',
     nextContactDate: new Date(),
@@ -34,6 +35,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
   const [lastVisitOpen, setLastVisitOpen] = useState(false);
   const [nextContactOpen, setNextContactOpen] = useState(false);
+  const [birthOpen, setBirthOpen] = useState(false);
 
   useEffect(() => {
     if (patient) {
@@ -41,6 +43,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
         name: patient.name,
         phone: patient.phone,
         secondaryPhone: patient.secondaryPhone || '',
+        birthDate: patient.birthDate,
         lastVisit: patient.lastVisit,
         nextContactReason: patient.nextContactReason,
         nextContactDate: patient.nextContactDate,
@@ -56,7 +59,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     onSave(formData);
   };
 
-  const handleChange = (field: keyof PatientCreateData, value: any) => {
+  const handleChange = <K extends keyof PatientCreateData>(
+    field: K,
+    value: PatientCreateData[K]
+  ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -87,6 +93,13 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     if (date) {
       handleChange('lastVisit', date);
       setLastVisitOpen(false); // Fechar calendário automaticamente
+    }
+  };
+
+  const handleBirthSelect = (date: Date | undefined) => {
+    if (date) {
+      handleChange('birthDate', date);
+      setBirthOpen(false);
     }
   };
 
@@ -132,37 +145,65 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="secondaryPhone">Telefone 2</Label>
-              <Input
-                id="secondaryPhone"
-                value={formData.secondaryPhone}
-                onChange={(e) => handleChange('secondaryPhone', e.target.value)}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
+          <div>
+            <Label htmlFor="secondaryPhone">Telefone 2</Label>
+            <Input
+              id="secondaryPhone"
+              value={formData.secondaryPhone}
+              onChange={(e) => handleChange('secondaryPhone', e.target.value)}
+              placeholder="(11) 99999-9999"
+            />
           </div>
+        </div>
+
+        <div>
+          <Label>Data de Nascimento</Label>
+          <Popover open={birthOpen} onOpenChange={setBirthOpen}>
+            <PopoverTrigger asChild>
+              <Input
+                type="date"
+                value={formData.birthDate ? format(formData.birthDate, 'yyyy-MM-dd') : ''}
+                onChange={(e) => handleBirthSelect(e.target.value ? new Date(e.target.value) : undefined)}
+                onFocus={() => setBirthOpen(true)}
+                className="w-full"
+              />
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.birthDate}
+                onSelect={handleBirthSelect}
+                captionLayout="dropdown"
+                fromYear={1900}
+                toYear={new Date().getFullYear() + 10}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
 
           <div>
             <Label>Última Consulta *</Label>
             <Popover open={lastVisitOpen} onOpenChange={setLastVisitOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.lastVisit && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.lastVisit ? format(formData.lastVisit, 'dd/MM/yyyy', { locale: ptBR }) : "Selecionar data"}
-                </Button>
+                <Input
+                  type="date"
+                  value={formData.lastVisit ? format(formData.lastVisit, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => handleLastVisitSelect(e.target.value ? new Date(e.target.value) : undefined)}
+                  onFocus={() => setLastVisitOpen(true)}
+                  className="w-full"
+                  required
+                />
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={formData.lastVisit}
                   onSelect={handleLastVisitSelect}
+                  captionLayout="dropdown"
+                  fromYear={1900}
+                  toYear={new Date().getFullYear() + 10}
                   initialFocus
                   className="pointer-events-auto"
                 />
@@ -228,22 +269,23 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
             <Label>Data do Próximo Contato *</Label>
             <Popover open={nextContactOpen} onOpenChange={setNextContactOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.nextContactDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.nextContactDate ? format(formData.nextContactDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecionar data"}
-                </Button>
+                <Input
+                  type="date"
+                  value={formData.nextContactDate ? format(formData.nextContactDate, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => handleNextContactSelect(e.target.value ? new Date(e.target.value) : undefined)}
+                  onFocus={() => setNextContactOpen(true)}
+                  className="w-full"
+                  required
+                />
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={formData.nextContactDate}
                   onSelect={handleNextContactSelect}
+                  captionLayout="dropdown"
+                  fromYear={1900}
+                  toYear={new Date().getFullYear() + 10}
                   initialFocus
                   className="pointer-events-auto"
                 />

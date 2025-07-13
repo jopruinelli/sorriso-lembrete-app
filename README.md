@@ -59,6 +59,8 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Custom date pickers allow typing dates and selecting years from dropdowns for
+  faster navigation
 
 ## How can I deploy this project?
 
