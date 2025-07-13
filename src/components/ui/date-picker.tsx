@@ -2,7 +2,7 @@ import * as React from "react";
 import { format, parse, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, useNavigation } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,9 @@ export function DatePicker({
   const [inputValue, setInputValue] = React.useState("");
   const [showYearPicker, setShowYearPicker] = React.useState(false);
   const [viewMonth, setViewMonth] = React.useState(selected || new Date());
+  const [yearRangeStart, setYearRangeStart] = React.useState(
+    Math.floor((selected || new Date()).getFullYear() / 10) * 10
+  );
 
   React.useEffect(() => {
     if (selected) {
@@ -37,6 +40,12 @@ export function DatePicker({
       setInputValue("");
     }
   }, [selected]);
+
+  React.useEffect(() => {
+    if (showYearPicker) {
+      setYearRangeStart(Math.floor(viewMonth.getFullYear() / 10) * 10);
+    }
+  }, [showYearPicker, viewMonth]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -69,42 +78,83 @@ export function DatePicker({
   };
 
   const generateYears = () => {
-    const currentYear = new Date().getFullYear();
     const years = [];
-    for (let i = currentYear - 100; i <= currentYear + 10; i++) {
+    for (let i = yearRangeStart; i < yearRangeStart + 10; i++) {
       years.push(i);
     }
     return years;
   };
 
   const YearPicker = () => (
-    <div className="p-3 grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
-      {generateYears().map((year) => (
+    <div className="p-3">
+      <div className="flex items-center justify-between mb-2">
         <Button
-          key={year}
-          variant={year === viewMonth.getFullYear() ? "default" : "ghost"}
+          variant="outline"
           size="sm"
-          onClick={() => handleYearSelect(year)}
-          className="h-8 text-sm"
+          className="h-7 w-7 p-0"
+          onClick={() => setYearRangeStart(yearRangeStart - 10)}
         >
-          {year}
+          <ChevronLeft className="h-4 w-4" />
         </Button>
-      ))}
+        <span className="text-sm font-medium">
+          {yearRangeStart} - {yearRangeStart + 9}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => setYearRangeStart(yearRangeStart + 10)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {generateYears().map((year) => (
+          <Button
+            key={year}
+            variant={year === viewMonth.getFullYear() ? "default" : "ghost"}
+            size="sm"
+            onClick={() => handleYearSelect(year)}
+            className="h-8 text-sm"
+          >
+            {year}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 
-  const CustomCaption = ({ displayMonth }: { displayMonth: Date }) => (
-    <div className="flex justify-center pt-1 relative items-center">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setShowYearPicker(!showYearPicker)}
-        className="text-sm font-medium hover:bg-accent"
-      >
-        {format(displayMonth, 'MMMM yyyy', { locale: ptBR })}
-      </Button>
-    </div>
-  );
+  const CustomCaption = ({ displayMonth }: { displayMonth: Date }) => {
+    const { nextMonth, previousMonth, goToMonth } = useNavigation();
+    return (
+      <div className="flex items-center justify-between px-2 pt-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => previousMonth && goToMonth(previousMonth)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowYearPicker(!showYearPicker)}
+          className="text-sm font-medium hover:bg-accent"
+        >
+          {format(displayMonth, 'MMMM yyyy', { locale: ptBR })}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => nextMonth && goToMonth(nextMonth)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
