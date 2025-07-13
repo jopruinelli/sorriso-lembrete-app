@@ -86,13 +86,13 @@ export function DatePicker({
   };
 
   const YearPicker = () => (
-    <div className="p-3">
+    <div className="p-3 pointer-events-auto">
       <div className="flex items-center justify-between mb-2">
         <Button
           variant="outline"
           size="sm"
           className="h-7 w-7 p-0"
-          onClick={() => setYearRangeStart(yearRangeStart - 10)}
+          onClick={() => setYearRangeStart((prev) => prev - 10)}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -103,12 +103,12 @@ export function DatePicker({
           variant="outline"
           size="sm"
           className="h-7 w-7 p-0"
-          onClick={() => setYearRangeStart(yearRangeStart + 10)}
+          onClick={() => setYearRangeStart((prev) => prev + 10)}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-2 mb-2">
         {generateYears().map((year) => (
           <Button
             key={year}
@@ -120,6 +120,11 @@ export function DatePicker({
             {year}
           </Button>
         ))}
+      </div>
+      <div className="flex justify-end">
+        <Button variant="ghost" size="sm" onClick={() => setShowYearPicker(false)}>
+          Voltar
+        </Button>
       </div>
     </div>
   );
@@ -175,7 +180,6 @@ export function DatePicker({
             variant="ghost"
             size="sm"
             className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-            onClick={() => setOpen(!open)}
             disabled={disabled}
           >
             <CalendarIcon className="h-4 w-4" />
