@@ -5,13 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Patient, ContactPeriod, PatientCreateData } from '@/types/patient';
-import { CalendarIcon, X } from 'lucide-react';
-import { format, addMonths, addDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { X } from 'lucide-react';
+import { addMonths } from 'date-fns';
 
 interface PatientFormProps {
   patient?: Patient;
@@ -33,9 +30,6 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     paymentType: 'particular' as 'particular' | 'convenio'
   });
 
-  const [lastVisitOpen, setLastVisitOpen] = useState(false);
-  const [nextContactOpen, setNextContactOpen] = useState(false);
-  const [birthOpen, setBirthOpen] = useState(false);
 
   useEffect(() => {
     if (patient) {
@@ -89,26 +83,6 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     handleChange('nextContactDate', nextDate);
   };
 
-  const handleLastVisitSelect = (date: Date | undefined) => {
-    if (date) {
-      handleChange('lastVisit', date);
-      setLastVisitOpen(false); // Fechar calendário automaticamente
-    }
-  };
-
-  const handleBirthSelect = (date: Date | undefined) => {
-    if (date) {
-      handleChange('birthDate', date);
-      setBirthOpen(false);
-    }
-  };
-
-  const handleNextContactSelect = (date: Date | undefined) => {
-    if (date) {
-      handleChange('nextContactDate', date);
-      setNextContactOpen(false); // Fechar calendário automaticamente
-    }
-  };
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
@@ -158,58 +132,20 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
         <div>
           <Label>Data de Nascimento</Label>
-          <Popover open={birthOpen} onOpenChange={setBirthOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  'w-full justify-start text-left font-normal',
-                  !formData.birthDate && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.birthDate
-                  ? format(formData.birthDate, 'dd/MM/yyyy', { locale: ptBR })
-                  : 'Selecionar data'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={formData.birthDate}
-                onSelect={handleBirthSelect}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            selected={formData.birthDate}
+            onSelect={(date) => handleChange('birthDate', date)}
+            placeholder="dd/mm/aaaa"
+          />
         </div>
 
           <div>
             <Label>Última Consulta *</Label>
-            <Popover open={lastVisitOpen} onOpenChange={setLastVisitOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.lastVisit && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.lastVisit ? format(formData.lastVisit, 'dd/MM/yyyy', { locale: ptBR }) : "Selecionar data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.lastVisit}
-                  onSelect={handleLastVisitSelect}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <DatePicker
+              selected={formData.lastVisit}
+              onSelect={(date) => handleChange('lastVisit', date)}
+              placeholder="dd/mm/aaaa"
+            />
           </div>
 
           <div>
@@ -268,29 +204,11 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
           <div>
             <Label>Data do Próximo Contato *</Label>
-            <Popover open={nextContactOpen} onOpenChange={setNextContactOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.nextContactDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.nextContactDate ? format(formData.nextContactDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecionar data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.nextContactDate}
-                  onSelect={handleNextContactSelect}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <DatePicker
+              selected={formData.nextContactDate}
+              onSelect={(date) => handleChange('nextContactDate', date)}
+              placeholder="dd/mm/aaaa"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

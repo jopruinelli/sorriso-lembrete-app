@@ -120,6 +120,7 @@ export type Database = {
       }
       patients: {
         Row: {
+          birth_date: string | null
           created_at: string
           id: string
           inactive_reason: string | null
@@ -137,6 +138,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           inactive_reason?: string | null
@@ -154,6 +156,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           inactive_reason?: string | null

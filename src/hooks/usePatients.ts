@@ -72,16 +72,16 @@ export const usePatients = () => {
       // Converter strings de data para objetos Date e adicionar paymentType se não existir
       const patientsWithDates = parsedPatients.map((patient: Record<string, unknown>) => ({
         ...patient,
-        lastVisit: new Date(patient.lastVisit),
-        nextContactDate: new Date(patient.nextContactDate),
-        birthDate: patient.birthDate ? new Date(patient.birthDate) : undefined,
+        lastVisit: new Date(patient.lastVisit as string | number | Date),
+        nextContactDate: new Date(patient.nextContactDate as string | number | Date),
+        birthDate: patient.birthDate ? new Date(patient.birthDate as string | number | Date) : undefined,
         paymentType: patient.paymentType || 'particular', // Default para registros existentes
         contactHistory: (patient as any).contactHistory.map((contact: Record<string, unknown>) => ({
           ...contact,
-          date: new Date(contact.date)
+          date: new Date(contact.date as string | number | Date)
         })),
-        created_at: patient.created_at ? new Date(patient.created_at) : new Date(),
-        updated_at: patient.updated_at ? new Date(patient.updated_at) : undefined
+        created_at: patient.created_at ? new Date(patient.created_at as string | number | Date) : new Date(),
+        updated_at: patient.updated_at ? new Date(patient.updated_at as string | number | Date) : undefined
       }));
       console.log('📥 Pacientes carregados do localStorage:', patientsWithDates);
       setPatients(patientsWithDates);
