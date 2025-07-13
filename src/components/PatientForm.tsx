@@ -160,24 +160,22 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
           <Label>Data de Nascimento</Label>
           <Popover open={birthOpen} onOpenChange={setBirthOpen}>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  'w-full justify-start text-left font-normal',
-                  !formData.birthDate && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.birthDate
-                  ? format(formData.birthDate, 'dd/MM/yyyy', { locale: ptBR })
-                  : 'Selecionar data'}
-              </Button>
+              <Input
+                type="date"
+                value={formData.birthDate ? format(formData.birthDate, 'yyyy-MM-dd') : ''}
+                onChange={(e) => handleBirthSelect(e.target.value ? new Date(e.target.value) : undefined)}
+                onFocus={() => setBirthOpen(true)}
+                className="w-full"
+              />
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={formData.birthDate}
                 onSelect={handleBirthSelect}
+                captionLayout="dropdown"
+                fromYear={1900}
+                toYear={new Date().getFullYear() + 10}
                 initialFocus
                 className="pointer-events-auto"
               />
@@ -189,22 +187,23 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
             <Label>Última Consulta *</Label>
             <Popover open={lastVisitOpen} onOpenChange={setLastVisitOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.lastVisit && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.lastVisit ? format(formData.lastVisit, 'dd/MM/yyyy', { locale: ptBR }) : "Selecionar data"}
-                </Button>
+                <Input
+                  type="date"
+                  value={formData.lastVisit ? format(formData.lastVisit, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => handleLastVisitSelect(e.target.value ? new Date(e.target.value) : undefined)}
+                  onFocus={() => setLastVisitOpen(true)}
+                  className="w-full"
+                  required
+                />
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={formData.lastVisit}
                   onSelect={handleLastVisitSelect}
+                  captionLayout="dropdown"
+                  fromYear={1900}
+                  toYear={new Date().getFullYear() + 10}
                   initialFocus
                   className="pointer-events-auto"
                 />
@@ -270,22 +269,23 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
             <Label>Data do Próximo Contato *</Label>
             <Popover open={nextContactOpen} onOpenChange={setNextContactOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.nextContactDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.nextContactDate ? format(formData.nextContactDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecionar data"}
-                </Button>
+                <Input
+                  type="date"
+                  value={formData.nextContactDate ? format(formData.nextContactDate, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => handleNextContactSelect(e.target.value ? new Date(e.target.value) : undefined)}
+                  onFocus={() => setNextContactOpen(true)}
+                  className="w-full"
+                  required
+                />
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={formData.nextContactDate}
                   onSelect={handleNextContactSelect}
+                  captionLayout="dropdown"
+                  fromYear={1900}
+                  toYear={new Date().getFullYear() + 10}
                   initialFocus
                   className="pointer-events-auto"
                 />
