@@ -93,6 +93,7 @@ export function DatePicker({
           size="sm"
           className="h-7 w-7 p-0"
           onClick={() => setYearRangeStart(yearRangeStart - 10)}
+          type="button"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -104,8 +105,19 @@ export function DatePicker({
           size="sm"
           className="h-7 w-7 p-0"
           onClick={() => setYearRangeStart(yearRangeStart + 10)}
+          type="button"
         >
           <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="flex justify-end mb-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowYearPicker(false)}
+          type="button"
+        >
+          Voltar
         </Button>
       </div>
       <div className="grid grid-cols-4 gap-2">
@@ -116,6 +128,7 @@ export function DatePicker({
             size="sm"
             onClick={() => handleYearSelect(year)}
             className="h-8 text-sm"
+            type="button"
           >
             {year}
           </Button>
@@ -133,6 +146,7 @@ export function DatePicker({
           size="sm"
           className="h-7 w-7 p-0"
           onClick={() => previousMonth && goToMonth(previousMonth)}
+          type="button"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -141,6 +155,7 @@ export function DatePicker({
           size="sm"
           onClick={() => setShowYearPicker(!showYearPicker)}
           className="text-sm font-medium hover:bg-accent"
+          type="button"
         >
           {format(displayMonth, 'MMMM yyyy', { locale: ptBR })}
         </Button>
@@ -149,6 +164,7 @@ export function DatePicker({
           size="sm"
           className="h-7 w-7 p-0"
           onClick={() => nextMonth && goToMonth(nextMonth)}
+          type="button"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -177,6 +193,7 @@ export function DatePicker({
             className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
             onClick={() => setOpen(!open)}
             disabled={disabled}
+            type="button"
           >
             <CalendarIcon className="h-4 w-4" />
           </Button>
