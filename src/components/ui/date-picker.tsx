@@ -86,13 +86,13 @@ export function DatePicker({
   };
 
   const YearPicker = () => (
-    <div className="p-3">
+    <div className="p-3 pointer-events-auto">
       <div className="flex items-center justify-between mb-2">
         <Button
           variant="outline"
           size="sm"
           className="h-7 w-7 p-0"
-          onClick={() => setYearRangeStart(yearRangeStart - 10)}
+          onClick={() => setYearRangeStart((prev) => prev - 10)}
           type="button"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -104,20 +104,10 @@ export function DatePicker({
           variant="outline"
           size="sm"
           className="h-7 w-7 p-0"
-          onClick={() => setYearRangeStart(yearRangeStart + 10)}
+          onClick={() => setYearRangeStart((prev) => prev + 10)}
           type="button"
         >
           <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-      <div className="flex justify-end mb-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowYearPicker(false)}
-          type="button"
-        >
-          Voltar
         </Button>
       </div>
       <div className="grid grid-cols-4 gap-2">
