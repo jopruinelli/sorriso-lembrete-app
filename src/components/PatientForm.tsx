@@ -83,7 +83,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent hideCloseButton className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-dental-primary flex items-center justify-between">
             <span>{patient ? 'Editar Paciente' : 'Novo Paciente'}</span>
