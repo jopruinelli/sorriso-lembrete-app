@@ -69,27 +69,48 @@ export const PatientCard: React.FC<PatientCardProps> = ({
 
   const PhoneSelector = ({ children, onSelect }: { children: React.ReactNode, onSelect: (phone: string) => void }) => {
     if (!hasMultipleNumbers) {
-      return <div onClick={() => onSelect(patient.phone)}>{children}</div>;
+      return (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(patient.phone);
+          }}
+        >
+          {children}
+        </div>
+      );
     }
 
     return (
       <Popover>
         <PopoverTrigger asChild>
-          {children}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {children}
+          </div>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-2" align="end">
           <div className="space-y-2">
             <p className="text-sm font-medium text-dental-primary mb-2">Escolha o número:</p>
-            <button 
-              onClick={() => onSelect(patient.phone)}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(patient.phone);
+              }}
               className="w-full p-2 text-left text-sm hover:bg-dental-background rounded border border-dental-primary/20"
             >
               <div className="font-medium">Principal</div>
               <div className="text-dental-secondary">{patient.phone}</div>
             </button>
             {patient.secondaryPhone && (
-              <button 
-                onClick={() => onSelect(patient.secondaryPhone!)}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(patient.secondaryPhone!);
+                }}
                 className="w-full p-2 text-left text-sm hover:bg-dental-background rounded border border-dental-primary/20"
               >
                 <div className="font-medium">Secundário</div>
@@ -103,7 +124,10 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   };
 
   return (
-    <Card className={`mb-3 border-l-4 ${getStatusColor()} transition-all duration-200 hover:shadow-md`}>
+    <Card
+      onClick={() => onEdit(patient)}
+      className={`mb-3 border-l-4 ${getStatusColor()} transition-all duration-200 hover:shadow-md cursor-pointer`}
+    >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
@@ -127,7 +151,10 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onEdit(patient)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(patient);
+            }}
             className="text-dental-secondary hover:text-dental-primary"
           >
             <Edit className="w-4 h-4" />
@@ -175,10 +202,13 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               {patient.paymentType === 'particular' ? 'Particular' : 'Convênio'}
             </Badge>
             {patient.contactHistory.length > 0 && (
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className="text-xs cursor-pointer hover:bg-dental-background"
-                onClick={() => setShowContactHistory(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowContactHistory(true);
+                }}
               >
                 <History className="w-3 h-3 mr-1" />
                 {patient.contactHistory.length} contatos
@@ -211,7 +241,10 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             
             <Button
               size="sm"
-              onClick={() => onContact(patient)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onContact(patient);
+              }}
               className="bg-dental-primary hover:bg-dental-secondary text-white"
             >
               Contato
