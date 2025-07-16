@@ -196,8 +196,8 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex gap-2 flex-wrap gap-y-2">
             <Badge variant={patient.paymentType === 'particular' ? 'default' : 'secondary'} className="text-xs">
               {patient.paymentType === 'particular' ? 'Particular' : 'Convênio'}
             </Badge>
@@ -216,7 +216,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             )}
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap gap-y-2">
             <PhoneSelector onSelect={handlePhoneClick}>
               <Button
                 variant="outline"
