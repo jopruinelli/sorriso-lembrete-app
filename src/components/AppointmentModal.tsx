@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, addHours, startOfDay, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, Clock, MapPin, User, FileText, Plus, Search } from 'lucide-react';
+import { AlertTriangle, Clock, MapPin, User, FileText, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -34,7 +34,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
   CommandSeparator,
@@ -89,7 +88,7 @@ export function AppointmentModal({
 }: AppointmentModalProps) {
   const [conflicts, setConflicts] = useState<Appointment[]>([]);
   const [patientSearchOpen, setPatientSearchOpen] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState('');
+  const [patientSearch, setPatientSearch] = useState('');
   const navigate = useNavigate();
   const { createAppointment, updateAppointment, deleteAppointment, checkForConflicts } = useAppointments();
 
@@ -134,7 +133,8 @@ export function AppointmentModal({
         recurrence_type: appointment.recurrence_type,
         recurrence_end_date: appointment.recurrence_end_date ? new Date(appointment.recurrence_end_date) : undefined,
       });
-      setSelectedPatientId(appointment.patient_id);
+      const patientName = patients.find((p) => p.id === appointment.patient_id)?.name || '';
+      setPatientSearch(patientName);
     } else if (selectedTimeSlot) {
       // Creating new appointment for specific time slot
       form.reset({
@@ -149,7 +149,7 @@ export function AppointmentModal({
         notes: '',
         recurrence_type: 'none',
       });
-      setSelectedPatientId('');
+      setPatientSearch('');
     } else {
       // Creating new appointment without specific time
       const now = new Date();
@@ -166,9 +166,9 @@ export function AppointmentModal({
         notes: '',
         recurrence_type: 'none',
       });
-      setSelectedPatientId('');
+      setPatientSearch('');
     }
-  }, [appointment, selectedTimeSlot, locations, form]);
+  }, [appointment, selectedTimeSlot, locations, patients, form]);
 
   useEffect(() => {
     if (watchedDate && watchedStartHour !== undefined && watchedStartMinute !== undefined && 
@@ -239,79 +239,91 @@ export function AppointmentModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="patient_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Paciente
-                  </FormLabel>
-                  <Popover
-                    open={patientSearchOpen}
-                    onOpenChange={setPatientSearchOpen}
-                    modal={false}
-                  >
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          role="combobox"
-                          className="w-full justify-between"
-                        >
-                          {field.value
-                            ? patients.find((patient) => patient.id === field.value)?.name
-                            : "Selecione um paciente..."}
-                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 z-[60]">
-                      <Command>
-                        <CommandInput placeholder="Buscar paciente..." />
-                        <CommandList>
-                          <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
-                          <CommandGroup>
-                            {patients.map((patient) => (
-                              <CommandItem
-                                key={patient.id}
-                                value={`${patient.name} ${patient.phone}`}
-                                onSelect={() => {
-                                  field.onChange(patient.id);
-                                  setSelectedPatientId(patient.id);
-                                  setPatientSearchOpen(false);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{patient.name}</span>
-                                  <span className="text-sm text-muted-foreground">{patient.phone}</span>
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                          <CommandSeparator />
-                          <CommandGroup>
-                            <CommandItem
-                              onSelect={() => {
-                                onClose();
-                                navigate('/?action=add-patient');
+              <FormField
+                control={form.control}
+                name="patient_id"
+                render={({ field }) => {
+                  const filteredPatients = patients.filter((patient) =>
+                    patient.name.toLowerCase().includes(patientSearch.toLowerCase())
+                  );
+                  return (
+                    <FormItem className="relative">
+                      <FormLabel className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Paciente
+                      </FormLabel>
+                      <Popover
+                        open={patientSearchOpen}
+                        onOpenChange={setPatientSearchOpen}
+                        modal={false}
+                      >
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Input
+                              placeholder="Digite para buscar..."
+                              value={
+                                field.value
+                                  ? patients.find((p) => p.id === field.value)?.name || ''
+                                  : patientSearch
+                              }
+                              onChange={(e) => {
+                                setPatientSearch(e.target.value);
+                                field.onChange('');
+                                setPatientSearchOpen(true);
                               }}
-                            >
-                              <Plus className="mr-2 h-4 w-4" />
-                              Adicionar novo paciente
-                            </CommandItem>
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                              onFocus={() => setPatientSearchOpen(true)}
+                            />
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0 z-[60]">
+                          <Command>
+                            <CommandList>
+                              {filteredPatients.length > 0 ? (
+                                <CommandGroup>
+                                  {filteredPatients.map((patient) => (
+                                    <CommandItem
+                                      key={patient.id}
+                                      value={`${patient.name} ${patient.phone}`}
+                                      onSelect={() => {
+                                        field.onChange(patient.id);
+                                        setPatientSearch(patient.name);
+                                        setPatientSearchOpen(false);
+                                      }}
+                                      className="cursor-pointer"
+                                    >
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">{patient.name}</span>
+                                        <span className="text-sm text-muted-foreground">
+                                          {patient.phone}
+                                        </span>
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              ) : (
+                                <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                              )}
+                              <CommandSeparator />
+                              <CommandGroup>
+                                <CommandItem
+                                  onSelect={() => {
+                                    onClose();
+                                    navigate('/?action=add-patient');
+                                  }}
+                                >
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Adicionar novo paciente
+                                </CommandItem>
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
 
             <FormField
               control={form.control}
