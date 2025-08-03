@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, addHours, startOfDay } from 'date-fns';
+import { format, addHours, startOfDay, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, Clock, MapPin, User, FileText } from 'lucide-react';
+import { AlertTriangle, Clock, MapPin, User, FileText, Plus, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAppointments } from '@/hooks/useAppointments';
@@ -39,12 +54,21 @@ const appointmentSchema = z.object({
   patient_id: z.string().min(1, 'Selecione um paciente'),
   location_id: z.string().min(1, 'Selecione um local'),
   title: z.string().min(1, 'Digite um título'),
-  start_time: z.date(),
-  end_time: z.date(),
+  date: z.date(),
+  start_hour: z.number().min(0).max(23),
+  start_minute: z.number().min(0).max(59),
+  end_hour: z.number().min(0).max(23),
+  end_minute: z.number().min(0).max(59),
   notes: z.string().optional(),
   recurrence_type: z.enum(['none', 'monthly', 'semiannual', 'annual']),
   recurrence_end_date: z.date().optional(),
 });
+
+const titleOptions = [
+  'Consulta de Retorno',
+  'Primeira Consulta', 
+  'Manutenção'
+];
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -64,6 +88,9 @@ export function AppointmentModal({
   locations,
 }: AppointmentModalProps) {
   const [conflicts, setConflicts] = useState<Appointment[]>([]);
+  const [patientSearchOpen, setPatientSearchOpen] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState('');
+  const navigate = useNavigate();
   const { createAppointment, updateAppointment, deleteAppointment, checkForConflicts } = useAppointments();
 
   const form = useForm<z.infer<typeof appointmentSchema>>({
@@ -71,80 +98,113 @@ export function AppointmentModal({
     defaultValues: {
       patient_id: '',
       location_id: '',
-      title: '',
-      start_time: new Date(),
-      end_time: new Date(),
+      title: 'Consulta de Retorno',
+      date: new Date(),
+      start_hour: 9,
+      start_minute: 0,
+      end_hour: 10,
+      end_minute: 0,
       notes: '',
       recurrence_type: 'none',
     },
   });
 
-  const watchedStartTime = form.watch('start_time');
-  const watchedEndTime = form.watch('end_time');
+  const watchedDate = form.watch('date');
+  const watchedStartHour = form.watch('start_hour');
+  const watchedStartMinute = form.watch('start_minute');
+  const watchedEndHour = form.watch('end_hour');
+  const watchedEndMinute = form.watch('end_minute');
 
   useEffect(() => {
     if (appointment) {
       // Editing existing appointment
+      const startTime = new Date(appointment.start_time);
+      const endTime = new Date(appointment.end_time);
+      
       form.reset({
         patient_id: appointment.patient_id,
         location_id: appointment.location_id,
         title: appointment.title,
-        start_time: new Date(appointment.start_time),
-        end_time: new Date(appointment.end_time),
+        date: startTime,
+        start_hour: startTime.getHours(),
+        start_minute: startTime.getMinutes(),
+        end_hour: endTime.getHours(),
+        end_minute: endTime.getMinutes(),
         notes: appointment.notes || '',
         recurrence_type: appointment.recurrence_type,
         recurrence_end_date: appointment.recurrence_end_date ? new Date(appointment.recurrence_end_date) : undefined,
       });
+      setSelectedPatientId(appointment.patient_id);
     } else if (selectedTimeSlot) {
       // Creating new appointment for specific time slot
-      const startTime = addHours(startOfDay(selectedTimeSlot.date), selectedTimeSlot.hour);
-      const endTime = addHours(startTime, 1); // Default 1 hour duration
-      
       form.reset({
         patient_id: '',
         location_id: locations[0]?.id || '',
-        title: '',
-        start_time: startTime,
-        end_time: endTime,
+        title: 'Consulta de Retorno',
+        date: selectedTimeSlot.date,
+        start_hour: selectedTimeSlot.hour,
+        start_minute: 0,
+        end_hour: selectedTimeSlot.hour + 1,
+        end_minute: 0,
         notes: '',
         recurrence_type: 'none',
       });
+      setSelectedPatientId('');
     } else {
       // Creating new appointment without specific time
       const now = new Date();
-      const startTime = new Date(now);
-      startTime.setMinutes(0, 0, 0); // Round to nearest hour
-      const endTime = addHours(startTime, 1);
       
       form.reset({
         patient_id: '',
         location_id: locations[0]?.id || '',
-        title: '',
-        start_time: startTime,
-        end_time: endTime,
+        title: 'Consulta de Retorno',
+        date: now,
+        start_hour: 9,
+        start_minute: 0,
+        end_hour: 10,
+        end_minute: 0,
         notes: '',
         recurrence_type: 'none',
       });
+      setSelectedPatientId('');
     }
   }, [appointment, selectedTimeSlot, locations, form]);
 
   useEffect(() => {
-    if (watchedStartTime && watchedEndTime) {
+    if (watchedDate && watchedStartHour !== undefined && watchedStartMinute !== undefined && 
+        watchedEndHour !== undefined && watchedEndMinute !== undefined) {
+      const startTime = setMinutes(setHours(watchedDate, watchedStartHour), watchedStartMinute);
+      const endTime = setMinutes(setHours(watchedDate, watchedEndHour), watchedEndMinute);
+      
       const foundConflicts = checkForConflicts(
-        watchedStartTime,
-        watchedEndTime,
+        startTime,
+        endTime,
         appointment?.id
       );
       setConflicts(foundConflicts);
     }
-  }, [watchedStartTime, watchedEndTime, appointment?.id, checkForConflicts]);
+  }, [watchedDate, watchedStartHour, watchedStartMinute, watchedEndHour, watchedEndMinute, appointment?.id, checkForConflicts]);
 
   const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
     try {
+      const startTime = setMinutes(setHours(data.date, data.start_hour), data.start_minute);
+      const endTime = setMinutes(setHours(data.date, data.end_hour), data.end_minute);
+      
+      const appointmentData: AppointmentFormData = {
+        patient_id: data.patient_id,
+        location_id: data.location_id,
+        title: data.title,
+        start_time: startTime,
+        end_time: endTime,
+        notes: data.notes,
+        recurrence_type: data.recurrence_type,
+        recurrence_end_date: data.recurrence_end_date,
+      };
+      
       if (appointment) {
-        await updateAppointment(appointment.id, data as AppointmentFormData);
+        await updateAppointment(appointment.id, appointmentData);
       } else {
-        await createAppointment(data as AppointmentFormData);
+        await createAppointment(appointmentData);
       }
       onClose();
     } catch (error) {
@@ -188,20 +248,57 @@ export function AppointmentModal({
                     <User className="w-4 h-4" />
                     Paciente
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um paciente" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {patients.map((patient) => (
-                        <SelectItem key={patient.id} value={patient.id}>
-                          {patient.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                        >
+                          {field.value
+                            ? patients.find((patient) => patient.id === field.value)?.name
+                            : "Selecione um paciente..."}
+                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Buscar paciente..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {patients.map((patient) => (
+                              <CommandItem
+                                key={patient.id}
+                                value={patient.name}
+                                onSelect={() => {
+                                  field.onChange(patient.id);
+                                  setSelectedPatientId(patient.id);
+                                  setPatientSearchOpen(false);
+                                }}
+                              >
+                                {patient.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                          <CommandSeparator />
+                          <CommandGroup>
+                            <CommandItem
+                              onSelect={() => {
+                                onClose();
+                                navigate('/?action=add-patient');
+                              }}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Adicionar novo paciente
+                            </CommandItem>
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -241,8 +338,40 @@ export function AppointmentModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Título</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {titleOptions.map((title) => (
+                        <SelectItem key={title} value={title}>
+                          {title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Data do Agendamento
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Consulta de retorno" {...field} />
+                    <DatePicker
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      placeholder="Selecione a data"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -250,44 +379,109 @@ export function AppointmentModal({
             />
 
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="start_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      Data e Hora de Início
-                    </FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        placeholder="Selecione a data"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="end_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data e Hora de Término</FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        placeholder="Selecione a data"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div>
+                <FormLabel>Horário de Início</FormLabel>
+                <div className="grid grid-cols-2 gap-2">
+                  <FormField
+                    control={form.control}
+                    name="start_hour"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Hora" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <SelectItem key={i} value={i.toString()}>
+                                {i.toString().padStart(2, '0')}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="start_minute"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Min" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {[0, 15, 30, 45].map((minute) => (
+                              <SelectItem key={minute} value={minute.toString()}>
+                                {minute.toString().padStart(2, '0')}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <FormLabel>Horário de Término</FormLabel>
+                <div className="grid grid-cols-2 gap-2">
+                  <FormField
+                    control={form.control}
+                    name="end_hour"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Hora" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <SelectItem key={i} value={i.toString()}>
+                                {i.toString().padStart(2, '0')}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="end_minute"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Min" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {[0, 15, 30, 45].map((minute) => (
+                              <SelectItem key={minute} value={minute.toString()}>
+                                {minute.toString().padStart(2, '0')}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
 
             <FormField

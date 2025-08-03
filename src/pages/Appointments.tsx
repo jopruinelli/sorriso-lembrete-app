@@ -22,7 +22,8 @@ export default function Appointments() {
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const workingHours = Array.from({ length: 21 }, (_, i) => i + 8); // 8:00 to 20:30 (8.5h to 20.5h)
+  const allHours = Array.from({ length: 24 }, (_, i) => i); // 0:00 to 23:00
+  const workingHours = { start: 9, end: 18 }; // 9:00 to 18:00
 
   const getAppointmentsForTimeSlot = (date: Date, hour: number) => {
     const slotStart = addHours(startOfDay(date), hour);
@@ -134,43 +135,54 @@ export default function Appointments() {
             ))}
 
             {/* Time slots */}
-            {workingHours.map((hour) => (
-              <div key={hour} className="contents">
-                <div className="bg-muted/50 p-2 border-r border-b text-xs text-muted-foreground text-center">
-                  {formatHour(hour)}
-                </div>
-                {weekDays.map((day) => {
-                  const slotAppointments = getAppointmentsForTimeSlot(day, hour);
-                  return (
-                    <div
-                      key={`${day.toISOString()}-${hour}`}
-                      className="border-r border-b p-1 min-h-[40px] cursor-pointer hover:bg-muted/30 transition-colors"
-                      onClick={() => handleTimeSlotClick(day, hour)}
-                    >
-                      {slotAppointments.map((appointment) => (
-                        <div
-                          key={appointment.id}
-                          className="mb-1 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAppointmentClick(appointment);
-                          }}
-                        >
-                          <Badge
-                            variant="secondary"
-                            className={`text-xs w-full justify-start ${getLocationColor(appointment.location_id)}`}
+            {allHours.map((hour) => {
+              const isWorkingHour = hour >= workingHours.start && hour < workingHours.end;
+              return (
+                <div key={hour} className="contents">
+                  <div className={`p-2 border-r border-b text-xs text-center ${
+                    isWorkingHour 
+                      ? 'bg-muted/50 text-muted-foreground' 
+                      : 'bg-muted/20 text-muted-foreground/50'
+                  }`}>
+                    {formatHour(hour)}
+                  </div>
+                  {weekDays.map((day) => {
+                    const slotAppointments = getAppointmentsForTimeSlot(day, hour);
+                    return (
+                      <div
+                        key={`${day.toISOString()}-${hour}`}
+                        className={`border-r border-b p-1 min-h-[40px] cursor-pointer transition-colors ${
+                          isWorkingHour 
+                            ? 'hover:bg-muted/30' 
+                            : 'bg-muted/10 hover:bg-muted/20 opacity-60'
+                        }`}
+                        onClick={() => handleTimeSlotClick(day, hour)}
+                      >
+                        {slotAppointments.map((appointment) => (
+                          <div
+                            key={appointment.id}
+                            className="mb-1 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAppointmentClick(appointment);
+                            }}
                           >
-                            <div className="truncate">
-                              {appointment.patient?.name}
-                            </div>
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                            <Badge
+                              variant="secondary"
+                              className={`text-xs w-full justify-start ${getLocationColor(appointment.location_id)}`}
+                            >
+                              <div className="truncate">
+                                {appointment.patient?.name}
+                              </div>
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+               );
+             })}
           </div>
         </CardContent>
       </Card>
