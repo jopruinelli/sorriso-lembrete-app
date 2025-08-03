@@ -248,7 +248,11 @@ export function AppointmentModal({
                     <User className="w-4 h-4" />
                     Paciente
                   </FormLabel>
-                  <Popover open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
+                  <Popover
+                    open={patientSearchOpen}
+                    onOpenChange={setPatientSearchOpen}
+                    modal={false}
+                  >
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -263,7 +267,7 @@ export function AppointmentModal({
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
+                    <PopoverContent className="w-full p-0 z-[60]">
                       <Command>
                         <CommandInput placeholder="Buscar paciente..." />
                         <CommandList>
