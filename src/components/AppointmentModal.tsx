@@ -272,14 +272,18 @@ export function AppointmentModal({
                             {patients.map((patient) => (
                               <CommandItem
                                 key={patient.id}
-                                value={patient.name}
+                                value={`${patient.name} ${patient.phone}`}
                                 onSelect={() => {
                                   field.onChange(patient.id);
                                   setSelectedPatientId(patient.id);
                                   setPatientSearchOpen(false);
                                 }}
+                                className="cursor-pointer"
                               >
-                                {patient.name}
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{patient.name}</span>
+                                  <span className="text-sm text-muted-foreground">{patient.phone}</span>
+                                </div>
                               </CommandItem>
                             ))}
                           </CommandGroup>
