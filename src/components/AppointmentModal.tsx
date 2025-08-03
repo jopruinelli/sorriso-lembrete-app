@@ -256,6 +256,7 @@ export function AppointmentModal({
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
+                          type="button"
                           variant="outline"
                           role="combobox"
                           className="w-full justify-between"
