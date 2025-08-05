@@ -63,7 +63,10 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
   };
 
   // Add patient to Supabase
-  const addPatient = async (patientData: PatientCreateData, userId: string) => {
+  const addPatient = async (
+    patientData: PatientCreateData,
+    userId: string
+  ): Promise<Patient | void> => {
     console.log('🚀 Starting addPatient:', { patientName: patientData.name, userId, organizationId });
     
     if (!organizationId) {
@@ -99,6 +102,7 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
       });
       
       console.log('✅ Patient added successfully to state');
+      return newPatient;
     } catch (error) {
       console.error('❌ Error adding patient:', error);
       
