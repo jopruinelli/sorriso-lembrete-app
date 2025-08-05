@@ -38,11 +38,6 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAppointments } from '@/hooks/useAppointments';
@@ -252,30 +247,25 @@ export function AppointmentModal({
                         <User className="w-4 h-4" />
                         Paciente
                       </FormLabel>
-                      <Popover
-                        open={patientSearchOpen}
-                        onOpenChange={setPatientSearchOpen}
-                        modal={false}
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Input
-                              placeholder="Digite para buscar..."
-                              value={
-                                field.value
-                                  ? patients.find((p) => p.id === field.value)?.name || ''
-                                  : patientSearch
-                              }
-                              onChange={(e) => {
-                                setPatientSearch(e.target.value);
-                                field.onChange('');
-                                setPatientSearchOpen(true);
-                              }}
-                              onFocus={() => setPatientSearchOpen(true)}
-                            />
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0 z-[60]">
+                      <FormControl>
+                        <Input
+                          placeholder="Digite para buscar..."
+                          value={
+                            field.value
+                              ? patients.find((p) => p.id === field.value)?.name || ''
+                              : patientSearch
+                          }
+                          onChange={(e) => {
+                            setPatientSearch(e.target.value);
+                            field.onChange('');
+                            setPatientSearchOpen(true);
+                          }}
+                          onFocus={() => setPatientSearchOpen(true)}
+                          onBlur={() => setTimeout(() => setPatientSearchOpen(false), 100)}
+                        />
+                      </FormControl>
+                      {patientSearchOpen && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
                           <Command>
                             <CommandList>
                               {filteredPatients.length > 0 ? (
@@ -317,8 +307,8 @@ export function AppointmentModal({
                               </CommandGroup>
                             </CommandList>
                           </Command>
-                        </PopoverContent>
-                      </Popover>
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   );
