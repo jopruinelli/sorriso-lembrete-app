@@ -250,14 +250,10 @@ export function AppointmentModal({
                       <FormControl>
                         <Input
                           placeholder="Digite para buscar..."
-                          value={
-                            field.value
-                              ? patients.find((p) => p.id === field.value)?.name || ''
-                              : patientSearch
-                          }
+                          value={patientSearch}
                           onChange={(e) => {
                             setPatientSearch(e.target.value);
-                            field.onChange('');
+                            if (field.value) field.onChange('');
                             setPatientSearchOpen(true);
                           }}
                           onFocus={() => setPatientSearchOpen(true)}
