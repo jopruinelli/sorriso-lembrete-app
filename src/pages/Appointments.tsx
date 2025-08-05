@@ -7,9 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAppointments } from '@/hooks/useAppointments';
-import { useSupabasePatients } from '@/hooks/useSupabasePatients';
-import { useAuth } from '@/hooks/useAuth';
-import { useOrganization } from '@/hooks/useOrganization';
 import { AppointmentModal } from '@/components/AppointmentModal';
 import { Appointment } from '@/types/appointment';
 
@@ -20,9 +17,6 @@ export default function Appointments() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; hour: number } | null>(null);
 
   const { appointments, locations, loading } = useAppointments();
-  const { user } = useAuth();
-  const { userProfile } = useOrganization(user);
-  const { patients } = useSupabasePatients(userProfile?.organization_id);
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -216,7 +210,6 @@ export default function Appointments() {
         onClose={() => setIsModalOpen(false)}
         appointment={selectedAppointment}
         selectedTimeSlot={selectedTimeSlot}
-        patients={patients}
         locations={locations}
       />
     </div>

@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { format, addHours, startOfDay, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertTriangle, Clock, MapPin, User, FileText, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -42,7 +41,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAppointments } from '@/hooks/useAppointments';
 import { Appointment, Location, AppointmentFormData } from '@/types/appointment';
-import { Patient } from '@/types/patient';
+import { PatientCreateData } from '@/types/patient';
+import { PatientForm } from '@/components/PatientForm';
+import { useAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/hooks/useOrganization';
+import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 
 const appointmentSchema = z.object({
   patient_id: z.string().min(1, 'Selecione um paciente'),
@@ -69,7 +72,6 @@ interface AppointmentModalProps {
   onClose: () => void;
   appointment?: Appointment | null;
   selectedTimeSlot?: { date: Date; hour: number } | null;
-  patients: Patient[];
   locations: Location[];
 }
 
@@ -78,14 +80,16 @@ export function AppointmentModal({
   onClose,
   appointment,
   selectedTimeSlot,
-  patients,
   locations,
 }: AppointmentModalProps) {
   const [conflicts, setConflicts] = useState<Appointment[]>([]);
   const [patientSearchOpen, setPatientSearchOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
-  const navigate = useNavigate();
+  const [showPatientForm, setShowPatientForm] = useState(false);
   const { createAppointment, updateAppointment, deleteAppointment, checkForConflicts } = useAppointments();
+  const { user } = useAuth();
+  const { userProfile } = useOrganization(user);
+  const { patients, addPatient, retryLoadPatients } = useSupabasePatients(userProfile?.organization_id);
 
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
@@ -214,9 +218,26 @@ export function AppointmentModal({
     }
   };
 
+  const handlePatientSave = async (data: PatientCreateData) => {
+    if (!user) return;
+    const newPatient = await addPatient(data, user.id);
+    await retryLoadPatients();
+    if (newPatient) {
+      form.setValue('patient_id', newPatient.id);
+      setPatientSearch(newPatient.name);
+    }
+    setShowPatientForm(false);
+  };
+
+  const handlePatientCancel = async () => {
+    await retryLoadPatients();
+    setShowPatientForm(false);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {appointment ? 'Editar Agendamento' : 'Novo Agendamento'}
@@ -293,8 +314,8 @@ export function AppointmentModal({
                               <CommandGroup>
                                 <CommandItem
                                   onSelect={() => {
-                                    onClose();
-                                    navigate('/?action=add-patient');
+                                    setPatientSearchOpen(false);
+                                    setShowPatientForm(true);
                                   }}
                                 >
                                   <Plus className="mr-2 h-4 w-4" />
@@ -581,5 +602,9 @@ export function AppointmentModal({
         </Form>
       </DialogContent>
     </Dialog>
+    {showPatientForm && (
+      <PatientForm onSave={handlePatientSave} onCancel={handlePatientCancel} />
+    )}
+    </>
   );
 }
