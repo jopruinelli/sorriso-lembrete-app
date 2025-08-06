@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter } from 'lucide-react';
 import { ContactPeriod } from '@/types/patient';
@@ -15,8 +14,6 @@ interface FilterBarProps {
   setSearchTerm: (term: string) => void;
   paymentFilter: 'all' | 'particular' | 'convenio';
   setPaymentFilter: (payment: 'all' | 'particular' | 'convenio') => void;
-  overdueFilter: boolean;
-  setOverdueFilter: (overdue: boolean) => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -27,9 +24,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   searchTerm,
   setSearchTerm,
   paymentFilter,
-  setPaymentFilter,
-  overdueFilter,
-  setOverdueFilter
+  setPaymentFilter
 }) => {
   return (
     <div className="space-y-3 mb-4">
@@ -81,17 +76,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <SelectItem value="convenio">Convênio</SelectItem>
           </SelectContent>
         </Select>
-
-        <Button
-          variant={overdueFilter ? "default" : "outline"}
-          onClick={() => setOverdueFilter(!overdueFilter)}
-          className={overdueFilter 
-            ? "bg-dental-primary hover:bg-dental-secondary whitespace-nowrap" 
-            : "border-dental-primary text-dental-primary hover:bg-dental-background whitespace-nowrap"
-          }
-        >
-          Apenas atrasados
-        </Button>
       </div>
     </div>
   );

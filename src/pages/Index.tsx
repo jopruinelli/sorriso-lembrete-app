@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -42,7 +42,6 @@ const Index = () => {
   const [contactPeriodFilter, setContactPeriodFilter] = useState<ContactPeriod | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'particular' | 'convenio'>('all');
-  const [overdueFilter, setOverdueFilter] = useState(false);
   const patientsListRef = useRef<HTMLDivElement>(null);
 
   // Filtering logic
@@ -61,19 +60,14 @@ const Index = () => {
     const nextContactDate = startOfDay(patient.nextContactDate);
     const isPatientOverdue = isAfter(today, nextContactDate);
 
-    // Filtro "Atrasados" no seletor de período
-    if (contactPeriodFilter === 'overdue') {
-      return isPatientOverdue;
-    }
+      // Filtro "Atrasados" no seletor de período
+      if (contactPeriodFilter === 'overdue') {
+        return isPatientOverdue;
+      }
 
-    // Botão "Apenas atrasados" só funciona quando o período é "Todos"
-    if (overdueFilter && contactPeriodFilter === 'all') {
-      return isPatientOverdue;
-    }
-
-    // Nas opções de período (1m, 3m, 6m, 1a) ignorar pacientes atrasados
-    if (contactPeriodFilter !== 'all') {
-      if (isPatientOverdue) return false;
+      // Nas opções de período (1m, 3m, 6m, 1a) ignorar pacientes atrasados
+      if (contactPeriodFilter !== 'all') {
+        if (isPatientOverdue) return false;
 
       const daysDiff = Math.ceil(
         (nextContactDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
@@ -113,10 +107,9 @@ const Index = () => {
 
   const filtersAreDefault =
     statusFilter === 'all' &&
-    contactPeriodFilter === 'all' &&
-    paymentFilter === 'all' &&
-    searchTerm === '' &&
-    !overdueFilter;
+      contactPeriodFilter === 'all' &&
+      paymentFilter === 'all' &&
+      searchTerm === '';
 
   // Handler functions
   const handleAddPatient = async (patientData: PatientCreateData) => {
@@ -140,14 +133,13 @@ const Index = () => {
   };
 
   const handleOverdueFilterClick = () => {
-    setOverdueFilter(true);
     setStatusFilter('active');
-    setContactPeriodFilter('all');
+    setContactPeriodFilter('overdue');
     setPaymentFilter('all');
     setSearchTerm('');
-    
+
     setTimeout(() => {
-      patientsListRef.current?.scrollIntoView({ 
+      patientsListRef.current?.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
@@ -155,7 +147,6 @@ const Index = () => {
   };
 
   const handleUpcomingFilterClick = () => {
-    setOverdueFilter(false);
     setStatusFilter('active');
     setContactPeriodFilter('1month');
     setPaymentFilter('all');
@@ -182,7 +173,6 @@ const Index = () => {
   };
 
   const resetFilters = () => {
-    setOverdueFilter(false);
     setStatusFilter('all');
     setContactPeriodFilter('all');
     setPaymentFilter('all');
@@ -345,18 +335,16 @@ const Index = () => {
             </div>
 
             {/* Filter Bar */}
-            <FilterBar
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              contactPeriodFilter={contactPeriodFilter}
-              setContactPeriodFilter={setContactPeriodFilter}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              paymentFilter={paymentFilter}
-              setPaymentFilter={setPaymentFilter}
-              overdueFilter={overdueFilter}
-              setOverdueFilter={setOverdueFilter}
-            />
+              <FilterBar
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                contactPeriodFilter={contactPeriodFilter}
+                setContactPeriodFilter={setContactPeriodFilter}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                paymentFilter={paymentFilter}
+                setPaymentFilter={setPaymentFilter}
+              />
 
             {/* Patient Count */}
             <div className="mb-4">
