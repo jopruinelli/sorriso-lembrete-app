@@ -8,11 +8,10 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { OnboardingFlow } from '@/components/OnboardingFlow';
 import { PatientCard } from '@/components/PatientCard';
 import { PatientForm } from '@/components/PatientForm';
-import { ContactForm } from '@/components/ContactForm';
 import { FilterBar } from '@/components/FilterBar';
 import { SettingsModal } from '@/components/SettingsModal';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Patient, ContactRecord, ContactPeriod, PatientCreateData } from '@/types/patient';
+import { Patient, ContactPeriod, PatientCreateData } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Users, Calendar, Settings, UserPlus, Clock, CalendarDays } from 'lucide-react';
@@ -22,7 +21,7 @@ import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 const Index = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const { userProfile, organizationSettings, loading: orgLoading, createOrganization, joinOrganization, updateProfile, updateOrganizationSettings } = useOrganization(user);
-  const { patients, loading: patientsLoading, addPatient, updatePatient, addContactRecord, deletePatient, bulkAddPatients, bulkDeletePatients } = useSupabasePatients(userProfile?.organization_id);
+  const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient, bulkAddPatients, bulkDeletePatients } = useSupabasePatients(userProfile?.organization_id);
 
   console.log('📱 Index component render:', { 
     user: user?.email, 
@@ -34,9 +33,7 @@ const Index = () => {
 
   // State variables
   const [showPatientForm, setShowPatientForm] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'closed'>('all');
   const [contactPeriodFilter, setContactPeriodFilter] = useState<ContactPeriod | 'all'>('all');
@@ -123,13 +120,6 @@ const Index = () => {
     await updatePatient(editingPatient.id, patientData, user.id);
     setEditingPatient(null);
     setShowPatientForm(false);
-  };
-
-  const handleAddContact = async (contactData: Omit<ContactRecord, 'id'>, nextContactDate?: Date) => {
-    if (!selectedPatient || !user?.id) return;
-    await addContactRecord(selectedPatient.id, contactData, user.id, nextContactDate);
-    setSelectedPatient(null);
-    setShowContactForm(false);
   };
 
   const handleOverdueFilterClick = () => {
@@ -373,10 +363,6 @@ const Index = () => {
                   <PatientCard
                     key={patient.id}
                     patient={patient}
-                    onContact={() => {
-                      setSelectedPatient(patient);
-                      setShowContactForm(true);
-                    }}
                     onEdit={() => {
                       setEditingPatient(patient);
                       setShowPatientForm(true);
@@ -395,17 +381,6 @@ const Index = () => {
                 onCancel={() => {
                   setShowPatientForm(false);
                   setEditingPatient(null);
-                }}
-              />
-            )}
-
-            {showContactForm && selectedPatient && (
-              <ContactForm
-                patient={selectedPatient}
-                onSave={handleAddContact}
-                onCancel={() => {
-                  setShowContactForm(false);
-                  setSelectedPatient(null);
                 }}
               />
             )}
