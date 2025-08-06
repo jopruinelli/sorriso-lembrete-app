@@ -8,6 +8,7 @@ import { useOrganization } from './useOrganization';
 export const useAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [titles, setTitles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -56,6 +57,29 @@ export const useAppointments = () => {
       toast({
         title: "Erro",
         description: "Não foi possível carregar os locais.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchTitles = async () => {
+    if (!userProfile?.organization_id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('appointment_titles')
+        .select('title')
+        .eq('organization_id', userProfile.organization_id)
+        .eq('is_active', true)
+        .order('title');
+
+      if (error) throw error;
+      setTitles((data || []).map((t: { title: string }) => t.title));
+    } catch (error) {
+      console.error('Error fetching titles:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os títulos.",
         variant: "destructive",
       });
     }
@@ -174,7 +198,7 @@ export const useAppointments = () => {
   useEffect(() => {
     if (userProfile?.organization_id) {
       setLoading(true);
-      Promise.all([fetchAppointments(), fetchLocations()]).finally(() => {
+      Promise.all([fetchAppointments(), fetchLocations(), fetchTitles()]).finally(() => {
         setLoading(false);
       });
     }
@@ -183,6 +207,7 @@ export const useAppointments = () => {
   return {
     appointments,
     locations,
+    titles,
     loading,
     createAppointment,
     updateAppointment,
@@ -190,5 +215,6 @@ export const useAppointments = () => {
     checkForConflicts,
     fetchAppointments,
     fetchLocations,
+    fetchTitles,
   };
 };

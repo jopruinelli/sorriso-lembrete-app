@@ -59,18 +59,13 @@ const appointmentSchema = z.object({
   recurrence_end_date: z.date().optional(),
 });
 
-const titleOptions = [
-  'Consulta de Retorno',
-  'Primeira Consulta', 
-  'Manutenção'
-];
-
 interface AppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   appointment?: Appointment | null;
   selectedTimeSlot?: { date: Date; hour: number; minute: number } | null;
   locations: Location[];
+  titles: string[];
   patients: Patient[];
   addPatient: (
     patientData: PatientCreateData,
@@ -85,6 +80,7 @@ export function AppointmentModal({
   appointment,
   selectedTimeSlot,
   locations,
+  titles,
   patients,
   addPatient,
   retryLoadPatients,
@@ -384,7 +380,7 @@ export function AppointmentModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {titleOptions.map((title) => (
+                      {(titles && titles.length > 0 ? titles : ['Consulta de Retorno']).map((title) => (
                         <SelectItem key={title} value={title}>
                           {title}
                         </SelectItem>
