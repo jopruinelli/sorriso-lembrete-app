@@ -46,37 +46,4 @@ export class ContactService {
       throw error;
     }
   }
-
-  static async addContactRecord(patientId: string, contactRecord: Omit<ContactRecord, 'id'>, userId: string, organizationId: string): Promise<void> {
-    console.log('➕ ContactService.addContactRecord:', { patientId, userId, organizationId });
-    
-    if (!organizationId) {
-      throw new Error('Organization ID is required');
-    }
-
-    try {
-      const { error } = await supabase
-        .from('contact_records')
-        .insert([{
-          patient_id: patientId,
-          user_id: userId,
-          organization_id: organizationId,
-          date: contactRecord.date.toISOString(),
-          method: contactRecord.method,
-          notes: contactRecord.notes,
-          successful: contactRecord.successful
-        }])
-        .select();
-
-      if (error) {
-        console.error('❌ Error adding contact record:', error);
-        throw error;
-      }
-
-      console.log('✅ Contact record added');
-    } catch (error) {
-      console.error('❌ ContactService.addContactRecord failed:', error);
-      throw error;
-    }
-  }
 }

@@ -15,14 +15,12 @@ interface PatientCardProps {
   patient: Patient;
   organizationSettings?: OrganizationSettings | null;
   onEdit: (patient: Patient) => void;
-  onContact: (patient: Patient) => void;
 }
 
-export const PatientCard: React.FC<PatientCardProps> = ({ 
-  patient, 
+export const PatientCard: React.FC<PatientCardProps> = ({
+  patient,
   organizationSettings,
-  onEdit, 
-  onContact 
+  onEdit
 }) => {
   const [showContactHistory, setShowContactHistory] = useState(false);
   const today = startOfToday();
@@ -239,16 +237,6 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               </Button>
             </PhoneSelector>
             
-            <Button
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onContact(patient);
-              }}
-              className="bg-dental-primary hover:bg-dental-secondary text-white"
-            >
-              Contato
-            </Button>
           </div>
         </div>
 

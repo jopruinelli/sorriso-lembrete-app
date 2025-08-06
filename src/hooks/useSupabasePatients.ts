@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Patient, ContactRecord, PatientCreateData } from '@/types/patient';
+import { Patient, PatientCreateData } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
 import { convertToAppPatient } from '@/utils/patientConverters';
 import { PatientService } from '@/services/patientService';
@@ -153,36 +153,6 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
     }
   };
 
-  // Add contact record
-  const addContactRecord = async (patientId: string, contactRecord: Omit<ContactRecord, 'id'>, userId: string, nextContactDate?: Date) => {
-    if (!organizationId) return;
-
-    try {
-      // Add contact record
-      await ContactService.addContactRecord(patientId, contactRecord, userId, organizationId);
-
-      // Update next contact date if provided
-      if (nextContactDate) {
-        await PatientService.updateNextContactDate(patientId, nextContactDate, organizationId);
-      }
-
-      // Reload patients to get updated data
-      await loadPatients();
-
-      toast({
-        title: "Contato registrado",
-        description: "Contato salvo com segurança no servidor",
-      });
-    } catch (error) {
-      console.error('❌ Error adding contact record:', error);
-      toast({
-        title: "Erro ao registrar",
-        description: "Falha ao registrar contato no servidor",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Delete patient
   const deletePatient = async (patientId: string) => {
     if (!organizationId) return;
@@ -269,7 +239,6 @@ export const useSupabasePatients = (organizationId: string | undefined) => {
     hasError,
     addPatient,
     updatePatient,
-    addContactRecord,
     deletePatient,
     bulkAddPatients,
     bulkDeletePatients,

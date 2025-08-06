@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Patient, ContactRecord, PatientCreateData } from '@/types/patient';
+import { Patient, PatientCreateData } from '@/types/patient';
 
 const STORAGE_KEY = 'dental_patients';
 
@@ -147,24 +147,6 @@ export const usePatients = () => {
     savePatients(updatedPatients);
   };
 
-  const addContactRecord = (patientId: string, contactRecord: Omit<ContactRecord, 'id'>, nextContactDate?: Date) => {
-    const updatedPatients = patients.map(patient => {
-      if (patient.id === patientId) {
-        const newContactRecord: ContactRecord = {
-          ...contactRecord,
-          id: Date.now().toString()
-        };
-        return {
-          ...patient,
-          contactHistory: [newContactRecord, ...patient.contactHistory],
-          ...(nextContactDate && { nextContactDate })
-        };
-      }
-      return patient;
-    });
-    savePatients(updatedPatients);
-  };
-
   const deletePatient = (patientId: string) => {
     console.log('🗑️ Excluindo paciente:', patientId);
     const updatedPatients = patients.filter(patient => patient.id !== patientId);
@@ -182,7 +164,6 @@ export const usePatients = () => {
     addPatient,
     bulkAddPatients,
     updatePatient,
-    addContactRecord,
     deletePatient,
     bulkDeletePatients
   };
