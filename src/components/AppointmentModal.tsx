@@ -41,11 +41,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAppointments } from '@/hooks/useAppointments';
 import { Appointment, Location, AppointmentFormData } from '@/types/appointment';
-import { PatientCreateData } from '@/types/patient';
+import { Patient, PatientCreateData } from '@/types/patient';
 import { PatientForm } from '@/components/PatientForm';
 import { useAuth } from '@/hooks/useAuth';
-import { useOrganization } from '@/hooks/useOrganization';
-import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 
 const appointmentSchema = z.object({
   patient_id: z.string().min(1, 'Selecione um paciente'),
@@ -73,6 +71,12 @@ interface AppointmentModalProps {
   appointment?: Appointment | null;
   selectedTimeSlot?: { date: Date; hour: number; minute: number } | null;
   locations: Location[];
+  patients: Patient[];
+  addPatient: (
+    patientData: PatientCreateData,
+    userId: string
+  ) => Promise<Patient | void>;
+  retryLoadPatients: () => void;
 }
 
 export function AppointmentModal({
@@ -81,6 +85,9 @@ export function AppointmentModal({
   appointment,
   selectedTimeSlot,
   locations,
+  patients,
+  addPatient,
+  retryLoadPatients,
 }: AppointmentModalProps) {
   const [conflicts, setConflicts] = useState<Appointment[]>([]);
   const [patientSearchOpen, setPatientSearchOpen] = useState(false);
@@ -88,8 +95,6 @@ export function AppointmentModal({
   const [showPatientForm, setShowPatientForm] = useState(false);
   const { createAppointment, updateAppointment, deleteAppointment, checkForConflicts } = useAppointments();
   const { user } = useAuth();
-  const { userProfile } = useOrganization(user);
-  const { patients, addPatient, retryLoadPatients } = useSupabasePatients(userProfile?.organization_id);
 
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
@@ -221,7 +226,7 @@ export function AppointmentModal({
   const handlePatientSave = async (data: PatientCreateData) => {
     if (!user) return;
     const newPatient = await addPatient(data, user.id);
-    await retryLoadPatients();
+    retryLoadPatients();
     if (newPatient) {
       form.setValue('patient_id', newPatient.id);
       setPatientSearch(newPatient.name);
@@ -229,8 +234,8 @@ export function AppointmentModal({
     setShowPatientForm(false);
   };
 
-  const handlePatientCancel = async () => {
-    await retryLoadPatients();
+  const handlePatientCancel = () => {
+    retryLoadPatients();
     setShowPatientForm(false);
   };
 
