@@ -291,6 +291,12 @@ export function AppointmentModal({
                                     <CommandItem
                                       key={patient.id}
                                       value={`${patient.name} ${patient.phone}`}
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        field.onChange(patient.id);
+                                        setPatientSearch(patient.name);
+                                        setPatientSearchOpen(false);
+                                      }}
                                       onSelect={() => {
                                         field.onChange(patient.id);
                                         setPatientSearch(patient.name);
