@@ -132,9 +132,9 @@ export default function Appointments() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent">
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-gradient-to-br from-dental-background via-white to-dental-accent">
+      <div className="container mx-auto px-4 py-6 h-full flex flex-col gap-6">
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
             <p className="text-dental-secondary">{userProfile?.organizations?.name || 'Organização não encontrada'}</p>
@@ -186,7 +186,7 @@ export default function Appointments() {
         </div>
 
       {/* Week/Day Navigation */}
-      <Card>
+      <Card className="flex-1 flex flex-col min-h-0">
         <CardHeader>
           <div className="hidden md:flex items-center justify-between">
             <Button
@@ -219,8 +219,8 @@ export default function Appointments() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div ref={scheduleRef} className="max-h-[70vh] overflow-y-auto">
+        <CardContent className="flex-1 overflow-hidden">
+          <div ref={scheduleRef} className="h-full overflow-y-auto">
             <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-lg overflow-hidden`}>
             {/* Header with days */}
             <div className="bg-muted p-2 border-r border-b">
