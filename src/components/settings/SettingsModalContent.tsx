@@ -5,6 +5,8 @@ import { ProfileTab } from '@/components/settings/ProfileTab';
 import { WhatsAppTab } from '@/components/settings/WhatsAppTab';
 import { ImportTab } from '@/components/settings/ImportTab';
 import { RemovalTab } from '@/components/settings/RemovalTab';
+import { LocationsTab } from '@/components/settings/LocationsTab';
+import { AppointmentTitlesTab } from '@/components/settings/AppointmentTitlesTab';
 import { UserManagement } from '@/components/UserManagement';
 import { UserProfile, OrganizationSettings } from '@/types/organization';
 
@@ -47,6 +49,18 @@ export const SettingsModalContent: React.FC<SettingsModalContentProps> = ({
           onUpdateSettings={onUpdateSettings}
         />
       </TabsContent>
+
+      {isAdmin && (
+        <TabsContent value="locations" className="space-y-4 mt-0">
+          <LocationsTab />
+        </TabsContent>
+      )}
+
+      {isAdmin && (
+        <TabsContent value="titles" className="space-y-4 mt-0">
+          <AppointmentTitlesTab />
+        </TabsContent>
+      )}
 
       {isAdmin && (
         <TabsContent value="import" className="space-y-4 mt-0">
