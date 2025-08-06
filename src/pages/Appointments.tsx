@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, startOfDay, addHours, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, ChevronLeft, ChevronRight, Plus, Clock, ArrowLeft } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Plus, Clock, CalendarDays, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,11 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentModal } from '@/components/AppointmentModal';
 import { Appointment } from '@/types/appointment';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { SettingsModal } from '@/components/SettingsModal';
+import { UserAvatar } from '@/components/UserAvatar';
+import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/hooks/useOrganization';
+import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 
 export default function Appointments() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -18,8 +23,21 @@ export default function Appointments() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; hour: number; minute: number } | null>(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [showSettings, setShowSettings] = useState(false);
 
-  const { appointments, locations, loading } = useAppointments();
+  const { user, loading: authLoading, signOut } = useSupabaseAuth();
+  const {
+    userProfile,
+    organizationSettings,
+    loading: orgLoading,
+    updateProfile,
+    updateOrganizationSettings
+  } = useOrganization(user);
+
+  const { patients, deletePatient, bulkAddPatients, bulkDeletePatients } =
+    useSupabasePatients(userProfile?.organization_id);
+
+  const { appointments, locations, loading: appointmentsLoading } = useAppointments();
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -95,37 +113,63 @@ export default function Appointments() {
 
   const daysToDisplay = isMobile ? [weekDays[selectedDayIndex]] : weekDays;
 
-  if (loading) {
+  if (appointmentsLoading || authLoading || orgLoading) {
     return <div className="p-6">Carregando...</div>;
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
-            </Button>
-          </Link>
-          <Calendar className="w-8 h-8 text-primary" />
+    <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent">
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Agendamentos</h1>
-            <p className="text-muted-foreground">
-              Gerencie suas consultas e compromissos
-            </p>
+            <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
+            <p className="text-dental-secondary">{userProfile?.organizations?.name || 'Organização não encontrada'}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettings(true)}
+              className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Configurações
+            </Button>
+            <UserAvatar
+              userProfile={userProfile}
+              onSettingsClick={() => setShowSettings(true)}
+              onSignOut={signOut}
+            />
           </div>
         </div>
-        <Button onClick={() => {
-          setSelectedAppointment(null);
-          setSelectedTimeSlot(null);
-          setIsModalOpen(true);
-        }}>
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Agendamento
-        </Button>
-      </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link to="/">
+              <Button className="bg-dental-primary hover:bg-dental-primary/90 text-white">
+                <CalendarDays className="w-4 h-4 mr-2" />
+                Gestão de Pacientes
+              </Button>
+            </Link>
+            <Calendar className="w-8 h-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Agendamentos</h1>
+              <p className="text-muted-foreground">
+                Gerencie suas consultas e compromissos
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => {
+              setSelectedAppointment(null);
+              setSelectedTimeSlot(null);
+              setIsModalOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Agendamento
+          </Button>
+        </div>
 
       {/* Week/Day Navigation */}
       <Card>
@@ -254,6 +298,19 @@ export default function Appointments() {
         selectedTimeSlot={selectedTimeSlot}
         locations={locations}
       />
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        userProfile={userProfile}
+        organizationSettings={organizationSettings}
+        patients={patients}
+        onUpdateProfile={updateProfile}
+        onUpdateSettings={updateOrganizationSettings}
+        onBulkImport={bulkAddPatients}
+        onDeletePatient={deletePatient}
+        onBulkDelete={bulkDeletePatients}
+      />
     </div>
+  </div>
   );
 }
