@@ -34,8 +34,14 @@ export default function Appointments() {
     updateOrganizationSettings
   } = useOrganization(user);
 
-  const { patients, deletePatient, bulkAddPatients, bulkDeletePatients } =
-    useSupabasePatients(userProfile?.organization_id);
+  const {
+    patients,
+    addPatient,
+    deletePatient,
+    bulkAddPatients,
+    bulkDeletePatients,
+    retryLoadPatients,
+  } = useSupabasePatients(userProfile?.organization_id);
 
   const { appointments, locations, loading: appointmentsLoading } = useAppointments();
 
@@ -297,6 +303,9 @@ export default function Appointments() {
         appointment={selectedAppointment}
         selectedTimeSlot={selectedTimeSlot}
         locations={locations}
+        patients={patients}
+        addPatient={addPatient}
+        retryLoadPatients={retryLoadPatients}
       />
       <SettingsModal
         isOpen={showSettings}
