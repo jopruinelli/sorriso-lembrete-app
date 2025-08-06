@@ -64,6 +64,15 @@ export const useAppointments = () => {
   const createAppointment = async (appointmentData: AppointmentFormData) => {
     if (!user?.id || !userProfile?.organization_id) return;
 
+    if (appointmentData.end_time <= appointmentData.start_time) {
+      toast({
+        title: "Erro",
+        description: "O horário de término deve ser posterior ao horário de início.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('appointments')
@@ -98,6 +107,15 @@ export const useAppointments = () => {
   };
 
   const updateAppointment = async (id: string, appointmentData: AppointmentFormData) => {
+    if (appointmentData.end_time <= appointmentData.start_time) {
+      toast({
+        title: "Erro",
+        description: "O horário de término deve ser posterior ao horário de início.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const updateData: any = { ...appointmentData };
       if (appointmentData.start_time) {
