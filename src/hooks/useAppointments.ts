@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Appointment, Location, AppointmentFormData, AppointmentTitle } from '@/types/appointment';
+import { Appointment, Location, AppointmentFormData } from '@/types/appointment';
 import { useAuth } from './useAuth';
 import { useOrganization } from './useOrganization';
 
 export const useAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [titles, setTitles] = useState<AppointmentTitle[]>([]);
+  const [titles, setTitles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -68,13 +68,13 @@ export const useAppointments = () => {
     try {
       const { data, error } = await supabase
         .from('appointment_titles')
-        .select('*')
+        .select('title')
         .eq('organization_id', userProfile.organization_id)
         .eq('is_active', true)
         .order('title');
 
       if (error) throw error;
-      setTitles((data || []) as AppointmentTitle[]);
+      setTitles((data || []).map((t: { title: string }) => t.title));
     } catch (error) {
       console.error('Error fetching titles:', error);
       toast({
@@ -87,6 +87,15 @@ export const useAppointments = () => {
 
   const createAppointment = async (appointmentData: AppointmentFormData) => {
     if (!user?.id || !userProfile?.organization_id) return;
+
+    if (appointmentData.end_time <= appointmentData.start_time) {
+      toast({
+        title: "Erro",
+        description: "O horário de término deve ser posterior ao horário de início.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -122,6 +131,15 @@ export const useAppointments = () => {
   };
 
   const updateAppointment = async (id: string, appointmentData: AppointmentFormData) => {
+    if (appointmentData.end_time <= appointmentData.start_time) {
+      toast({
+        title: "Erro",
+        description: "O horário de término deve ser posterior ao horário de início.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const updateData: any = { ...appointmentData };
       if (appointmentData.start_time) {
