@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, startOfDay, addHours, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -43,6 +43,9 @@ export default function Appointments() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
   const workingHours = { start: 9, end: 18 }; // 9:00 to 18:00
+  const scrollTargetHour = Math.max(workingHours.start - 1, 0);
+  const scheduleRef = useRef<HTMLDivElement>(null);
+  const firstHourRef = useRef<HTMLDivElement>(null);
 
   const getAppointmentsForTimeSlot = (date: Date, hour: number) => {
     const slotStart = addHours(startOfDay(date), hour);
@@ -92,6 +95,12 @@ export default function Appointments() {
       setSelectedDayIndex(todayIndex);
     }
   }, [currentWeek]);
+
+  useEffect(() => {
+    if (scheduleRef.current && firstHourRef.current) {
+      scheduleRef.current.scrollTop = firstHourRef.current.offsetTop;
+    }
+  }, []);
 
   const handlePrevDay = () => {
     if (selectedDayIndex === 0) {
@@ -206,7 +215,8 @@ export default function Appointments() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-lg overflow-hidden`}>
+          <div ref={scheduleRef} className="max-h-[70vh] overflow-y-auto">
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-lg overflow-hidden`}>
             {/* Header with days */}
             <div className="bg-muted p-2 border-r border-b">
               <Clock className="w-4 h-4 text-muted-foreground" />
@@ -223,11 +233,14 @@ export default function Appointments() {
               const isWorkingHour = hour >= workingHours.start && hour < workingHours.end;
               return (
                 <div key={hour} className="contents">
-                  <div className={`p-2 border-r border-b text-xs text-center ${
-                    isWorkingHour
-                      ? 'bg-muted/50 text-muted-foreground'
-                      : 'bg-muted/20 text-muted-foreground/50'
-                  }`}>
+                  <div
+                    ref={hour === scrollTargetHour ? firstHourRef : null}
+                    className={`p-2 border-r border-b text-xs text-center ${
+                      isWorkingHour
+                        ? 'bg-muted/50 text-muted-foreground'
+                        : 'bg-muted/20 text-muted-foreground/50'
+                    }`}
+                  >
                     {formatHour(hour)}
                   </div>
                   {daysToDisplay.map((day) => {
@@ -267,6 +280,7 @@ export default function Appointments() {
                 </div>
                );
              })}
+            </div>
           </div>
         </CardContent>
       </Card>
