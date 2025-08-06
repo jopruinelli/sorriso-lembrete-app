@@ -70,7 +70,7 @@ export const assertDatabasePatient = (data: any): DatabasePatient => {
     throw new Error('Invalid patient data: not an object');
   }
 
-  const required = ['id', 'name', 'phone', 'last_visit', 'next_contact_reason', 'next_contact_date', 'user_id'];
+  const required = ['id', 'name', 'phone', 'last_visit', 'next_contact_date', 'user_id'];
   for (const field of required) {
     if (!data[field]) {
       throw new Error(`Invalid patient data: missing ${field}`);

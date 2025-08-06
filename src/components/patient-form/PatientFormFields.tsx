@@ -67,14 +67,13 @@ export const PatientFormFields: React.FC<PatientFormFieldsProps> = ({
       />
 
       <div>
-        <Label htmlFor="nextContactReason">Motivo do Próximo Contato *</Label>
+        <Label htmlFor="nextContactReason">Motivo do Próximo Contato</Label>
         <Textarea
           id="nextContactReason"
           value={formData.nextContactReason}
           onChange={(e) => onChange('nextContactReason', e.target.value)}
           placeholder="Ex: Limpeza, revisão, tratamento..."
           rows={2}
-          required
         />
       </div>
 

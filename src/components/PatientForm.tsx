@@ -79,7 +79,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
     handleChange('nextContactDate', nextDate);
   };
 
-  const isFormValid = formData.name && formData.phone && formData.nextContactReason;
+  const isFormValid = formData.name && formData.phone;
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
