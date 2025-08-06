@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { format, startOfWeek, addDays, addWeeks, subWeeks, startOfDay, addHours, isSameDay } from 'date-fns';
+import {
+  format,
+  startOfWeek,
+  addDays,
+  addWeeks,
+  subWeeks,
+  startOfDay,
+  addHours,
+  isSameDay,
+  isWeekend
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, ChevronLeft, ChevronRight, Plus, Clock, CalendarDays, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,7 +58,7 @@ export default function Appointments() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
   const workingHours = { start: 9, end: 18 }; // 9:00 to 18:00
-  const scrollTargetHour = Math.max(workingHours.start - 1, 0);
+  const scrollTargetHour = 8; // Scroll to 8:00 on load
   const scheduleRef = useRef<HTMLDivElement>(null);
   const firstHourRef = useRef<HTMLDivElement>(null);
 
@@ -227,12 +237,18 @@ export default function Appointments() {
             <div className="bg-muted p-2 border-r border-b">
               <Clock className="w-4 h-4 text-muted-foreground" />
             </div>
-            {daysToDisplay.map((day) => (
-              <div key={day.toISOString()} className="bg-muted p-2 border-r border-b text-center">
-                <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
-                <div className="text-sm text-muted-foreground">{format(day, 'd')}</div>
-              </div>
-            ))}
+            {daysToDisplay.map((day) => {
+              const weekend = isWeekend(day);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r border-b text-center`}
+                >
+                  <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
+                  <div className={`text-sm ${weekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{format(day, 'd')}</div>
+                </div>
+              );
+            })}
 
             {/* Time slots */}
             {allHours.map((hour) => {
@@ -251,14 +267,15 @@ export default function Appointments() {
                   </div>
                   {daysToDisplay.map((day) => {
                     const slotAppointments = getAppointmentsForTimeSlot(day, hour);
+                    const weekend = isWeekend(day);
+                    const cellClass =
+                      weekend || !isWorkingHour
+                        ? 'bg-muted/10 hover:bg-muted/20 opacity-60'
+                        : 'hover:bg-muted/30';
                     return (
                       <div
                         key={`${day.toISOString()}-${hour}`}
-                        className={`border-r border-b p-1 min-h-[40px] cursor-pointer transition-colors ${
-                          isWorkingHour
-                            ? 'hover:bg-muted/30'
-                            : 'bg-muted/10 hover:bg-muted/20 opacity-60'
-                        }`}
+                        className={`border-r border-b p-1 min-h-[40px] cursor-pointer transition-colors ${cellClass}`}
                         onClick={() => handleTimeSlotClick(day, hour)}
                       >
                         {slotAppointments.map((appointment) => (
@@ -284,8 +301,8 @@ export default function Appointments() {
                     );
                   })}
                 </div>
-               );
-             })}
+              );
+            })}
             </div>
           </div>
         </CardContent>
