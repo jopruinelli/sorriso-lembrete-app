@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { format, startOfWeek, addDays, addWeeks, subWeeks, startOfDay, addHours } from 'date-fns';
+import { format, startOfWeek, addDays, addWeeks, subWeeks, startOfDay, addHours, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, ChevronLeft, ChevronRight, Plus, Clock, CalendarDays, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentModal } from '@/components/AppointmentModal';
 import { Appointment } from '@/types/appointment';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { SettingsModal } from '@/components/SettingsModal';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
@@ -19,7 +20,9 @@ export default function Appointments() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; hour: number } | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; hour: number; minute: number } | null>(null);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [showSettings, setShowSettings] = useState(false);
 
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
@@ -38,12 +41,12 @@ export default function Appointments() {
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const allHours = Array.from({ length: 24 }, (_, i) => i); // 0:00 to 23:00
+  const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
   const workingHours = { start: 9, end: 18 }; // 9:00 to 18:00
 
   const getAppointmentsForTimeSlot = (date: Date, hour: number) => {
     const slotStart = addHours(startOfDay(date), hour);
-    const slotEnd = addHours(slotStart, 0.5); // 30 minutes slots
+    const slotEnd = addHours(slotStart, 0.25); // 15 minutes slots
 
     return appointments.filter(appointment => {
       const appointmentStart = new Date(appointment.start_time);
@@ -64,8 +67,9 @@ export default function Appointments() {
   };
 
   const handleTimeSlotClick = (date: Date, hour: number) => {
-    const slotTime = addHours(startOfDay(date), hour);
-    setSelectedTimeSlot({ date, hour });
+    const fullHour = Math.floor(hour);
+    const minute = Math.round((hour % 1) * 60);
+    setSelectedTimeSlot({ date, hour: fullHour, minute });
     setSelectedAppointment(null);
     setIsModalOpen(true);
   };
@@ -78,9 +82,36 @@ export default function Appointments() {
 
   const formatHour = (hour: number) => {
     const fullHour = Math.floor(hour);
-    const minutes = (hour % 1) * 60;
+    const minutes = Math.round((hour % 1) * 60);
     return `${fullHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
+
+  useEffect(() => {
+    const todayIndex = weekDays.findIndex(day => isSameDay(day, new Date()));
+    if (todayIndex !== -1) {
+      setSelectedDayIndex(todayIndex);
+    }
+  }, [currentWeek]);
+
+  const handlePrevDay = () => {
+    if (selectedDayIndex === 0) {
+      setCurrentWeek(subWeeks(currentWeek, 1));
+      setSelectedDayIndex(6);
+    } else {
+      setSelectedDayIndex(selectedDayIndex - 1);
+    }
+  };
+
+  const handleNextDay = () => {
+    if (selectedDayIndex === 6) {
+      setCurrentWeek(addWeeks(currentWeek, 1));
+      setSelectedDayIndex(0);
+    } else {
+      setSelectedDayIndex(selectedDayIndex + 1);
+    }
+  };
+
+  const daysToDisplay = isMobile ? [weekDays[selectedDayIndex]] : weekDays;
 
   if (appointmentsLoading || authLoading || orgLoading) {
     return <div className="p-6">Carregando...</div>;
@@ -140,10 +171,10 @@ export default function Appointments() {
           </Button>
         </div>
 
-      {/* Week Navigation */}
+      {/* Week/Day Navigation */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="hidden md:flex items-center justify-between">
             <Button
               variant="outline"
               size="sm"
@@ -162,14 +193,25 @@ export default function Appointments() {
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
+          <div className="flex md:hidden items-center justify-between">
+            <Button variant="outline" size="sm" onClick={handlePrevDay}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <CardTitle className="text-lg">
+              {format(weekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })}
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={handleNextDay}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-8 gap-0 border rounded-lg overflow-hidden">
+          <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-lg overflow-hidden`}>
             {/* Header with days */}
             <div className="bg-muted p-2 border-r border-b">
               <Clock className="w-4 h-4 text-muted-foreground" />
             </div>
-            {weekDays.map((day) => (
+            {daysToDisplay.map((day) => (
               <div key={day.toISOString()} className="bg-muted p-2 border-r border-b text-center">
                 <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
                 <div className="text-sm text-muted-foreground">{format(day, 'd')}</div>
@@ -182,20 +224,20 @@ export default function Appointments() {
               return (
                 <div key={hour} className="contents">
                   <div className={`p-2 border-r border-b text-xs text-center ${
-                    isWorkingHour 
-                      ? 'bg-muted/50 text-muted-foreground' 
+                    isWorkingHour
+                      ? 'bg-muted/50 text-muted-foreground'
                       : 'bg-muted/20 text-muted-foreground/50'
                   }`}>
                     {formatHour(hour)}
                   </div>
-                  {weekDays.map((day) => {
+                  {daysToDisplay.map((day) => {
                     const slotAppointments = getAppointmentsForTimeSlot(day, hour);
                     return (
                       <div
                         key={`${day.toISOString()}-${hour}`}
                         className={`border-r border-b p-1 min-h-[40px] cursor-pointer transition-colors ${
-                          isWorkingHour 
-                            ? 'hover:bg-muted/30' 
+                          isWorkingHour
+                            ? 'hover:bg-muted/30'
                             : 'bg-muted/10 hover:bg-muted/20 opacity-60'
                         }`}
                         onClick={() => handleTimeSlotClick(day, hour)}
