@@ -22,7 +22,11 @@ interface AppointmentTitle {
   updated_at: string;
 }
 
-export const AppointmentTitlesTab: React.FC = () => {
+interface AppointmentTitlesTabProps {
+  fetchTitles: () => Promise<void>;
+}
+
+export const AppointmentTitlesTab: React.FC<AppointmentTitlesTabProps> = ({ fetchTitles }) => {
   const [titles, setTitles] = useState<AppointmentTitle[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
@@ -81,6 +85,7 @@ export const AppointmentTitlesTab: React.FC = () => {
         title: "Sucesso",
         description: "Título adicionado com sucesso",
       });
+      fetchTitles();
     } catch (error) {
       console.error('Error adding title:', error);
       toast({
@@ -110,6 +115,7 @@ export const AppointmentTitlesTab: React.FC = () => {
         title: "Sucesso",
         description: "Título atualizado com sucesso",
       });
+      fetchTitles();
     } catch (error) {
       console.error('Error updating title:', error);
       toast({
@@ -133,11 +139,12 @@ export const AppointmentTitlesTab: React.FC = () => {
         ...t,
         is_default: t.id === titleId
       })));
-      
+
       toast({
         title: "Sucesso",
         description: "Título padrão atualizado",
       });
+      fetchTitles();
     } catch (error) {
       console.error('Error setting default title:', error);
       toast({
@@ -162,6 +169,7 @@ export const AppointmentTitlesTab: React.FC = () => {
         title: "Sucesso",
         description: "Título removido com sucesso",
       });
+      fetchTitles();
     } catch (error) {
       console.error('Error deleting title:', error);
       toast({

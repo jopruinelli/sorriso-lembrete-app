@@ -39,7 +39,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAppointments } from '@/hooks/useAppointments';
-import { Appointment, Location, AppointmentFormData } from '@/types/appointment';
+import { Appointment, Location, AppointmentFormData, AppointmentTitle } from '@/types/appointment';
 import { Patient, PatientCreateData } from '@/types/patient';
 import { PatientForm } from '@/components/PatientForm';
 import { useAuth } from '@/hooks/useAuth';
@@ -76,7 +76,6 @@ const appointmentSchema = z
       });
     }
   });
-
 interface AppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -111,12 +110,14 @@ export function AppointmentModal({
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const defaultTitle = titles.find(t => t.is_default)?.title || titles[0]?.title || 'Consulta de Retorno';
+
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       patient_id: '',
       location_id: '',
-      title: 'Consulta de Retorno',
+      title: defaultTitle,
       date: new Date(),
       start_hour: 9,
       start_minute: 0,
@@ -159,7 +160,7 @@ export function AppointmentModal({
       form.reset({
         patient_id: '',
         location_id: locations[0]?.id || '',
-        title: 'Consulta de Retorno',
+        title: defaultTitle,
         date: selectedTimeSlot.date,
         start_hour: selectedTimeSlot.hour,
         start_minute: selectedTimeSlot.minute,
@@ -172,11 +173,11 @@ export function AppointmentModal({
     } else {
       // Creating new appointment without specific time
       const now = new Date();
-      
+
       form.reset({
         patient_id: '',
         location_id: locations[0]?.id || '',
-        title: 'Consulta de Retorno',
+        title: defaultTitle,
         date: now,
         start_hour: 9,
         start_minute: 0,
@@ -187,7 +188,7 @@ export function AppointmentModal({
       });
       setPatientSearch('');
     }
-  }, [appointment, selectedTimeSlot, locations, patients, form]);
+  }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle]);
 
   useEffect(() => {
     if (watchedDate && watchedStartHour !== undefined && watchedStartMinute !== undefined && 
