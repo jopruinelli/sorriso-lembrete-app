@@ -134,12 +134,12 @@ export default function Appointments() {
   return (
     <div className="min-h-screen md:h-screen md:overflow-hidden bg-gradient-to-br from-dental-background via-white to-dental-accent">
       <div className="container mx-auto px-4 py-6 h-full flex flex-col gap-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
           <div>
             <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
             <p className="text-dental-secondary">{userProfile?.organizations?.name || 'Organização não encontrada'}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <Button
               variant="outline"
               size="sm"
@@ -157,8 +157,8 @@ export default function Appointments() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
             <Link to="/">
               <Button className="bg-dental-primary hover:bg-dental-primary/90 text-white">
                 <CalendarDays className="w-4 h-4 mr-2" />
@@ -174,6 +174,7 @@ export default function Appointments() {
             </div>
           </div>
           <Button
+            className="w-full sm:w-auto"
             onClick={() => {
               setSelectedAppointment(null);
               setSelectedTimeSlot(null);
