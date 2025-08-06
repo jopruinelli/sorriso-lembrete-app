@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, addHours, startOfDay, setHours, setMinutes } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { setHours, setMinutes } from 'date-fns';
 import { AlertTriangle, Clock, MapPin, User, FileText, Plus } from 'lucide-react';
 import {
   Dialog,
@@ -44,20 +43,39 @@ import { Appointment, Location, AppointmentFormData } from '@/types/appointment'
 import { Patient, PatientCreateData } from '@/types/patient';
 import { PatientForm } from '@/components/PatientForm';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
-const appointmentSchema = z.object({
-  patient_id: z.string().min(1, 'Selecione um paciente'),
-  location_id: z.string().min(1, 'Selecione um local'),
-  title: z.string().min(1, 'Digite um título'),
-  date: z.date(),
-  start_hour: z.number().min(0).max(23),
-  start_minute: z.number().min(0).max(59),
-  end_hour: z.number().min(0).max(23),
-  end_minute: z.number().min(0).max(59),
-  notes: z.string().optional(),
-  recurrence_type: z.enum(['none', 'monthly', 'semiannual', 'annual']),
-  recurrence_end_date: z.date().optional(),
-});
+const appointmentSchema = z
+  .object({
+    patient_id: z.string().min(1, 'Selecione um paciente'),
+    location_id: z.string().min(1, 'Selecione um local'),
+    title: z.string().min(1, 'Digite um título'),
+    date: z.date(),
+    start_hour: z.number().min(0).max(23),
+    start_minute: z.number().min(0).max(59),
+    end_hour: z.number().min(0).max(23),
+    end_minute: z.number().min(0).max(59),
+    notes: z.string().optional(),
+    recurrence_type: z.enum(['none', 'monthly', 'semiannual', 'annual']),
+    recurrence_end_date: z.date().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const start = setMinutes(setHours(data.date, data.start_hour), data.start_minute);
+    const end = setMinutes(setHours(data.date, data.end_hour), data.end_minute);
+
+    if (end <= start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Horário de término deve ser após o início',
+        path: ['end_hour'],
+      });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Horário de término deve ser após o início',
+        path: ['end_minute'],
+      });
+    }
+  });
 
 const titleOptions = [
   'Consulta de Retorno',
@@ -95,6 +113,7 @@ export function AppointmentModal({
   const [showPatientForm, setShowPatientForm] = useState(false);
   const { createAppointment, updateAppointment, deleteAppointment, checkForConflicts } = useAppointments();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
@@ -193,7 +212,16 @@ export function AppointmentModal({
     try {
       const startTime = setMinutes(setHours(data.date, data.start_hour), data.start_minute);
       const endTime = setMinutes(setHours(data.date, data.end_hour), data.end_minute);
-      
+
+      if (endTime <= startTime) {
+        toast({
+          title: 'Erro',
+          description: 'O horário de término deve ser posterior ao horário de início.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const appointmentData: AppointmentFormData = {
         patient_id: data.patient_id,
         location_id: data.location_id,
@@ -204,7 +232,7 @@ export function AppointmentModal({
         recurrence_type: data.recurrence_type,
         recurrence_end_date: data.recurrence_end_date,
       };
-      
+
       if (appointment) {
         await updateAppointment(appointment.id, appointmentData);
       } else {
