@@ -18,6 +18,8 @@ interface SettingsModalContentProps {
   onUpdateSettings: (updates: { whatsapp_default_message: string }) => void;
   onShowExcelImport: () => void;
   onShowPatientRemoval: () => void;
+  fetchLocations: () => Promise<void>;
+  fetchTitles: () => Promise<void>;
 }
 
 export const SettingsModalContent: React.FC<SettingsModalContentProps> = ({
@@ -27,7 +29,9 @@ export const SettingsModalContent: React.FC<SettingsModalContentProps> = ({
   onUpdateProfile,
   onUpdateSettings,
   onShowExcelImport,
-  onShowPatientRemoval
+  onShowPatientRemoval,
+  fetchLocations,
+  fetchTitles
 }) => {
   return (
     <div className="flex-1 overflow-y-auto p-6">
@@ -52,13 +56,13 @@ export const SettingsModalContent: React.FC<SettingsModalContentProps> = ({
 
       {isAdmin && (
         <TabsContent value="locations" className="space-y-4 mt-0">
-          <LocationsTab />
+          <LocationsTab fetchLocations={fetchLocations} />
         </TabsContent>
       )}
 
       {isAdmin && (
         <TabsContent value="titles" className="space-y-4 mt-0">
-          <AppointmentTitlesTab />
+          <AppointmentTitlesTab fetchTitles={fetchTitles} />
         </TabsContent>
       )}
 

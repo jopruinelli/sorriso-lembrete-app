@@ -21,6 +21,8 @@ interface SettingsModalProps {
   onBulkImport: (patients: Omit<Patient, 'id' | 'contactHistory'>[]) => void;
   onDeletePatient: (patientId: string) => void;
   onBulkDelete: (patientIds: string[]) => void;
+  fetchLocations: () => Promise<void>;
+  fetchTitles: () => Promise<void>;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -33,7 +35,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onUpdateSettings,
   onBulkImport,
   onDeletePatient,
-  onBulkDelete
+  onBulkDelete,
+  fetchLocations,
+  fetchTitles
 }) => {
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [showPatientRemoval, setShowPatientRemoval] = useState(false);
@@ -103,6 +107,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onUpdateSettings={onUpdateSettings}
               onShowExcelImport={() => setShowExcelImport(true)}
               onShowPatientRemoval={() => setShowPatientRemoval(true)}
+              fetchLocations={fetchLocations}
+              fetchTitles={fetchTitles}
             />
           </Tabs>
         )}

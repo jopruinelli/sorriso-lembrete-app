@@ -40,7 +40,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAppointments } from '@/hooks/useAppointments';
-import { Appointment, Location, AppointmentFormData } from '@/types/appointment';
+import { Appointment, Location, AppointmentFormData, AppointmentTitle } from '@/types/appointment';
 import { Patient, PatientCreateData } from '@/types/patient';
 import { PatientForm } from '@/components/PatientForm';
 import { useAuth } from '@/hooks/useAuth';
@@ -59,18 +59,13 @@ const appointmentSchema = z.object({
   recurrence_end_date: z.date().optional(),
 });
 
-const titleOptions = [
-  'Consulta de Retorno',
-  'Primeira Consulta', 
-  'Manutenção'
-];
-
 interface AppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   appointment?: Appointment | null;
   selectedTimeSlot?: { date: Date; hour: number; minute: number } | null;
   locations: Location[];
+  titles: AppointmentTitle[];
   patients: Patient[];
   addPatient: (
     patientData: PatientCreateData,
@@ -85,6 +80,7 @@ export function AppointmentModal({
   appointment,
   selectedTimeSlot,
   locations,
+  titles,
   patients,
   addPatient,
   retryLoadPatients,
@@ -96,12 +92,14 @@ export function AppointmentModal({
   const { createAppointment, updateAppointment, deleteAppointment, checkForConflicts } = useAppointments();
   const { user } = useAuth();
 
+  const defaultTitle = titles.find(t => t.is_default)?.title || titles[0]?.title || 'Consulta de Retorno';
+
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       patient_id: '',
       location_id: '',
-      title: 'Consulta de Retorno',
+      title: defaultTitle,
       date: new Date(),
       start_hour: 9,
       start_minute: 0,
@@ -144,7 +142,7 @@ export function AppointmentModal({
       form.reset({
         patient_id: '',
         location_id: locations[0]?.id || '',
-        title: 'Consulta de Retorno',
+        title: defaultTitle,
         date: selectedTimeSlot.date,
         start_hour: selectedTimeSlot.hour,
         start_minute: selectedTimeSlot.minute,
@@ -157,11 +155,11 @@ export function AppointmentModal({
     } else {
       // Creating new appointment without specific time
       const now = new Date();
-      
+
       form.reset({
         patient_id: '',
         location_id: locations[0]?.id || '',
-        title: 'Consulta de Retorno',
+        title: defaultTitle,
         date: now,
         start_hour: 9,
         start_minute: 0,
@@ -172,7 +170,7 @@ export function AppointmentModal({
       });
       setPatientSearch('');
     }
-  }, [appointment, selectedTimeSlot, locations, patients, form]);
+  }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle]);
 
   useEffect(() => {
     if (watchedDate && watchedStartHour !== undefined && watchedStartMinute !== undefined && 
@@ -384,9 +382,9 @@ export function AppointmentModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {titleOptions.map((title) => (
-                        <SelectItem key={title} value={title}>
-                          {title}
+                      {titles.map((t) => (
+                        <SelectItem key={t.id} value={t.title}>
+                          {t.title}
                         </SelectItem>
                       ))}
                     </SelectContent>

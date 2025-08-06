@@ -41,3 +41,10 @@ export interface AppointmentFormData {
   recurrence_type: 'none' | 'monthly' | 'semiannual' | 'annual';
   recurrence_end_date?: Date;
 }
+
+export interface AppointmentTitle {
+  id: string;
+  title: string;
+  is_active: boolean;
+  is_default: boolean;
+}

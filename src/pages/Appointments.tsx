@@ -43,7 +43,7 @@ export default function Appointments() {
     retryLoadPatients,
   } = useSupabasePatients(userProfile?.organization_id);
 
-  const { appointments, locations, loading: appointmentsLoading } = useAppointments();
+  const { appointments, locations, titles, loading: appointmentsLoading, fetchLocations, fetchTitles } = useAppointments();
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -317,6 +317,7 @@ export default function Appointments() {
         appointment={selectedAppointment}
         selectedTimeSlot={selectedTimeSlot}
         locations={locations}
+        titles={titles}
         patients={patients}
         addPatient={addPatient}
         retryLoadPatients={retryLoadPatients}
@@ -332,6 +333,8 @@ export default function Appointments() {
         onBulkImport={bulkAddPatients}
         onDeletePatient={deletePatient}
         onBulkDelete={bulkDeletePatients}
+        fetchLocations={fetchLocations}
+        fetchTitles={fetchTitles}
       />
     </div>
   </div>

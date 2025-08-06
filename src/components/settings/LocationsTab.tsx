@@ -23,7 +23,11 @@ interface Location {
   updated_at: string;
 }
 
-export const LocationsTab: React.FC = () => {
+interface LocationsTabProps {
+  fetchLocations: () => Promise<void>;
+}
+
+export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [newLocation, setNewLocation] = useState({ name: '', address: '' });
@@ -82,6 +86,7 @@ export const LocationsTab: React.FC = () => {
         title: "Sucesso",
         description: "Local adicionado com sucesso",
       });
+      fetchLocations();
     } catch (error) {
       console.error('Error adding location:', error);
       toast({
@@ -111,6 +116,7 @@ export const LocationsTab: React.FC = () => {
         title: "Sucesso",
         description: "Local atualizado com sucesso",
       });
+      fetchLocations();
     } catch (error) {
       console.error('Error updating location:', error);
       toast({
@@ -135,6 +141,7 @@ export const LocationsTab: React.FC = () => {
         title: "Sucesso",
         description: "Local removido com sucesso",
       });
+      fetchLocations();
     } catch (error) {
       console.error('Error deleting location:', error);
       toast({
