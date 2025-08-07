@@ -234,7 +234,7 @@ export default function Appointments() {
           <div ref={scheduleRef} className="h-full overflow-y-auto">
             <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-lg overflow-hidden`}>
             {/* Header with days */}
-            <div className="bg-muted p-2 border-r border-b">
+            <div className="bg-muted p-2 border-r border-b sticky top-0 z-10">
               <Clock className="w-4 h-4 text-muted-foreground" />
             </div>
             {daysToDisplay.map((day) => {
@@ -242,7 +242,7 @@ export default function Appointments() {
               return (
                 <div
                   key={day.toISOString()}
-                  className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r border-b text-center`}
+                  className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r border-b text-center sticky top-0 z-10`}
                 >
                   <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
                   <div className={`text-sm ${weekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{format(day, 'd')}</div>
