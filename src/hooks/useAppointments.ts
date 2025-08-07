@@ -85,7 +85,7 @@ export const useAppointments = () => {
     }
   };
 
-  const createAppointment = async (appointmentData: AppointmentFormData) => {
+  const createAppointment = async (appointmentData: AppointmentFormData): Promise<Appointment | void> => {
     if (!user?.id || !userProfile?.organization_id) return;
 
     if (appointmentData.end_time <= appointmentData.start_time) {
@@ -119,7 +119,7 @@ export const useAppointments = () => {
         description: "Agendamento criado com sucesso.",
       });
 
-      return data;
+      return data as Appointment;
     } catch (error) {
       console.error('Error creating appointment:', error);
       toast({

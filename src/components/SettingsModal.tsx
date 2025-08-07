@@ -18,7 +18,7 @@ interface SettingsModalProps {
   patients: Patient[];
   onUpdateProfile: (updates: { name: string }) => void;
   onUpdateSettings: (updates: { whatsapp_default_message: string }) => void;
-  onBulkImport: (patients: Omit<Patient, 'id' | 'contactHistory'>[]) => void;
+  onBulkImport: (patientsData: any[], userId: string) => Promise<number>;
   onDeletePatient: (patientId: string) => void;
   onBulkDelete: (patientIds: string[]) => void;
   fetchLocations: () => Promise<void>;
@@ -43,7 +43,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [showPatientRemoval, setShowPatientRemoval] = useState(false);
 
   const handleImport = (importedPatients: Omit<Patient, 'id' | 'contactHistory'>[]) => {
-    onBulkImport(importedPatients);
+    onBulkImport(importedPatients, userProfile?.id || '');
     setShowExcelImport(false);
   };
 

@@ -11,6 +11,7 @@ import { PatientForm } from '@/components/PatientForm';
 import { FilterBar } from '@/components/FilterBar';
 import { SettingsModal } from '@/components/SettingsModal';
 import { UserAvatar } from '@/components/UserAvatar';
+import { AppNavigation } from '@/components/AppNavigation';
 import { Patient, ContactPeriod, PatientCreateData } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -232,30 +233,16 @@ const Index = () => {
           />
         )
       ) : (
-        <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent">
-          <div className="container mx-auto px-4 py-6">
-            {/* Header - sem cabeçalho fixo duplicado */}
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
-                <p className="text-dental-secondary">{userProfile.organizations?.name || 'Organização não encontrada'}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSettings(true)}
-                  className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Configurações
-                </Button>
-                <UserAvatar 
-                  userProfile={userProfile}
-                  onSettingsClick={() => setShowSettings(true)}
-                  onSignOut={signOut}
-                />
-              </div>
+        <AppNavigation
+          userProfile={userProfile}
+          onSettingsClick={() => setShowSettings(true)}
+          onSignOut={signOut}
+        >
+          <div className="container mx-auto max-w-7xl">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
+              <p className="text-dental-secondary">{userProfile.organizations?.name || 'Organização não encontrada'}</p>
             </div>
 
             {/* Dashboard Cards */}
@@ -394,13 +381,15 @@ const Index = () => {
                 patients={patients}
                 onUpdateProfile={updateProfile}
                 onUpdateSettings={updateOrganizationSettings}
-                onBulkImport={handleBulkImport}
+                onBulkImport={bulkAddPatients}
+                fetchLocations={() => Promise.resolve()}
+                fetchTitles={() => Promise.resolve()}
                 onDeletePatient={deletePatient}
                 onBulkDelete={bulkDeletePatients}
               />
             )}
           </div>
-        </div>
+        </AppNavigation>
       )}
     </AuthGuard>
   );

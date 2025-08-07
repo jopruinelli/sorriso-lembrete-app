@@ -22,6 +22,7 @@ import { Appointment } from '@/types/appointment';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { SettingsModal } from '@/components/SettingsModal';
 import { UserAvatar } from '@/components/UserAvatar';
+import { AppNavigation } from '@/components/AppNavigation';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
@@ -153,47 +154,20 @@ export default function Appointments() {
   }
 
   return (
-    <div className="min-h-screen md:h-screen md:overflow-hidden bg-gradient-to-br from-dental-background via-white to-dental-accent">
-      <div className="container mx-auto px-4 py-6 h-full flex flex-col gap-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
-            <p className="text-dental-secondary">{userProfile?.organizations?.name || 'Organização não encontrada'}</p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSettings(true)}
-              className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Configurações
-            </Button>
-            <UserAvatar
-              userProfile={userProfile}
-              onSettingsClick={() => setShowSettings(true)}
-              onSignOut={signOut}
-            />
-          </div>
+    <AppNavigation
+      userProfile={userProfile}
+      onSettingsClick={() => setShowSettings(true)}
+      onSignOut={signOut}
+    >
+      <div className="container mx-auto max-w-7xl h-full flex flex-col gap-6">
+
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-dental-primary">Agendamentos</h1>
+          <p className="text-dental-secondary">Gerencie suas consultas e compromissos</p>
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-            <Link to="/">
-              <Button className="bg-dental-primary hover:bg-dental-primary/90 text-white">
-                <CalendarDays className="w-4 h-4 mr-2" />
-                Gestão de Pacientes
-              </Button>
-            </Link>
-            <Calendar className="w-8 h-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold">Agendamentos</h1>
-              <p className="text-muted-foreground">
-                Gerencie suas consultas e compromissos
-              </p>
-            </div>
-          </div>
           <Button
             className="w-full sm:w-auto"
             onClick={() => {
@@ -370,7 +344,7 @@ export default function Appointments() {
         fetchLocations={fetchLocations}
         fetchTitles={fetchTitles}
       />
-    </div>
-  </div>
+      </div>
+    </AppNavigation>
   );
 }
