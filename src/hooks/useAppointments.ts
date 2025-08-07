@@ -222,6 +222,30 @@ export const useAppointments = () => {
     }
   }, [userProfile?.organization_id]);
 
+  useEffect(() => {
+    if (!userProfile?.organization_id) return;
+
+    const channel = supabase
+      .channel('appointments_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments',
+          filter: `organization_id=eq.${userProfile.organization_id}`,
+        },
+        () => {
+          fetchAppointments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userProfile?.organization_id]);
+
   return {
     appointments,
     locations,

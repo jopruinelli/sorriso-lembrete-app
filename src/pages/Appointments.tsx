@@ -53,7 +53,18 @@ export default function Appointments() {
     retryLoadPatients,
   } = useSupabasePatients(userProfile?.organization_id);
 
-  const { appointments, locations, titles, loading: appointmentsLoading, fetchLocations, fetchTitles } = useAppointments();
+  const {
+    appointments,
+    locations,
+    titles,
+    loading: appointmentsLoading,
+    fetchLocations,
+    fetchTitles,
+    createAppointment,
+    updateAppointment,
+    deleteAppointment,
+    checkForConflicts,
+  } = useAppointments();
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
@@ -338,6 +349,10 @@ export default function Appointments() {
         patients={patients}
         addPatient={addPatient}
         retryLoadPatients={retryLoadPatients}
+        createAppointment={createAppointment}
+        updateAppointment={updateAppointment}
+        deleteAppointment={deleteAppointment}
+        checkForConflicts={checkForConflicts}
       />
       <SettingsModal
         isOpen={showSettings}
