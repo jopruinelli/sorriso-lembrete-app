@@ -38,8 +38,7 @@ import {
 } from '@/components/ui/command';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useAppointments } from '@/hooks/useAppointments';
-import { Appointment, Location, AppointmentFormData, AppointmentTitle } from '@/types/appointment';
+import { Appointment, Location, AppointmentFormData } from '@/types/appointment';
 import { Patient, PatientCreateData } from '@/types/patient';
 import { PatientForm } from '@/components/PatientForm';
 import { useAuth } from '@/hooks/useAuth';
@@ -89,6 +88,10 @@ interface AppointmentModalProps {
     userId: string
   ) => Promise<Patient | void>;
   retryLoadPatients: () => void;
+  createAppointment: (appointmentData: AppointmentFormData) => Promise<Appointment | void>;
+  updateAppointment: (id: string, appointmentData: AppointmentFormData) => Promise<void>;
+  deleteAppointment: (id: string) => Promise<void>;
+  checkForConflicts: (startTime: Date, endTime: Date, excludeId?: string) => Appointment[];
 }
 
 export function AppointmentModal({
@@ -101,16 +104,19 @@ export function AppointmentModal({
   patients,
   addPatient,
   retryLoadPatients,
+  createAppointment,
+  updateAppointment,
+  deleteAppointment,
+  checkForConflicts,
 }: AppointmentModalProps) {
   const [conflicts, setConflicts] = useState<Appointment[]>([]);
   const [patientSearchOpen, setPatientSearchOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   const [showPatientForm, setShowPatientForm] = useState(false);
-  const { createAppointment, updateAppointment, deleteAppointment, checkForConflicts } = useAppointments();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const defaultTitle = titles.find(t => t.is_default)?.title || titles[0]?.title || 'Consulta de Retorno';
+  const defaultTitle = titles[0] || 'Consulta de Retorno';
 
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
