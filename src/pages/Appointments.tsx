@@ -242,10 +242,9 @@ export default function Appointments() {
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden">
-          <div ref={scheduleRef} className="h-full overflow-y-auto">
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-lg overflow-hidden`}>
-            {/* Header with days */}
-            <div className="bg-muted p-2 border-r border-b sticky top-0 z-10">
+          {/* Header with days */}
+          <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-t-lg overflow-hidden`}>
+            <div className="bg-muted p-2 border-r text-center">
               <Clock className="w-4 h-4 text-muted-foreground" />
             </div>
             {daysToDisplay.map((day) => {
@@ -253,67 +252,70 @@ export default function Appointments() {
               return (
                 <div
                   key={day.toISOString()}
-                  className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r border-b text-center sticky top-0 z-10`}
+                  className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r text-center`}
                 >
                   <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
                   <div className={`text-sm ${weekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{format(day, 'd')}</div>
                 </div>
               );
             })}
+          </div>
 
-            {/* Time slots */}
-            {allHours.map((hour) => {
-              const isWorkingHour = hour >= workingHours.start && hour < workingHours.end;
-              return (
-                <div key={hour} className="contents">
-                  <div
-                    ref={hour === scrollTargetHour ? firstHourRef : null}
-                    className={`p-2 border-r border-b text-xs text-center ${
-                      isWorkingHour
-                        ? 'bg-muted/50 text-muted-foreground'
-                        : 'bg-muted/20 text-muted-foreground/50'
-                    }`}
-                  >
-                    {formatHour(hour)}
-                  </div>
-                  {daysToDisplay.map((day) => {
-                    const slotAppointments = getAppointmentsForTimeSlot(day, hour);
-                    const weekend = isWeekend(day);
-                    const cellClass =
-                      weekend || !isWorkingHour
-                        ? 'bg-muted/10 hover:bg-muted/20 opacity-60'
-                        : 'hover:bg-muted/30';
-                    return (
-                      <div
-                        key={`${day.toISOString()}-${hour}`}
-                        className={`border-r border-b p-1 min-h-[40px] cursor-pointer transition-colors ${cellClass}`}
-                        onClick={() => handleTimeSlotClick(day, hour)}
-                      >
-                        {slotAppointments.map((appointment) => (
-                          <div
-                            key={appointment.id}
-                            className="mb-1 cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAppointmentClick(appointment);
-                            }}
-                          >
-                            <Badge
-                              variant="secondary"
-                              className={`text-xs w-full justify-start ${getLocationColor(appointment.location_id)}`}
+          {/* Time slots */}
+          <div ref={scheduleRef} className="h-full overflow-y-auto border border-t-0 rounded-b-lg">
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0`}>
+              {allHours.map((hour) => {
+                const isWorkingHour = hour >= workingHours.start && hour < workingHours.end;
+                return (
+                  <div key={hour} className="contents">
+                    <div
+                      ref={hour === scrollTargetHour ? firstHourRef : null}
+                      className={`p-2 border-r border-b text-xs text-center ${
+                        isWorkingHour
+                          ? 'bg-muted/50 text-muted-foreground'
+                          : 'bg-muted/20 text-muted-foreground/50'
+                      }`}
+                    >
+                      {formatHour(hour)}
+                    </div>
+                    {daysToDisplay.map((day) => {
+                      const slotAppointments = getAppointmentsForTimeSlot(day, hour);
+                      const weekend = isWeekend(day);
+                      const cellClass =
+                        weekend || !isWorkingHour
+                          ? 'bg-muted/10 hover:bg-muted/20 opacity-60'
+                          : 'hover:bg-muted/30';
+                      return (
+                        <div
+                          key={`${day.toISOString()}-${hour}`}
+                          className={`border-r border-b p-1 min-h-[40px] cursor-pointer transition-colors ${cellClass}`}
+                          onClick={() => handleTimeSlotClick(day, hour)}
+                        >
+                          {slotAppointments.map((appointment) => (
+                            <div
+                              key={appointment.id}
+                              className="mb-1 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAppointmentClick(appointment);
+                              }}
                             >
-                              <div className="truncate">
-                                {appointment.patient?.name}
-                              </div>
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                              <Badge
+                                variant="secondary"
+                                className={`text-xs w-full justify-start ${getLocationColor(appointment.location_id)}`}
+                              >
+                                <div className="truncate">
+                                  {appointment.patient?.name}
+                                </div>
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </CardContent>
