@@ -1,6 +1,6 @@
 import React from 'react';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, User, MessageSquare, FileSpreadsheet, Trash2, Users, MapPin, Tag } from 'lucide-react';
+import { Building2, User, MessageSquare, FileSpreadsheet, Trash2, Users, MapPin, Tag, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SettingsModalSidebarProps {
@@ -19,8 +19,8 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
       flex-shrink-0
     `}>
       <TabsList className={`
-        ${isMobile 
-          ? 'grid grid-cols-7 w-full h-auto bg-muted/50 p-1 gap-1' 
+        ${isMobile
+          ? 'grid grid-cols-9 w-full h-auto bg-muted/50 p-1 gap-1'
           : 'flex flex-col h-full w-full bg-transparent p-1 gap-1'
         }
       `}>
@@ -63,9 +63,9 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
             </span>
           )}
         </TabsTrigger>
-        
-        <TabsTrigger 
-          value="whatsapp" 
+
+        <TabsTrigger
+          value="whatsapp"
           className={`
             ${isMobile 
               ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
@@ -85,11 +85,33 @@ export const SettingsModalSidebar: React.FC<SettingsModalSidebarProps> = ({ isAd
         </TabsTrigger>
         
         {isAdmin && (
-          <TabsTrigger 
-            value="locations" 
+          <TabsTrigger
+            value="hours"
             className={`
-              ${isMobile 
-                ? 'flex flex-col items-center justify-center p-2 h-16 text-xs' 
+              ${isMobile
+                ? 'flex flex-col items-center justify-center p-2 h-16 text-xs'
+                : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
+              }
+            `}
+            title="Horários"
+          >
+            <Clock className={isMobile ? "w-4 h-4 mb-1" : "w-5 h-5 flex-shrink-0"} />
+            {isMobile ? (
+              <span className="text-xs leading-tight">Horas</span>
+            ) : (
+              <span className="ml-3 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Horários
+              </span>
+            )}
+          </TabsTrigger>
+        )}
+
+        {isAdmin && (
+          <TabsTrigger
+            value="locations"
+            className={`
+              ${isMobile
+                ? 'flex flex-col items-center justify-center p-2 h-16 text-xs'
                 : 'flex items-center justify-start p-3 h-12 w-full overflow-hidden hover:bg-accent/50 data-[state=active]:bg-accent'
               }
             `}

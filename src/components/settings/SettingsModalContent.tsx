@@ -8,6 +8,7 @@ import { RemovalTab } from '@/components/settings/RemovalTab';
 import { LocationsTab } from '@/components/settings/LocationsTab';
 import { AppointmentTitlesTab } from '@/components/settings/AppointmentTitlesTab';
 import { UserManagement } from '@/components/UserManagement';
+import { WorkingHoursTab } from '@/components/settings/WorkingHoursTab';
 import { UserProfile, OrganizationSettings } from '@/types/organization';
 
 interface SettingsModalContentProps {
@@ -15,7 +16,9 @@ interface SettingsModalContentProps {
   organizationSettings: OrganizationSettings | null;
   isAdmin: boolean;
   onUpdateProfile: (updates: { name: string }) => void;
-  onUpdateSettings: (updates: { whatsapp_default_message: string }) => void;
+  onUpdateSettings: (
+    updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message' | 'working_hours_start' | 'working_hours_end'>>
+  ) => void;
   onShowExcelImport: () => void;
   onShowPatientRemoval: () => void;
   fetchLocations: () => Promise<void>;
@@ -53,6 +56,15 @@ export const SettingsModalContent: React.FC<SettingsModalContentProps> = ({
           onUpdateSettings={onUpdateSettings}
         />
       </TabsContent>
+
+      {isAdmin && (
+        <TabsContent value="hours" className="space-y-4 mt-0">
+          <WorkingHoursTab
+            organizationSettings={organizationSettings}
+            onUpdateSettings={onUpdateSettings}
+          />
+        </TabsContent>
+      )}
 
       {isAdmin && (
         <TabsContent value="locations" className="space-y-4 mt-0">
