@@ -73,7 +73,7 @@ export default function Appointments() {
   };
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = getWeekDays(currentWeek);
-  const filteredWeekDays = showNonWorkingHours ? weekDays : weekDays.filter(day => !isWeekend(day));
+  const filteredWeekDays = weekDays.filter(day => !isWeekend(day));
   const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
   const workingHours = { start: 9, end: 18 }; // 9:00 to 18:00
   const scrollTargetHour = 8; // Scroll to 8:00 on load
@@ -141,7 +141,7 @@ export default function Appointments() {
     } else {
       setSelectedDayIndex(0);
     }
-  }, [currentWeek, showNonWorkingHours]);
+  }, [currentWeek, filteredWeekDays]);
 
   useEffect(() => {
     if (scheduleRef.current && firstHourRef.current) {
@@ -152,9 +152,7 @@ export default function Appointments() {
   const handlePrevDay = () => {
     if (selectedDayIndex === 0) {
       const prevWeek = subWeeks(currentWeek, 1);
-      const prevWeekDays = showNonWorkingHours
-        ? getWeekDays(prevWeek)
-        : getWeekDays(prevWeek).filter(day => !isWeekend(day));
+      const prevWeekDays = getWeekDays(prevWeek).filter(day => !isWeekend(day));
       setCurrentWeek(prevWeek);
       setSelectedDayIndex(prevWeekDays.length - 1);
     } else {
