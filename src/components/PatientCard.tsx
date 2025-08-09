@@ -26,14 +26,17 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   const today = startOfToday();
   const isOverdue = isBefore(patient.nextContactDate, today);
   const isDueSoon = !isOverdue && isBefore(patient.nextContactDate, addDays(today, 7));
+  const isClosed = patient.status === 'closed';
 
   const getStatusColor = () => {
+    if (isClosed) return 'border-l-gray-400 bg-gray-100';
     if (isOverdue) return 'border-l-red-500 bg-red-50';
     if (isDueSoon) return 'border-l-yellow-500 bg-yellow-50';
     return 'border-l-dental-primary bg-white';
   };
 
   const getStatusIcon = () => {
+    if (isClosed) return <User className="w-4 h-4 text-gray-500" />;
     if (isOverdue) return <AlertTriangle className="w-4 h-4 text-red-500" />;
     if (isDueSoon) return <Clock className="w-4 h-4 text-yellow-500" />;
     return <Calendar className="w-4 h-4 text-dental-primary" />;
@@ -171,7 +174,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           <div className="flex items-center gap-2 text-sm">
             {getStatusIcon()}
             <span className="text-dental-secondary">Próximo contato:</span>
-            <span className={`font-medium ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-yellow-600' : 'text-dental-primary'}`}>
+            <span className={`font-medium ${isClosed ? 'text-gray-600' : isOverdue ? 'text-red-600' : isDueSoon ? 'text-yellow-600' : 'text-dental-primary'}`}>
               {format(patient.nextContactDate, 'dd/MM/yyyy', { locale: ptBR })}
             </span>
           </div>
@@ -240,7 +243,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
         </div>
 
-        {isOverdue && (
+        {isOverdue && !isClosed && (
           <div className="mt-3 p-2 bg-red-100 border border-red-200 rounded text-sm text-red-700 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             <span>Contato em atraso!</span>
