@@ -26,9 +26,11 @@ interface WeekScheduleProps {
 }
 
 // Visual constants
-const SLOT_HEIGHT_PX = 40; // each 15-minute slot height (h-10 = 40px)
 const SLOTS_PER_HOUR = 4;
-const TOTAL_SLOTS = 24 * SLOTS_PER_HOUR; // 96
+const HOUR_HEIGHT_PX = 40; // each hour cell height (h-10 = 40px)
+const SLOT_HEIGHT_PX = HOUR_HEIGHT_PX / SLOTS_PER_HOUR; // 10px per 15-minute slice
+const TOTAL_HOURS = 24;
+const TOTAL_SLOTS = TOTAL_HOURS * SLOTS_PER_HOUR; // 96 quarter-hour slices
 
 const formatHour = (hour: number) => {
   const fullHour = Math.floor(hour);
@@ -52,12 +54,14 @@ export function WeekSchedule(props: WeekScheduleProps) {
     showNonWorkingHours = false,
   } = props;
 
-  const slots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
-  const startSlot = workingHours.start * SLOTS_PER_HOUR;
-  const endSlot = workingHours.end * SLOTS_PER_HOUR;
-  const renderStartSlot = showNonWorkingHours ? 0 : startSlot;
-  const renderEndSlot = showNonWorkingHours ? TOTAL_SLOTS : endSlot;
-  const renderSlots = slots.slice(renderStartSlot, renderEndSlot);
+  const hours = useMemo(() => Array.from({ length: TOTAL_HOURS }, (_, i) => i), []);
+  const renderStartHour = showNonWorkingHours ? 0 : workingHours.start;
+  const renderEndHour = showNonWorkingHours ? TOTAL_HOURS : workingHours.end;
+  const renderHours = hours.slice(renderStartHour, renderEndHour);
+
+  const renderStartSlot = renderStartHour * SLOTS_PER_HOUR;
+  const renderEndSlot = renderEndHour * SLOTS_PER_HOUR;
+  const totalRenderedSlots = renderHours.length * SLOTS_PER_HOUR;
   const [drag, setDrag] = useState<{ dayISO: string; startIndex: number; endIndex: number } | null>(null);
 
   // Helper to compute an absolute block position for an appointment within a day column
@@ -82,7 +86,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
     const durationMinutes = Math.max(15, (apptEnd - apptStart) / 60000);
 
     const top = (minutesFromStart / 15) * SLOT_HEIGHT_PX; // px
-    const height = (durationMinutes / 15) * SLOT_HEIGHT_PX - 4; // subtract a tiny gap
+    const height = (durationMinutes / 15) * SLOT_HEIGHT_PX - 2; // subtract a tiny gap
 
     return { top, height };
   };
@@ -92,12 +96,11 @@ export function WeekSchedule(props: WeekScheduleProps) {
       <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0`}>
         {/* Time column */}
         <div className="border-r">
-          {renderSlots.map((slot) => {
-            const hour = slot / SLOTS_PER_HOUR;
+          {renderHours.map((hour) => {
             const isWorking = hour >= workingHours.start && hour < workingHours.end;
             return (
               <div
-                key={slot}
+                key={hour}
                 ref={hour === scrollTargetHour ? firstHourRef : undefined}
                 className={`h-10 p-2 border-b text-xs text-center ${
                   isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'
@@ -137,7 +140,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                 onPointerDown={(e) => {
                   const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                   const offsetY = e.clientY - rect.top;
-                  const offsetIndex = Math.max(0, Math.min(renderSlots.length - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
+                  const offsetIndex = Math.max(0, Math.min(totalRenderedSlots - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
                   const index = offsetIndex + renderStartSlot;
                   setDrag({ dayISO: day.toISOString(), startIndex: index, endIndex: index });
                   (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
@@ -146,7 +149,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   if (!drag || drag.dayISO !== day.toISOString()) return;
                   const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                   const offsetY = e.clientY - rect.top;
-                  const offsetIndex = Math.max(0, Math.min(renderSlots.length - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
+                  const offsetIndex = Math.max(0, Math.min(totalRenderedSlots - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
                   const index = offsetIndex + renderStartSlot;
                   setDrag({ ...drag, endIndex: index });
                 }}
@@ -156,7 +159,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const endExclusive = Math.max(drag.startIndex, drag.endIndex) + 1;
                   const startHour = Math.floor(start / SLOTS_PER_HOUR);
                   const startMinute = (start % SLOTS_PER_HOUR) * 15;
-                  let endIndex = Math.min(endExclusive, renderEndSlot);
+                  const endIndex = Math.min(endExclusive, renderEndSlot);
                   let endHour = Math.floor(endIndex / SLOTS_PER_HOUR);
                   let endMinute = (endIndex % SLOTS_PER_HOUR) * 15;
                   if (endHour === 24) { endHour = 23; endMinute = 45; }
@@ -170,15 +173,22 @@ export function WeekSchedule(props: WeekScheduleProps) {
                 }}
                 onPointerCancel={() => setDrag(null)}
               >
-                {renderSlots.map((slot) => {
-                  const hour = slot / SLOTS_PER_HOUR;
+                {renderHours.map((hour) => {
                   const isWorking = hour >= workingHours.start && hour < workingHours.end;
                   const cellClass = weekend || !isWorking ? 'bg-muted/10 hover:bg-muted/20 opacity-60' : 'hover:bg-muted/30';
                   return (
                     <div
-                      key={slot}
-                      className={`h-10 border-b p-1 cursor-pointer transition-colors ${cellClass}`}
-                    />
+                      key={hour}
+                      className={`relative h-10 border-b p-1 cursor-pointer transition-colors ${cellClass}`}
+                    >
+                      {[1, 2, 3].map((q) => (
+                        <div
+                          key={q}
+                          className="pointer-events-none absolute left-0 right-0 border-t border-muted/40"
+                          style={{ top: `${q * 25}%` }}
+                        />
+                      ))}
+                    </div>
                   );
                 })}
 
