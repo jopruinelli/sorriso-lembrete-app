@@ -18,7 +18,7 @@ interface SettingsModalProps {
   patients: Patient[];
   onUpdateProfile: (updates: { name: string }) => void;
   onUpdateSettings: (updates: { whatsapp_default_message: string }) => void;
-  onBulkImport: (patientsData: any[], userId: string) => Promise<number>;
+  onBulkImport: (patientsData: Omit<Patient, 'id' | 'contactHistory'>[], userId: string) => Promise<number>;
   onDeletePatient: (patientId: string) => void;
   onBulkDelete: (patientIds: string[]) => void;
   fetchLocations: () => Promise<void>;
@@ -42,9 +42,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [showPatientRemoval, setShowPatientRemoval] = useState(false);
 
+  const isAdmin = userProfile?.role === 'admin';
+  const isMobile = useIsMobile();
+
   const handleImport = (importedPatients: Omit<Patient, 'id' | 'contactHistory'>[]) => {
     onBulkImport(importedPatients, userProfile?.id || '');
     setShowExcelImport(false);
+  };
+
+  const handleShowPatientRemoval = () => {
+    if (isAdmin) {
+      setShowPatientRemoval(true);
+    }
   };
 
   // Renderizar conteúdo específico se alguma função especial estiver ativa
@@ -73,9 +82,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const specialContent = renderSpecialContent();
-
-  const isAdmin = userProfile?.role === 'admin';
-  const isMobile = useIsMobile();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -106,7 +112,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onUpdateProfile={onUpdateProfile}
               onUpdateSettings={onUpdateSettings}
               onShowExcelImport={() => setShowExcelImport(true)}
-              onShowPatientRemoval={() => setShowPatientRemoval(true)}
+              onShowPatientRemoval={handleShowPatientRemoval}
               fetchLocations={fetchLocations}
               fetchTitles={fetchTitles}
             />
