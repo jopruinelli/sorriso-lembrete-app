@@ -113,6 +113,7 @@ export function AppointmentModal({
   const [patientSearchOpen, setPatientSearchOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   const [showPatientForm, setShowPatientForm] = useState(false);
+  const [showRecurrence, setShowRecurrence] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -165,6 +166,7 @@ export function AppointmentModal({
       });
       const patientName = patients.find((p) => p.id === appointment.patient_id)?.name || '';
       setPatientSearch(patientName);
+      setShowRecurrence(appointment.recurrence_type !== 'none');
     } else if (selectedTimeSlot) {
       // Creating new appointment for specific time slot
       form.reset({
@@ -180,6 +182,7 @@ export function AppointmentModal({
         recurrence_type: 'none',
       });
       setPatientSearch('');
+      setShowRecurrence(false);
     } else {
       // Creating new appointment without specific time
       const now = new Date();
@@ -197,6 +200,7 @@ export function AppointmentModal({
         recurrence_type: 'none',
       });
       setPatientSearch('');
+      setShowRecurrence(false);
     }
   }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle, firstActiveLocationId]);
 
@@ -566,48 +570,74 @@ export function AppointmentModal({
               </div>
             </div>
 
-            <FormField
-              control={form.control}
-              name="recurrence_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Recorrência</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">Sem recorrência</SelectItem>
-                      <SelectItem value="monthly">Mensal</SelectItem>
-                      <SelectItem value="semiannual">Semestral</SelectItem>
-                      <SelectItem value="annual">Anual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!showRecurrence ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="self-start"
+                onClick={() => {
+                  setShowRecurrence(true);
+                  form.setValue('recurrence_type', 'monthly');
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" /> Adicionar recorrência
+              </Button>
+            ) : (
+              <>
+                <FormField
+                  control={form.control}
+                  name="recurrence_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Recorrência</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="monthly">Mensal</SelectItem>
+                          <SelectItem value="semiannual">Semestral</SelectItem>
+                          <SelectItem value="annual">Anual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {form.watch('recurrence_type') !== 'none' && (
-              <FormField
-                control={form.control}
-                name="recurrence_end_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data Final da Recorrência</FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        placeholder="Selecione a data final"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="recurrence_end_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data Final da Recorrência</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          placeholder="Selecione a data final"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="self-start"
+                  onClick={() => {
+                    setShowRecurrence(false);
+                    form.setValue('recurrence_type', 'none');
+                    form.setValue('recurrence_end_date', undefined);
+                  }}
+                >
+                  Remover recorrência
+                </Button>
+              </>
             )}
 
             <FormField
