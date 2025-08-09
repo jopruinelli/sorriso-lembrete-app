@@ -79,7 +79,7 @@ interface AppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   appointment?: Appointment | null;
-  selectedTimeSlot?: { date: Date; hour: number; minute: number } | null;
+  selectedTimeSlot?: { date: Date; hour: number; minute: number; endHour?: number; endMinute?: number } | null;
   locations: Location[];
   titles: string[];
   patients: Patient[];
@@ -170,8 +170,8 @@ export function AppointmentModal({
         date: selectedTimeSlot.date,
         start_hour: selectedTimeSlot.hour,
         start_minute: selectedTimeSlot.minute,
-        end_hour: selectedTimeSlot.hour + 1,
-        end_minute: selectedTimeSlot.minute,
+        end_hour: selectedTimeSlot.endHour ?? (selectedTimeSlot.hour + 1),
+        end_minute: selectedTimeSlot.endMinute ?? selectedTimeSlot.minute,
         notes: '',
         recurrence_type: 'none',
       });

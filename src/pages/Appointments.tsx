@@ -32,7 +32,7 @@ export default function Appointments() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; hour: number; minute: number } | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; hour: number; minute: number; endHour?: number; endMinute?: number } | null>(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [showSettings, setShowSettings] = useState(false);
@@ -101,6 +101,18 @@ export default function Appointments() {
     const fullHour = Math.floor(hour);
     const minute = Math.round((hour % 1) * 60);
     setSelectedTimeSlot({ date, hour: fullHour, minute });
+    setSelectedAppointment(null);
+    setIsModalOpen(true);
+  };
+
+  const handleTimeRangeSelect = (
+    date: Date,
+    startHour: number,
+    startMinute: number,
+    endHour: number,
+    endMinute: number
+  ) => {
+    setSelectedTimeSlot({ date, hour: startHour, minute: startMinute, endHour, endMinute });
     setSelectedAppointment(null);
     setIsModalOpen(true);
   };
@@ -243,6 +255,7 @@ export default function Appointments() {
             workingHours={workingHours}
             appointments={appointments}
             onTimeSlotClick={handleTimeSlotClick}
+            onTimeRangeSelect={handleTimeRangeSelect}
             onAppointmentClick={handleAppointmentClick}
             getLocationColor={getLocationColor}
             scheduleRef={scheduleRef}

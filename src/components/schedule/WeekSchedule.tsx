@@ -1,4 +1,4 @@
-import { useMemo, RefObject } from 'react';
+import { useMemo, RefObject, useState } from 'react';
 import { Appointment } from '@/types/appointment';
 import { isWeekend, startOfDay, addDays } from 'date-fns';
 
@@ -10,6 +10,13 @@ interface WeekScheduleProps {
   workingHours: WorkingHours;
   appointments: Appointment[];
   onTimeSlotClick: (date: Date, hour: number) => void;
+  onTimeRangeSelect?: (
+    date: Date,
+    startHour: number,
+    startMinute: number,
+    endHour: number,
+    endMinute: number
+  ) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   getLocationColor: (locationId: string) => string;
   scheduleRef: RefObject<HTMLDivElement>;
@@ -35,6 +42,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
     workingHours,
     appointments,
     onTimeSlotClick,
+    onTimeRangeSelect,
     onAppointmentClick,
     getLocationColor,
     scheduleRef,
@@ -43,6 +51,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
   } = props;
 
   const slots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
+  const [drag, setDrag] = useState<{ dayISO: string; startIndex: number; endIndex: number } | null>(null);
 
   // Helper to compute an absolute block position for an appointment within a day column
   const computeBlock = (appointment: Appointment, day: Date) => {
@@ -103,8 +112,43 @@ export function WeekSchedule(props: WeekScheduleProps) {
 
           return (
             <div key={day.toISOString()} className="relative border-r">
-              {/* Background clickable slots */}
-              <div className="relative">
+              {/* Background clickable slots with pointer handlers */}
+              <div
+                className="relative"
+                onPointerDown={(e) => {
+                  const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                  const offsetY = e.clientY - rect.top;
+                  const index = Math.max(0, Math.min(TOTAL_SLOTS - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
+                  setDrag({ dayISO: day.toISOString(), startIndex: index, endIndex: index });
+                  (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
+                }}
+                onPointerMove={(e) => {
+                  if (!drag || drag.dayISO !== day.toISOString()) return;
+                  const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                  const offsetY = e.clientY - rect.top;
+                  const index = Math.max(0, Math.min(TOTAL_SLOTS - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
+                  setDrag({ ...drag, endIndex: index });
+                }}
+                onPointerUp={() => {
+                  if (!drag || drag.dayISO !== day.toISOString()) return;
+                  const start = Math.min(drag.startIndex, drag.endIndex);
+                  const endExclusive = Math.max(drag.startIndex, drag.endIndex) + 1;
+                  const startHour = Math.floor(start / SLOTS_PER_HOUR);
+                  const startMinute = (start % SLOTS_PER_HOUR) * 15;
+                  let endIndex = Math.min(endExclusive, TOTAL_SLOTS);
+                  let endHour = Math.floor(endIndex / SLOTS_PER_HOUR);
+                  let endMinute = (endIndex % SLOTS_PER_HOUR) * 15;
+                  if (endHour === 24) { endHour = 23; endMinute = 45; }
+
+                  if (endExclusive - start <= 1) {
+                    onTimeSlotClick(day, start / SLOTS_PER_HOUR);
+                  } else {
+                    onTimeRangeSelect?.(day, startHour, startMinute, endHour, endMinute);
+                  }
+                  setDrag(null);
+                }}
+                onPointerCancel={() => setDrag(null)}
+              >
                 {slots.map((i) => {
                   const hour = i / SLOTS_PER_HOUR;
                   const isWorking = hour >= workingHours.start && hour < workingHours.end;
@@ -113,10 +157,27 @@ export function WeekSchedule(props: WeekScheduleProps) {
                     <div
                       key={i}
                       className={`h-10 border-b p-1 cursor-pointer transition-colors ${cellClass}`}
-                      onClick={() => onTimeSlotClick(day, hour)}
                     />
                   );
                 })}
+
+                {/* Drag selection overlay (below appointments) */}
+                {drag && drag.dayISO === day.toISOString() && (
+                  <div className="pointer-events-none absolute inset-0">
+                    {(() => {
+                      const start = Math.min(drag.startIndex, drag.endIndex);
+                      const endExclusive = Math.max(drag.startIndex, drag.endIndex) + 1;
+                      const top = start * SLOT_HEIGHT_PX;
+                      const height = (endExclusive - start) * SLOT_HEIGHT_PX;
+                      return (
+                        <div
+                          className="absolute left-1 right-1 rounded-md border border-primary/30 bg-primary/20"
+                          style={{ top, height }}
+                        />
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
 
               {/* Overlay continuous appointment blocks */}
