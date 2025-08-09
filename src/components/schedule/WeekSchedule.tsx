@@ -27,8 +27,8 @@ interface WeekScheduleProps {
 
 // Visual constants
 const SLOTS_PER_HOUR = 4;
-const HOUR_HEIGHT_PX = 40; // each hour cell height (h-10 = 40px)
-const SLOT_HEIGHT_PX = HOUR_HEIGHT_PX / SLOTS_PER_HOUR; // 10px per 15-minute slice
+const HOUR_HEIGHT_PX = 48; // each hour cell height (h-12 = 48px)
+const SLOT_HEIGHT_PX = HOUR_HEIGHT_PX / SLOTS_PER_HOUR; // height per 15-minute slice
 const TOTAL_HOURS = 24;
 const TOTAL_SLOTS = TOTAL_HOURS * SLOTS_PER_HOUR; // 96 quarter-hour slices
 
@@ -102,7 +102,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
               <div
                 key={hour}
                 ref={hour === scrollTargetHour ? firstHourRef : undefined}
-                className={`h-10 p-2 border-b text-xs text-center ${
+                className={`h-12 p-2 border-b text-xs text-center ${
                   isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'
                 }`}
               >
@@ -179,16 +179,8 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   return (
                     <div
                       key={hour}
-                      className={`relative h-10 border-b p-1 cursor-pointer transition-colors ${cellClass}`}
-                    >
-                      {[1, 2, 3].map((q) => (
-                        <div
-                          key={q}
-                          className="pointer-events-none absolute left-0 right-0 border-t border-muted/40"
-                          style={{ top: `${q * 25}%` }}
-                        />
-                      ))}
-                    </div>
+                      className={`relative h-12 border-b p-1 cursor-pointer transition-colors ${cellClass}`}
+                    />
                   );
                 })}
 
