@@ -295,9 +295,15 @@ export function AppointmentModal({
                 control={form.control}
                 name="patient_id"
                 render={({ field }) => {
-                  const filteredPatients = patients.filter((patient) =>
-                    patient.name.toLowerCase().includes(patientSearch.toLowerCase())
-                  );
+                  const filteredPatients = patients
+                    .filter((patient) =>
+                      patient.name
+                        .toLowerCase()
+                        .includes(patientSearch.toLowerCase())
+                    )
+                    .sort((a, b) =>
+                      a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
+                    );
                   return (
                     <FormItem className="relative">
                       <FormLabel className="flex items-center gap-2">
@@ -313,8 +319,10 @@ export function AppointmentModal({
                             if (field.value) field.onChange('');
                             setPatientSearchOpen(true);
                           }}
-                          onFocus={() => setPatientSearchOpen(true)}
-                          onBlur={() => setTimeout(() => setPatientSearchOpen(false), 100)}
+                          onClick={() => setPatientSearchOpen(true)}
+                          onBlur={() =>
+                            setTimeout(() => setPatientSearchOpen(false), 100)
+                          }
                         />
                       </FormControl>
                       {patientSearchOpen && (
