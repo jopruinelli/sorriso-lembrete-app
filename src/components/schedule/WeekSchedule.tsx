@@ -1,6 +1,6 @@
 import { useMemo, RefObject, useState } from 'react';
 import { Appointment } from '@/types/appointment';
-import { isWeekend, startOfDay, addDays } from 'date-fns';
+import { isWeekend, startOfDay, addDays, format } from 'date-fns';
 
 type WorkingHours = { start: number; end: number };
 
@@ -197,9 +197,27 @@ export function WeekSchedule(props: WeekScheduleProps) {
                       }}
                       title={appointment.patient?.name ?? ''}
                     >
-                      <div className="px-2 py-1 text-xs font-medium truncate">
-                        {appointment.patient?.name}
-                      </div>
+                      {(() => {
+                        const start = new Date(appointment.start_time);
+                        const end = new Date(appointment.end_time);
+                        const timesLabel = `${format(start, "HH:mm")} - ${format(end, "HH:mm")}`;
+                        const fullName = appointment.patient?.name ?? "";
+                        const parts = fullName.trim().split(/\s+/);
+                        const shortName = parts.length > 1 ? `${parts[0]} ${parts[1].charAt(0)}.` : (parts[0] || "");
+                        const isCompact = (block.height as number) < (SLOT_HEIGHT_PX * 1.5);
+                        return (
+                          <div className="px-2 py-1 text-[10px] sm:text-xs leading-tight">
+                            {isCompact ? (
+                              <div className="font-medium truncate">{timesLabel} • {shortName}</div>
+                            ) : (
+                              <>
+                                <div className="font-semibold">{timesLabel}</div>
+                                <div className="truncate" title={fullName}>{fullName}</div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}
