@@ -190,46 +190,75 @@ const Index = () => {
 
   return (
     <AuthGuard>
-      {!userProfile || userProfile.status === 'pending' ? (
-        userProfile?.status === 'pending' ? (
-          <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
-            {/* Cabeçalho com e-mail e botão sair para usuários pending */}
-            <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-              <span className="text-sm text-dental-secondary bg-white/80 px-2 py-1 rounded">
-                {user?.email}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={signOut}
-                className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
-              >
-                Sair
-              </Button>
-            </div>
-            
-            <Card className="w-full max-w-md">
-              <CardContent className="p-6 text-center">
-                <Clock className="w-12 h-12 mx-auto text-dental-secondary mb-4" />
-                <h2 className="text-xl font-semibold text-dental-primary mb-2">
-                  Aguardando Aprovação
-                </h2>
-                <p className="text-dental-secondary mb-4">
-                  Sua solicitação de acesso foi enviada e está aguardando aprovação do administrador.
-                </p>
-                <Button onClick={signOut} variant="outline">
-                  Fazer logout
-                </Button>
-              </CardContent>
-            </Card>
+      {!userProfile ? (
+        <OnboardingFlow
+          onCreateOrganization={createOrganization}
+          onJoinOrganization={joinOrganization}
+          userEmail={user?.email}
+        />
+      ) : userProfile.status === 'pending' ? (
+        <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
+          {/* Cabeçalho com e-mail e botão sair para usuários pending */}
+          <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+            <span className="text-sm text-dental-secondary bg-white/80 px-2 py-1 rounded">
+              {user?.email}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={signOut}
+              className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
+            >
+              Sair
+            </Button>
           </div>
-        ) : (
-          <OnboardingFlow 
-            onCreateOrganization={createOrganization}
-            onJoinOrganization={joinOrganization}
-            userEmail={user?.email}
-          />
-        )
+
+          <Card className="w-full max-w-md">
+            <CardContent className="p-6 text-center">
+              <Clock className="w-12 h-12 mx-auto text-dental-secondary mb-4" />
+              <h2 className="text-xl font-semibold text-dental-primary mb-2">
+                Aguardando Aprovação
+              </h2>
+              <p className="text-dental-secondary mb-4">
+                Sua solicitação de acesso foi enviada e está aguardando aprovação do administrador.
+              </p>
+              <Button onClick={signOut} variant="outline">
+                Fazer logout
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      ) : userProfile.status === 'rejected' ? (
+        <div className="min-h-screen bg-gradient-to-br from-dental-background via-white to-dental-accent flex items-center justify-center p-4">
+          <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+            <span className="text-sm text-dental-secondary bg-white/80 px-2 py-1 rounded">
+              {user?.email}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={signOut}
+              className="border-dental-primary text-dental-primary hover:bg-dental-primary hover:text-white"
+            >
+              Sair
+            </Button>
+          </div>
+
+          <Card className="w-full max-w-md">
+            <CardContent className="p-6 text-center">
+              <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
+              <h2 className="text-xl font-semibold text-dental-primary mb-2">
+                Acesso Negado
+              </h2>
+              <p className="text-dental-secondary mb-4">
+                Seu acesso foi rejeitado pelo administrador.
+              </p>
+              <Button onClick={signOut} variant="outline">
+                Fazer logout
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       ) : (
         <AppNavigation
           userProfile={userProfile}

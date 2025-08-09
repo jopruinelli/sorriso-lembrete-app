@@ -6,6 +6,7 @@ import { UserProfileService } from '@/services/userProfileService';
 import { OrganizationSettingsService } from '@/services/organizationSettingsService';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useOrganization = (user: User | null) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -34,7 +35,20 @@ export const useOrganization = (user: User | null) => {
       
       const profile = await UserProfileService.getUserProfile(user.id);
       console.log('✅ User profile loaded:', profile);
-      
+
+      if (profile?.status === 'rejected') {
+        console.log('🚫 User profile rejected, signing out');
+        await supabase.auth.signOut();
+        toast({
+          title: "Acesso negado",
+          description: "Sua solicitação de acesso foi rejeitada pelo administrador.",
+          variant: "destructive",
+        });
+        resetState();
+        setLoading(false);
+        return;
+      }
+
       setUserProfile(profile);
 
       if (profile?.organization_id) {
