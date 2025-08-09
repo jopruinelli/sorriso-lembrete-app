@@ -72,9 +72,11 @@ export const SettingsModalContent: React.FC<SettingsModalContentProps> = ({
         </TabsContent>
       )}
 
-      <TabsContent value="removal" className="space-y-4 mt-0">
-        <RemovalTab onShowPatientRemoval={onShowPatientRemoval} />
-      </TabsContent>
+      {isAdmin && (
+        <TabsContent value="removal" className="space-y-4 mt-0">
+          <RemovalTab onShowPatientRemoval={onShowPatientRemoval} />
+        </TabsContent>
+      )}
 
       {isAdmin && (
         <TabsContent value="users" className="space-y-4 mt-0">
