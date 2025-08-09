@@ -117,6 +117,10 @@ export function AppointmentModal({
   const { toast } = useToast();
 
   const defaultTitle = titles[0] || 'Consulta de Retorno';
+  const firstActiveLocationId = locations.find((l) => l.is_active)?.id || '';
+  const availableLocations = appointment
+    ? locations.filter((l) => l.is_active || l.id === appointment.location_id)
+    : locations.filter((l) => l.is_active);
 
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
@@ -165,7 +169,7 @@ export function AppointmentModal({
       // Creating new appointment for specific time slot
       form.reset({
         patient_id: '',
-        location_id: locations[0]?.id || '',
+        location_id: firstActiveLocationId,
         title: defaultTitle,
         date: selectedTimeSlot.date,
         start_hour: selectedTimeSlot.hour,
@@ -182,7 +186,7 @@ export function AppointmentModal({
 
       form.reset({
         patient_id: '',
-        location_id: locations[0]?.id || '',
+        location_id: firstActiveLocationId,
         title: defaultTitle,
         date: now,
         start_hour: 9,
@@ -194,7 +198,7 @@ export function AppointmentModal({
       });
       setPatientSearch('');
     }
-  }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle]);
+  }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle, firstActiveLocationId]);
 
   useEffect(() => {
     if (watchedDate && watchedStartHour !== undefined && watchedStartMinute !== undefined && 
@@ -398,7 +402,7 @@ export function AppointmentModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {locations.map((location) => (
+                      {availableLocations.map((location) => (
                         <SelectItem key={location.id} value={location.id}>
                           {location.name} {location.address && `- ${location.address}`}
                         </SelectItem>
