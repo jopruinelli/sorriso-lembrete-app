@@ -260,7 +260,7 @@ export default function Appointments() {
                   key={day.toISOString()}
                   className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r text-center`}
                 >
-                  <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
+                  <div className="font-medium">{format(day, 'EEEEEE', { locale: ptBR })}</div>
                   <div className={`text-sm ${weekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{format(day, 'd')}</div>
                 </div>
               );
