@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   format,
   startOfWeek,
@@ -12,7 +11,7 @@ import {
   isWeekend
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, ChevronLeft, ChevronRight, Plus, Clock, CalendarDays, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +35,7 @@ export default function Appointments() {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [showSettings, setShowSettings] = useState(false);
+  const [showNonWorkingHours, setShowNonWorkingHours] = useState(false);
 
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const {
@@ -67,8 +67,13 @@ export default function Appointments() {
     deleteAppointment,
     checkForConflicts,
   } = useAppointments();
+  const getWeekDays = (week: Date) => {
+    const start = startOfWeek(week, { weekStartsOn: 1 });
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  };
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekDays = getWeekDays(currentWeek);
+  const filteredWeekDays = showNonWorkingHours ? weekDays : weekDays.filter(day => !isWeekend(day));
   const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
   const workingHours = { start: 9, end: 18 }; // 9:00 to 18:00
   const scrollTargetHour = 8; // Scroll to 8:00 on load
@@ -130,11 +135,13 @@ export default function Appointments() {
   };
 
   useEffect(() => {
-    const todayIndex = weekDays.findIndex(day => isSameDay(day, new Date()));
+    const todayIndex = filteredWeekDays.findIndex(day => isSameDay(day, new Date()));
     if (todayIndex !== -1) {
       setSelectedDayIndex(todayIndex);
+    } else {
+      setSelectedDayIndex(0);
     }
-  }, [currentWeek]);
+  }, [currentWeek, showNonWorkingHours]);
 
   useEffect(() => {
     if (scheduleRef.current && firstHourRef.current) {
@@ -144,23 +151,27 @@ export default function Appointments() {
 
   const handlePrevDay = () => {
     if (selectedDayIndex === 0) {
-      setCurrentWeek(subWeeks(currentWeek, 1));
-      setSelectedDayIndex(6);
+      const prevWeek = subWeeks(currentWeek, 1);
+      const prevWeekDays = showNonWorkingHours
+        ? getWeekDays(prevWeek)
+        : getWeekDays(prevWeek).filter(day => !isWeekend(day));
+      setCurrentWeek(prevWeek);
+      setSelectedDayIndex(prevWeekDays.length - 1);
     } else {
       setSelectedDayIndex(selectedDayIndex - 1);
     }
   };
 
   const handleNextDay = () => {
-    if (selectedDayIndex === 6) {
-      setCurrentWeek(addWeeks(currentWeek, 1));
+    if (selectedDayIndex === filteredWeekDays.length - 1) {
+      const nextWeek = addWeeks(currentWeek, 1);
+      setCurrentWeek(nextWeek);
       setSelectedDayIndex(0);
     } else {
       setSelectedDayIndex(selectedDayIndex + 1);
     }
   };
-
-  const daysToDisplay = isMobile ? [weekDays[selectedDayIndex]] : weekDays;
+  const daysToDisplay = isMobile ? [filteredWeekDays[selectedDayIndex]] : filteredWeekDays;
 
   if (appointmentsLoading || authLoading || orgLoading) {
     return <div className="p-6">Carregando...</div>;
@@ -192,6 +203,14 @@ export default function Appointments() {
             <Plus className="w-4 h-4 mr-2" />
             Novo Agendamento
           </Button>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={() => setShowNonWorkingHours(!showNonWorkingHours)}
+          >
+            <Clock className="w-4 h-4 mr-2" />
+            {showNonWorkingHours ? 'Ocultar horários não úteis' : 'Mostrar horários não úteis'}
+          </Button>
         </div>
 
       {/* Week/Day Navigation */}
@@ -221,7 +240,7 @@ export default function Appointments() {
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <CardTitle className="text-lg">
-              {format(weekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })}
+              {format(filteredWeekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })}
             </CardTitle>
             <Button variant="outline" size="sm" onClick={handleNextDay}>
               <ChevronRight className="w-4 h-4" />
@@ -260,7 +279,8 @@ export default function Appointments() {
             getLocationColor={getLocationColor}
             scheduleRef={scheduleRef}
             firstHourRef={firstHourRef}
-            scrollTargetHour={scrollTargetHour}
+            scrollTargetHour={showNonWorkingHours ? scrollTargetHour : workingHours.start}
+            showNonWorkingHours={showNonWorkingHours}
           />
         </CardContent>
       </Card>

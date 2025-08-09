@@ -22,6 +22,7 @@ interface WeekScheduleProps {
   scheduleRef: RefObject<HTMLDivElement>;
   firstHourRef: RefObject<HTMLDivElement>;
   scrollTargetHour?: number;
+  showNonWorkingHours?: boolean;
 }
 
 // Visual constants
@@ -48,9 +49,15 @@ export function WeekSchedule(props: WeekScheduleProps) {
     scheduleRef,
     firstHourRef,
     scrollTargetHour = 8,
+    showNonWorkingHours = false,
   } = props;
 
   const slots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
+  const startSlot = workingHours.start * SLOTS_PER_HOUR;
+  const endSlot = workingHours.end * SLOTS_PER_HOUR;
+  const renderStartSlot = showNonWorkingHours ? 0 : startSlot;
+  const renderEndSlot = showNonWorkingHours ? TOTAL_SLOTS : endSlot;
+  const renderSlots = slots.slice(renderStartSlot, renderEndSlot);
   const [drag, setDrag] = useState<{ dayISO: string; startIndex: number; endIndex: number } | null>(null);
 
   // Helper to compute an absolute block position for an appointment within a day column
@@ -60,16 +67,21 @@ export function WeekSchedule(props: WeekScheduleProps) {
 
     const dayStart = startOfDay(day).getTime();
     const dayEnd = addDays(startOfDay(day), 1).getTime();
+    const workStart = dayStart + workingHours.start * 60 * 60 * 1000;
+    const workEnd = dayStart + workingHours.end * 60 * 60 * 1000;
 
-    const apptStart = Math.max(start.getTime(), dayStart);
-    const apptEnd = Math.min(end.getTime(), dayEnd);
+    const startLimit = showNonWorkingHours ? dayStart : workStart;
+    const endLimit = showNonWorkingHours ? dayEnd : workEnd;
+
+    const apptStart = Math.max(start.getTime(), startLimit);
+    const apptEnd = Math.min(end.getTime(), endLimit);
 
     if (apptEnd <= apptStart) return null;
 
-    const minutesFromDayStart = (apptStart - dayStart) / 60000;
+    const minutesFromStart = (apptStart - startLimit) / 60000;
     const durationMinutes = Math.max(15, (apptEnd - apptStart) / 60000);
 
-    const top = (minutesFromDayStart / 15) * SLOT_HEIGHT_PX; // px
+    const top = (minutesFromStart / 15) * SLOT_HEIGHT_PX; // px
     const height = (durationMinutes / 15) * SLOT_HEIGHT_PX - 4; // subtract a tiny gap
 
     return { top, height };
@@ -80,12 +92,12 @@ export function WeekSchedule(props: WeekScheduleProps) {
       <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0`}>
         {/* Time column */}
         <div className="border-r">
-          {slots.map((i) => {
-            const hour = i / SLOTS_PER_HOUR;
+          {renderSlots.map((slot) => {
+            const hour = slot / SLOTS_PER_HOUR;
             const isWorking = hour >= workingHours.start && hour < workingHours.end;
             return (
               <div
-                key={i}
+                key={slot}
                 ref={hour === scrollTargetHour ? firstHourRef : undefined}
                 className={`h-10 p-2 border-b text-xs text-center ${
                   isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'
@@ -107,7 +119,14 @@ export function WeekSchedule(props: WeekScheduleProps) {
           const dayAppointments = appointments.filter((a) => {
             const aStart = new Date(a.start_time).getTime();
             const aEnd = new Date(a.end_time).getTime();
-            return aEnd > dayStart && aStart < dayEnd;
+            const intersectsDay = aEnd > dayStart && aStart < dayEnd;
+            if (!intersectsDay) return false;
+            if (!showNonWorkingHours) {
+              const workStart = dayStart + workingHours.start * 60 * 60 * 1000;
+              const workEnd = dayStart + workingHours.end * 60 * 60 * 1000;
+              return aEnd > workStart && aStart < workEnd;
+            }
+            return true;
           });
 
           return (
@@ -118,7 +137,8 @@ export function WeekSchedule(props: WeekScheduleProps) {
                 onPointerDown={(e) => {
                   const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                   const offsetY = e.clientY - rect.top;
-                  const index = Math.max(0, Math.min(TOTAL_SLOTS - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
+                  const offsetIndex = Math.max(0, Math.min(renderSlots.length - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
+                  const index = offsetIndex + renderStartSlot;
                   setDrag({ dayISO: day.toISOString(), startIndex: index, endIndex: index });
                   (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
                 }}
@@ -126,7 +146,8 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   if (!drag || drag.dayISO !== day.toISOString()) return;
                   const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                   const offsetY = e.clientY - rect.top;
-                  const index = Math.max(0, Math.min(TOTAL_SLOTS - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
+                  const offsetIndex = Math.max(0, Math.min(renderSlots.length - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
+                  const index = offsetIndex + renderStartSlot;
                   setDrag({ ...drag, endIndex: index });
                 }}
                 onPointerUp={() => {
@@ -135,7 +156,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const endExclusive = Math.max(drag.startIndex, drag.endIndex) + 1;
                   const startHour = Math.floor(start / SLOTS_PER_HOUR);
                   const startMinute = (start % SLOTS_PER_HOUR) * 15;
-                  let endIndex = Math.min(endExclusive, TOTAL_SLOTS);
+                  let endIndex = Math.min(endExclusive, renderEndSlot);
                   let endHour = Math.floor(endIndex / SLOTS_PER_HOUR);
                   let endMinute = (endIndex % SLOTS_PER_HOUR) * 15;
                   if (endHour === 24) { endHour = 23; endMinute = 45; }
@@ -149,13 +170,13 @@ export function WeekSchedule(props: WeekScheduleProps) {
                 }}
                 onPointerCancel={() => setDrag(null)}
               >
-                {slots.map((i) => {
-                  const hour = i / SLOTS_PER_HOUR;
+                {renderSlots.map((slot) => {
+                  const hour = slot / SLOTS_PER_HOUR;
                   const isWorking = hour >= workingHours.start && hour < workingHours.end;
                   const cellClass = weekend || !isWorking ? 'bg-muted/10 hover:bg-muted/20 opacity-60' : 'hover:bg-muted/30';
                   return (
                     <div
-                      key={i}
+                      key={slot}
                       className={`h-10 border-b p-1 cursor-pointer transition-colors ${cellClass}`}
                     />
                   );
@@ -167,7 +188,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                     {(() => {
                       const start = Math.min(drag.startIndex, drag.endIndex);
                       const endExclusive = Math.max(drag.startIndex, drag.endIndex) + 1;
-                      const top = start * SLOT_HEIGHT_PX;
+                      const top = (start - renderStartSlot) * SLOT_HEIGHT_PX;
                       const height = (endExclusive - start) * SLOT_HEIGHT_PX;
                       return (
                         <div
