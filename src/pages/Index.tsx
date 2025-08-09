@@ -1,7 +1,5 @@
 
 import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { AuthGuard } from '@/components/AuthGuard';
@@ -15,7 +13,7 @@ import { AppNavigation } from '@/components/AppNavigation';
 import { Patient, ContactPeriod, PatientCreateData } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Users, Calendar, Settings, UserPlus, Clock, CalendarDays } from 'lucide-react';
+import { AlertCircle, Users, Calendar, Settings, UserPlus, Clock } from 'lucide-react';
 import { isAfter, format, parseISO, startOfDay } from 'date-fns';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 
@@ -284,22 +282,14 @@ const Index = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-4 mb-6">
-              <Link to="/appointments">
-                <Button 
-                  className="bg-dental-primary hover:bg-dental-primary/90 text-white"
-                >
-                  <CalendarDays className="w-4 h-4 mr-2" />
-                  Agendamentos
-                </Button>
-              </Link>
-              <Button 
+              <Button
                 onClick={() => setShowPatientForm(true)}
                 className="bg-dental-primary hover:bg-dental-secondary"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
                 Adicionar Paciente
               </Button>
-              
+
               {!filtersAreDefault && (
                 <Button
                   variant="outline"
