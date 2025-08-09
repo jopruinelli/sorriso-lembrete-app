@@ -1,0 +1,152 @@
+import { useMemo, RefObject } from 'react';
+import { Appointment } from '@/types/appointment';
+import { isWeekend, startOfDay, addDays } from 'date-fns';
+
+type WorkingHours = { start: number; end: number };
+
+interface WeekScheduleProps {
+  isMobile: boolean;
+  daysToDisplay: Date[];
+  workingHours: WorkingHours;
+  appointments: Appointment[];
+  onTimeSlotClick: (date: Date, hour: number) => void;
+  onAppointmentClick: (appointment: Appointment) => void;
+  getLocationColor: (locationId: string) => string;
+  scheduleRef: RefObject<HTMLDivElement>;
+  firstHourRef: RefObject<HTMLDivElement>;
+  scrollTargetHour?: number;
+}
+
+// Visual constants
+const SLOT_HEIGHT_PX = 40; // each 15-minute slot height (h-10 = 40px)
+const SLOTS_PER_HOUR = 4;
+const TOTAL_SLOTS = 24 * SLOTS_PER_HOUR; // 96
+
+const formatHour = (hour: number) => {
+  const fullHour = Math.floor(hour);
+  const minutes = Math.round((hour % 1) * 60);
+  return `${fullHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
+export function WeekSchedule(props: WeekScheduleProps) {
+  const {
+    isMobile,
+    daysToDisplay,
+    workingHours,
+    appointments,
+    onTimeSlotClick,
+    onAppointmentClick,
+    getLocationColor,
+    scheduleRef,
+    firstHourRef,
+    scrollTargetHour = 8,
+  } = props;
+
+  const slots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
+
+  // Helper to compute an absolute block position for an appointment within a day column
+  const computeBlock = (appointment: Appointment, day: Date) => {
+    const start = new Date(appointment.start_time);
+    const end = new Date(appointment.end_time);
+
+    const dayStart = startOfDay(day).getTime();
+    const dayEnd = addDays(startOfDay(day), 1).getTime();
+
+    const apptStart = Math.max(start.getTime(), dayStart);
+    const apptEnd = Math.min(end.getTime(), dayEnd);
+
+    if (apptEnd <= apptStart) return null;
+
+    const minutesFromDayStart = (apptStart - dayStart) / 60000;
+    const durationMinutes = Math.max(15, (apptEnd - apptStart) / 60000);
+
+    const top = (minutesFromDayStart / 15) * SLOT_HEIGHT_PX; // px
+    const height = (durationMinutes / 15) * SLOT_HEIGHT_PX - 4; // subtract a tiny gap
+
+    return { top, height };
+  };
+
+  return (
+    <div ref={scheduleRef} className="h-full overflow-y-auto border border-t-0 rounded-b-lg">
+      <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0`}>
+        {/* Time column */}
+        <div className="border-r">
+          {slots.map((i) => {
+            const hour = i / SLOTS_PER_HOUR;
+            const isWorking = hour >= workingHours.start && hour < workingHours.end;
+            return (
+              <div
+                key={i}
+                ref={hour === scrollTargetHour ? firstHourRef : undefined}
+                className={`h-10 p-2 border-b text-xs text-center ${
+                  isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'
+                }`}
+              >
+                {formatHour(hour)}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Day columns */}
+        {daysToDisplay.map((day) => {
+          const weekend = isWeekend(day);
+          const dayStart = startOfDay(day).getTime();
+          const dayEnd = addDays(startOfDay(day), 1).getTime();
+
+          // Appointments that intersect this day
+          const dayAppointments = appointments.filter((a) => {
+            const aStart = new Date(a.start_time).getTime();
+            const aEnd = new Date(a.end_time).getTime();
+            return aEnd > dayStart && aStart < dayEnd;
+          });
+
+          return (
+            <div key={day.toISOString()} className="relative border-r">
+              {/* Background clickable slots */}
+              <div className="relative">
+                {slots.map((i) => {
+                  const hour = i / SLOTS_PER_HOUR;
+                  const isWorking = hour >= workingHours.start && hour < workingHours.end;
+                  const cellClass = weekend || !isWorking ? 'bg-muted/10 hover:bg-muted/20 opacity-60' : 'hover:bg-muted/30';
+                  return (
+                    <div
+                      key={i}
+                      className={`h-10 border-b p-1 cursor-pointer transition-colors ${cellClass}`}
+                      onClick={() => onTimeSlotClick(day, hour)}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Overlay continuous appointment blocks */}
+              <div className="pointer-events-none absolute inset-0">
+                {dayAppointments.map((appointment) => {
+                  const block = computeBlock(appointment, day);
+                  if (!block) return null;
+
+                  return (
+                    <div
+                      key={appointment.id}
+                      className={`pointer-events-auto absolute left-1 right-1 rounded-md border shadow-sm bg-secondary text-secondary-foreground ${getLocationColor(appointment.location_id)}`}
+                      style={{ top: block.top, height: block.height }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAppointmentClick(appointment);
+                      }}
+                      title={appointment.patient?.name ?? ''}
+                    >
+                      <div className="px-2 py-1 text-xs font-medium truncate">
+                        {appointment.patient?.name}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
