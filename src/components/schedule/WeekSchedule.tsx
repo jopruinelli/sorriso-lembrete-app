@@ -189,7 +189,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   return (
                     <div
                       key={appointment.id}
-                      className={`pointer-events-auto absolute left-1 right-1 rounded-md border shadow-sm bg-secondary text-secondary-foreground ${getLocationColor(appointment.location_id)}`}
+                      className={`pointer-events-auto absolute left-1 right-1 rounded-md border shadow-sm ${getLocationColor(appointment.location_id)}`}
                       style={{ top: block.top, height: block.height }}
                       onClick={(e) => {
                         e.stopPropagation();
