@@ -145,7 +145,9 @@ export const useOrganization = (user: User | null) => {
     }
   };
 
-  const updateOrganizationSettings = async (updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message'>>) => {
+  const updateOrganizationSettings = async (
+    updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message' | 'working_hours_start' | 'working_hours_end'>>
+  ) => {
     if (!userProfile?.organization_id) return;
 
     try {

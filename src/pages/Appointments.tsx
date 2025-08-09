@@ -75,7 +75,10 @@ export default function Appointments() {
   const weekDays = getWeekDays(currentWeek);
   const filteredWeekDays = weekDays.filter(day => !isWeekend(day));
   const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
-  const workingHours = { start: 9, end: 18 }; // 9:00 to 18:00
+  const workingHours = {
+    start: organizationSettings?.working_hours_start ?? 9,
+    end: organizationSettings?.working_hours_end ?? 18,
+  };
   const scrollTargetHour = 8; // Scroll to 8:00 on load
   const scheduleRef = useRef<HTMLDivElement>(null);
   const firstHourRef = useRef<HTMLDivElement>(null);
@@ -181,7 +184,7 @@ export default function Appointments() {
       onSettingsClick={() => setShowSettings(true)}
       onSignOut={signOut}
     >
-      <div className="container mx-auto max-w-7xl h-full flex flex-col gap-6">
+      <div className="container mx-auto max-w-7xl flex flex-col gap-6 h-[calc(100vh-8rem)] overflow-hidden">
 
         {/* Header */}
         <div className="mb-8">

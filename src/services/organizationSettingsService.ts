@@ -26,7 +26,10 @@ export class OrganizationSettingsService {
     }
   }
 
-  static async updateOrganizationSettings(organizationId: string, updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message'>>): Promise<void> {
+  static async updateOrganizationSettings(
+    organizationId: string,
+    updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message' | 'working_hours_start' | 'working_hours_end'>>
+  ): Promise<void> {
     console.log('📝 OrganizationSettingsService.updateOrganizationSettings:', { organizationId, updates });
     
     const { error } = await supabase
@@ -48,10 +51,15 @@ export class OrganizationSettingsService {
     
     const { error } = await supabase
       .from('organization_settings')
-      .insert([{
-        organization_id: organizationId,
-        whatsapp_default_message: 'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!'
-      }])
+      .insert([
+        {
+          organization_id: organizationId,
+          whatsapp_default_message:
+            'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!',
+          working_hours_start: 9,
+          working_hours_end: 18,
+        },
+      ])
       .select();
 
     if (error) {
