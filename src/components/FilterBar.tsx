@@ -2,7 +2,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Search, Filter } from 'lucide-react';
+import { Search, Calendar, CreditCard } from 'lucide-react';
 import { ContactPeriod } from '@/types/patient';
 
 interface FilterBarProps {
@@ -40,7 +40,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="flex gap-2 flex-wrap">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40 border-dental-primary/30">
+          <SelectTrigger className="w-full sm:w-40 border-dental-primary/30">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -52,8 +52,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </Select>
 
         <Select value={contactPeriodFilter} onValueChange={setContactPeriodFilter}>
-          <SelectTrigger className="w-40 border-dental-primary/30">
-            <Filter className="w-4 h-4 mr-2 text-dental-primary" />
+          <SelectTrigger className="w-full sm:w-52 border-dental-primary/30">
+            <Calendar className="w-4 h-4 mr-2 text-dental-primary" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -67,7 +67,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </Select>
 
         <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-          <SelectTrigger className="w-40 border-dental-primary/30">
+          <SelectTrigger className="w-full sm:w-56 border-dental-primary/30">
+            <CreditCard className="w-4 h-4 mr-2 text-dental-primary" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
