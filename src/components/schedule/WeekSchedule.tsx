@@ -31,6 +31,7 @@ const HOUR_HEIGHT_PX = 48; // each hour cell height (h-12 = 48px)
 const SLOT_HEIGHT_PX = HOUR_HEIGHT_PX / SLOTS_PER_HOUR; // height per 15-minute slice
 const TOTAL_HOURS = 24;
 const TOTAL_SLOTS = TOTAL_HOURS * SLOTS_PER_HOUR; // 96 quarter-hour slices
+const HOLD_DELAY_MS = 300;
 
 const formatHour = (hour: number) => {
   const fullHour = Math.floor(hour);
@@ -62,7 +63,9 @@ export function WeekSchedule(props: WeekScheduleProps) {
   const renderStartSlot = renderStartHour * SLOTS_PER_HOUR;
   const renderEndSlot = renderEndHour * SLOTS_PER_HOUR;
   const totalRenderedSlots = renderHours.length * SLOTS_PER_HOUR;
-  const [drag, setDrag] = useState<{ dayISO: string; startIndex: number; endIndex: number } | null>(null);
+  const [drag, setDrag] = useState<
+    { dayISO: string; startIndex: number; endIndex: number; startTime: number } | null
+  >(null);
 
   // Helper to compute an absolute block position for an appointment within a day column
   const computeBlock = (appointment: Appointment, day: Date) => {
@@ -142,7 +145,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const offsetY = e.clientY - rect.top;
                   const offsetIndex = Math.max(0, Math.min(totalRenderedSlots - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
                   const index = offsetIndex + renderStartSlot;
-                  setDrag({ dayISO: day.toISOString(), startIndex: index, endIndex: index });
+                  setDrag({ dayISO: day.toISOString(), startIndex: index, endIndex: index, startTime: Date.now() });
                   (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
                 }}
                 onPointerMove={(e) => {
@@ -155,6 +158,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                 }}
                 onPointerUp={() => {
                   if (!drag || drag.dayISO !== day.toISOString()) return;
+                  const duration = Date.now() - drag.startTime;
                   const start = Math.min(drag.startIndex, drag.endIndex);
                   const endExclusive = Math.max(drag.startIndex, drag.endIndex) + 1;
                   const startHour = Math.floor(start / SLOTS_PER_HOUR);
@@ -165,7 +169,11 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   if (endHour === 24) { endHour = 23; endMinute = 45; }
 
                   if (endExclusive - start <= 1) {
-                    onTimeSlotClick(day, start / SLOTS_PER_HOUR);
+                    if (duration < HOLD_DELAY_MS) {
+                      onTimeSlotClick(day, Math.floor(start / SLOTS_PER_HOUR));
+                    } else {
+                      onTimeSlotClick(day, start / SLOTS_PER_HOUR);
+                    }
                   } else {
                     onTimeRangeSelect?.(day, startHour, startMinute, endHour, endMinute);
                   }
