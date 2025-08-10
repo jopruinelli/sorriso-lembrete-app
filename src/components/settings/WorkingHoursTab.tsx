@@ -17,14 +17,14 @@ export const WorkingHoursTab: React.FC<WorkingHoursTabProps> = ({
   onUpdateSettings,
 }) => {
   const [start, setStart] = useState<number>(
-    Number(organizationSettings?.working_hours_start ?? 9)
+    Number(organizationSettings?.working_hours_start ?? 8)
   );
   const [end, setEnd] = useState<number>(
     Number(organizationSettings?.working_hours_end ?? 18)
   );
 
   useEffect(() => {
-    setStart(Number(organizationSettings?.working_hours_start ?? 9));
+    setStart(Number(organizationSettings?.working_hours_start ?? 8));
     setEnd(Number(organizationSettings?.working_hours_end ?? 18));
   }, [organizationSettings]);
 
