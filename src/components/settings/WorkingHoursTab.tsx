@@ -16,12 +16,16 @@ export const WorkingHoursTab: React.FC<WorkingHoursTabProps> = ({
   organizationSettings,
   onUpdateSettings,
 }) => {
-  const [start, setStart] = useState<number>(organizationSettings?.working_hours_start ?? 9);
-  const [end, setEnd] = useState<number>(organizationSettings?.working_hours_end ?? 18);
+  const [start, setStart] = useState<number>(
+    Number(organizationSettings?.working_hours_start ?? 9)
+  );
+  const [end, setEnd] = useState<number>(
+    Number(organizationSettings?.working_hours_end ?? 18)
+  );
 
   useEffect(() => {
-    setStart(organizationSettings?.working_hours_start ?? 9);
-    setEnd(organizationSettings?.working_hours_end ?? 18);
+    setStart(Number(organizationSettings?.working_hours_start ?? 9));
+    setEnd(Number(organizationSettings?.working_hours_end ?? 18));
   }, [organizationSettings]);
 
   // Generate 15 minute increments across 24 hours (0, 0.25, ..., 23.75)

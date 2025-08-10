@@ -56,7 +56,15 @@ export const useOrganization = (user: User | null) => {
         try {
           const settings = await OrganizationSettingsService.getOrganizationSettings(profile.organization_id);
           console.log('✅ Organization settings loaded:', settings);
-          setOrganizationSettings(settings);
+          setOrganizationSettings(
+            settings
+              ? {
+                  ...settings,
+                  working_hours_start: Number(settings.working_hours_start),
+                  working_hours_end: Number(settings.working_hours_end),
+                }
+              : null
+          );
         } catch (settingsError) {
           console.warn('⚠️ Failed to load organization settings, but continuing:', settingsError);
           setOrganizationSettings(null);
