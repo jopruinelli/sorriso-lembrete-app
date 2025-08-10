@@ -1,4 +1,4 @@
-import { useMemo, RefObject, useState } from 'react';
+import { useMemo, RefObject, useState, useRef } from 'react';
 import { Appointment } from '@/types/appointment';
 import { isWeekend, startOfDay, addDays, format } from 'date-fns';
 
@@ -64,8 +64,17 @@ export function WeekSchedule(props: WeekScheduleProps) {
   const renderEndSlot = renderEndHour * SLOTS_PER_HOUR;
   const totalRenderedSlots = renderHours.length * SLOTS_PER_HOUR;
   const [drag, setDrag] = useState<
-    { dayISO: string; startIndex: number; endIndex: number; startTime: number } | null
+    |
+      {
+        dayISO: string;
+        startIndex: number;
+        endIndex: number;
+        startTime: number;
+        mode: 'hour' | 'quarter';
+      }
+    | null
   >(null);
+  const holdTimeoutRef = useRef<number | null>(null);
 
   // Helper to compute an absolute block position for an appointment within a day column
   const computeBlock = (appointment: Appointment, day: Date) => {
@@ -145,7 +154,20 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const offsetY = e.clientY - rect.top;
                   const offsetIndex = Math.max(0, Math.min(totalRenderedSlots - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
                   const index = offsetIndex + renderStartSlot;
-                  setDrag({ dayISO: day.toISOString(), startIndex: index, endIndex: index, startTime: Date.now() });
+                  setDrag({
+                    dayISO: day.toISOString(),
+                    startIndex: index,
+                    endIndex: index,
+                    startTime: Date.now(),
+                    mode: 'hour',
+                  });
+                  holdTimeoutRef.current = window.setTimeout(() => {
+                    setDrag((prev) =>
+                      prev && prev.dayISO === day.toISOString() && prev.mode === 'hour'
+                        ? { ...prev, mode: 'quarter' }
+                        : prev
+                    );
+                  }, HOLD_DELAY_MS);
                   (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
                 }}
                 onPointerMove={(e) => {
@@ -154,10 +176,24 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const offsetY = e.clientY - rect.top;
                   const offsetIndex = Math.max(0, Math.min(totalRenderedSlots - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
                   const index = offsetIndex + renderStartSlot;
-                  setDrag({ ...drag, endIndex: index });
+                  if (drag.mode === 'hour') {
+                    if (index !== drag.startIndex) {
+                      if (holdTimeoutRef.current) {
+                        clearTimeout(holdTimeoutRef.current);
+                        holdTimeoutRef.current = null;
+                      }
+                      setDrag({ ...drag, mode: 'quarter', endIndex: index });
+                    }
+                  } else {
+                    setDrag({ ...drag, endIndex: index });
+                  }
                 }}
                 onPointerUp={() => {
                   if (!drag || drag.dayISO !== day.toISOString()) return;
+                  if (holdTimeoutRef.current) {
+                    clearTimeout(holdTimeoutRef.current);
+                    holdTimeoutRef.current = null;
+                  }
                   const duration = Date.now() - drag.startTime;
                   const start = Math.min(drag.startIndex, drag.endIndex);
                   const endExclusive = Math.max(drag.startIndex, drag.endIndex) + 1;
@@ -179,7 +215,13 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   }
                   setDrag(null);
                 }}
-                onPointerCancel={() => setDrag(null)}
+                onPointerCancel={() => {
+                  if (holdTimeoutRef.current) {
+                    clearTimeout(holdTimeoutRef.current);
+                    holdTimeoutRef.current = null;
+                  }
+                  setDrag(null);
+                }}
               >
                 {renderHours.map((hour) => {
                   const isWorking = hour >= workingHours.start && hour < workingHours.end;
@@ -196,6 +238,17 @@ export function WeekSchedule(props: WeekScheduleProps) {
                 {drag && drag.dayISO === day.toISOString() && (
                   <div className="pointer-events-none absolute inset-0">
                     {(() => {
+                      if (drag.mode === 'hour') {
+                        const startHour = Math.floor(drag.startIndex / SLOTS_PER_HOUR);
+                        const top = (startHour * SLOTS_PER_HOUR - renderStartSlot) * SLOT_HEIGHT_PX;
+                        const height = SLOTS_PER_HOUR * SLOT_HEIGHT_PX;
+                        return (
+                          <div
+                            className="absolute left-1 right-1 rounded-md border border-primary/30 bg-primary/20"
+                            style={{ top, height }}
+                          />
+                        );
+                      }
                       const start = Math.min(drag.startIndex, drag.endIndex);
                       const endExclusive = Math.max(drag.startIndex, drag.endIndex) + 1;
                       const top = (start - renderStartSlot) * SLOT_HEIGHT_PX;
