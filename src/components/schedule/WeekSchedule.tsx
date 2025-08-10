@@ -33,6 +33,63 @@ const TOTAL_HOURS = 24;
 const TOTAL_SLOTS = TOTAL_HOURS * SLOTS_PER_HOUR; // 96 quarter-hour slices
 const HOLD_DELAY_MS = 300;
 
+type LayoutInfo = { column: number; totalColumns: number };
+
+function computeLayout(appointments: Appointment[]): Record<string, LayoutInfo> {
+  const sorted = [...appointments].sort(
+    (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+  );
+
+  const groups: Appointment[][] = [];
+  let currentGroup: Appointment[] = [];
+  let currentEnd = 0;
+
+  sorted.forEach((appt) => {
+    const start = new Date(appt.start_time).getTime();
+    const end = new Date(appt.end_time).getTime();
+    if (currentGroup.length === 0 || start < currentEnd) {
+      currentGroup.push(appt);
+      currentEnd = Math.max(currentEnd, end);
+    } else {
+      groups.push(currentGroup);
+      currentGroup = [appt];
+      currentEnd = end;
+    }
+  });
+  if (currentGroup.length) groups.push(currentGroup);
+
+  const layout: Record<string, LayoutInfo> = {};
+
+  groups.forEach((group) => {
+    const columns: Appointment[][] = [];
+    group.forEach((appt) => {
+      const start = new Date(appt.start_time).getTime();
+      let placed = false;
+      for (const col of columns) {
+        const last = col[col.length - 1];
+        const lastEnd = new Date(last.end_time).getTime();
+        if (start >= lastEnd) {
+          col.push(appt);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        columns.push([appt]);
+      }
+    });
+
+    const total = columns.length;
+    columns.forEach((col, columnIndex) => {
+      col.forEach((appt) => {
+        layout[appt.id] = { column: columnIndex, totalColumns: total };
+      });
+    });
+  });
+
+  return layout;
+}
+
 const formatHour = (hour: number) => {
   const fullHour = Math.floor(hour);
   const minutes = Math.round((hour % 1) * 60);
@@ -143,6 +200,8 @@ export function WeekSchedule(props: WeekScheduleProps) {
             }
             return true;
           });
+
+          const layout = computeLayout(dayAppointments);
 
           return (
             <div key={day.toISOString()} className="relative border-r">
@@ -270,11 +329,16 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const block = computeBlock(appointment, day);
                   if (!block) return null;
 
+                  const info = layout[appointment.id] || { column: 0, totalColumns: 1 };
+                  const width = 100 / info.totalColumns;
+                  const left = width * info.column;
+                  const hasConflict = info.totalColumns > 1;
+
                   return (
                     <div
                       key={appointment.id}
-                      className={`pointer-events-auto absolute left-1 right-1 rounded-md border shadow-sm ${getLocationColor(appointment.location_id)}`}
-                      style={{ top: block.top, height: block.height }}
+                      className={`pointer-events-auto absolute rounded-md border shadow-sm ${getLocationColor(appointment.location_id)} ${hasConflict ? 'ring-2 ring-red-500' : ''}`}
+                      style={{ top: block.top, height: block.height, left: `${left}%`, width: `${width}%` }}
                       onClick={(e) => {
                         e.stopPropagation();
                         onAppointmentClick(appointment);
