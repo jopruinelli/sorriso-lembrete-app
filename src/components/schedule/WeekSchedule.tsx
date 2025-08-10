@@ -167,12 +167,13 @@ export function WeekSchedule(props: WeekScheduleProps) {
             const slotHour = slotIndex / SLOTS_PER_HOUR;
             const isWorking = slotHour >= workingHours.start && slotHour < workingHours.end;
             const isHourBoundary = slotIndex % SLOTS_PER_HOUR === 0;
-            const attachRef = slotIndex === Math.floor(scrollTargetHour * SLOTS_PER_HOUR);
+            const targetSlotIndex = showNonWorkingHours ? Math.floor(scrollTargetHour * SLOTS_PER_HOUR) : Math.floor(workingHours.start * SLOTS_PER_HOUR);
+            const attachRef = slotIndex === targetSlotIndex;
             return (
               <div
                 key={slotIndex}
                 ref={attachRef ? firstHourRef : undefined}
-                className={`p-2 text-[10px] sm:text-xs text-center border-b ${isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'} ${isHourBoundary ? '' : 'border-muted/20'}`}
+                className={`p-2 text-[10px] sm:text-xs text-center ${isHourBoundary ? 'border-b' : ''} ${isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'}`}
                 style={{ height: SLOT_HEIGHT_PX }}
               >
                 {isHourBoundary ? formatHour(slotHour) : ''}
@@ -291,7 +292,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   return (
                     <div
                       key={slotIndex}
-                      className={`relative border-b p-1 cursor-pointer transition-colors ${cellClass} ${isHourBoundary ? '' : 'border-muted/20'}`}
+                      className={`relative p-1 cursor-pointer transition-colors ${cellClass} ${isHourBoundary ? 'border-b' : ''}`}
                       style={{ height: SLOT_HEIGHT_PX }}
                     />
                   );
