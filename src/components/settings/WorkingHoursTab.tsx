@@ -24,7 +24,16 @@ export const WorkingHoursTab: React.FC<WorkingHoursTabProps> = ({
     setEnd(organizationSettings?.working_hours_end ?? 18);
   }, [organizationSettings]);
 
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  // Generate 15 minute increments across 24 hours (0, 0.25, ..., 23.75)
+  const hours = Array.from({ length: 24 * 4 }, (_, i) => i * 0.25);
+
+  const formatHour = (hour: number) => {
+    const h = Math.floor(hour).toString().padStart(2, '0');
+    const m = Math.round((hour % 1) * 60)
+      .toString()
+      .padStart(2, '0');
+    return `${h}:${m}`;
+  };
 
   const handleSave = () => {
     if (start < end) {
@@ -51,7 +60,7 @@ export const WorkingHoursTab: React.FC<WorkingHoursTabProps> = ({
               <SelectContent>
                 {hours.map((h) => (
                   <SelectItem key={h} value={h.toString()}>
-                    {`${h.toString().padStart(2, '0')}:00`}
+                    {formatHour(h)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -66,7 +75,7 @@ export const WorkingHoursTab: React.FC<WorkingHoursTabProps> = ({
               <SelectContent>
                 {hours.map((h) => (
                   <SelectItem key={h} value={h.toString()}>
-                    {`${h.toString().padStart(2, '0')}:00`}
+                    {formatHour(h)}
                   </SelectItem>
                 ))}
               </SelectContent>
