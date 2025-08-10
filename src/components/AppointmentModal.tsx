@@ -233,6 +233,11 @@ export function AppointmentModal({
         return;
       }
 
+      if (conflicts.length > 0) {
+        const proceed = window.confirm('Existem conflitos de horário. Deseja continuar?');
+        if (!proceed) return;
+      }
+
       const appointmentData: AppointmentFormData = {
         patient_id: data.patient_id,
         location_id: data.location_id,
