@@ -13,14 +13,13 @@ import {
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentModal } from '@/components/AppointmentModal';
 import { Appointment } from '@/types/appointment';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { SettingsModal } from '@/components/SettingsModal';
-import { UserAvatar } from '@/components/UserAvatar';
 import { AppNavigation } from '@/components/AppNavigation';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -174,6 +173,11 @@ export default function Appointments() {
   };
   const daysToDisplay = isMobile ? [filteredWeekDays[selectedDayIndex]] : filteredWeekDays;
 
+  const weekRange = `${format(weekStart, "d 'de' MMMM", { locale: ptBR })} - ${format(addDays(weekStart, 6), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
+  const headerDate = isMobile
+    ? format(filteredWeekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })
+    : weekRange;
+
   if (appointmentsLoading || authLoading || orgLoading) {
     return <div className="p-6">Carregando...</div>;
   }
@@ -183,6 +187,7 @@ export default function Appointments() {
       userProfile={userProfile}
       onSettingsClick={() => setShowSettings(true)}
       onSignOut={signOut}
+      topBarContent={headerDate}
     >
       <div className="flex flex-col gap-2 h-[calc(100vh-4rem)] overflow-hidden">
 
@@ -213,38 +218,32 @@ export default function Appointments() {
 
         {/* Week/Day Navigation */}
         <Card className="flex-1 flex flex-col min-h-0">
-          <CardHeader className="px-2 py-2 md:px-4 md:py-4">
+          <CardHeader className="px-2 py-2 md:px-4 md:py-2">
             <div className="hidden md:flex items-center justify-between">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <CardTitle className="text-lg">
-              {format(weekStart, "d 'de' MMMM", { locale: ptBR })} - {format(addDays(weekStart, 6), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-            </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="flex md:hidden items-center justify-between">
-            <Button variant="outline" size="sm" onClick={handlePrevDay}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <CardTitle className="text-lg">
-              {format(filteredWeekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })}
-            </CardTitle>
-            <Button variant="outline" size="sm" onClick={handleNextDay}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex md:hidden items-center justify-between">
+              <Button variant="outline" size="sm" onClick={handlePrevDay}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleNextDay}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
           {/* Header with days */}
           <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-t-lg overflow-hidden`}>
