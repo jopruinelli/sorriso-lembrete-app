@@ -10,6 +10,7 @@ import { ContactHistoryModal } from '@/components/ContactHistoryModal';
 import { Phone, MessageSquare, Calendar, Edit, Clock, AlertTriangle, User, History, ChevronDown } from 'lucide-react';
 import { format, isBefore, isAfter, startOfToday, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatMessage } from '@/utils/messageTemplates';
 
 interface PatientCardProps {
   patient: Patient;
@@ -42,22 +43,11 @@ export const PatientCard: React.FC<PatientCardProps> = ({
     return <Calendar className="w-4 h-4 text-dental-primary" />;
   };
 
-  const formatWhatsAppMessage = (message: string) => {
-    const firstName = patient.name.split(' ')[0];
-    const lastVisitFormatted = format(patient.lastVisit, 'dd/MM/yyyy', { locale: ptBR });
-    
-    return message
-      .replace('{nome_do_paciente}', patient.name)
-      .replace('{primeiro_nome_do_paciente}', firstName)
-      .replace('{data_proximo_contato}', format(patient.nextContactDate, 'dd/MM/yyyy', { locale: ptBR }))
-      .replace('{data_ultima_consulta}', lastVisitFormatted);
-  };
-
   const handleWhatsAppClick = (phoneNumber: string) => {
-    const defaultMessage = organizationSettings?.whatsapp_default_message || 
+    const defaultMessage = organizationSettings?.whatsapp_default_message ||
       'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!';
-    
-    const message = formatWhatsAppMessage(defaultMessage);
+
+    const message = formatMessage(defaultMessage, { patient });
     const whatsappUrl = `https://wa.me/55${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
