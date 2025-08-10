@@ -72,8 +72,6 @@ export default function Appointments() {
   };
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = getWeekDays(currentWeek);
-  const filteredWeekDays = weekDays.filter(day => !isWeekend(day));
-  const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
   const workingHours = {
     start: Number(organizationSettings?.working_hours_start ?? 8),
     end: Number(organizationSettings?.working_hours_end ?? 18),
@@ -130,20 +128,11 @@ export default function Appointments() {
     setIsModalOpen(true);
   };
 
-  const formatHour = (hour: number) => {
-    const fullHour = Math.floor(hour);
-    const minutes = Math.round((hour % 1) * 60);
-    return `${fullHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  };
-
   useEffect(() => {
-    const todayIndex = filteredWeekDays.findIndex(day => isSameDay(day, new Date()));
-    if (todayIndex !== -1) {
-      setSelectedDayIndex(todayIndex);
-    } else {
-      setSelectedDayIndex(0);
-    }
-  }, [currentWeek, filteredWeekDays]);
+    const todayIndex = weekDays.findIndex(day => isSameDay(day, new Date()));
+    setSelectedDayIndex(todayIndex !== -1 ? todayIndex : 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (scheduleRef.current && firstHourRef.current) {
@@ -154,16 +143,15 @@ export default function Appointments() {
   const handlePrevDay = () => {
     if (selectedDayIndex === 0) {
       const prevWeek = subWeeks(currentWeek, 1);
-      const prevWeekDays = getWeekDays(prevWeek).filter(day => !isWeekend(day));
       setCurrentWeek(prevWeek);
-      setSelectedDayIndex(prevWeekDays.length - 1);
+      setSelectedDayIndex(weekDays.length - 1);
     } else {
       setSelectedDayIndex(selectedDayIndex - 1);
     }
   };
 
   const handleNextDay = () => {
-    if (selectedDayIndex === filteredWeekDays.length - 1) {
+    if (selectedDayIndex === weekDays.length - 1) {
       const nextWeek = addWeeks(currentWeek, 1);
       setCurrentWeek(nextWeek);
       setSelectedDayIndex(0);
@@ -171,11 +159,11 @@ export default function Appointments() {
       setSelectedDayIndex(selectedDayIndex + 1);
     }
   };
-  const daysToDisplay = isMobile ? [filteredWeekDays[selectedDayIndex]] : filteredWeekDays;
+  const daysToDisplay = isMobile ? [weekDays[selectedDayIndex]] : weekDays;
 
   const weekRange = `${format(weekStart, "d 'de' MMMM", { locale: ptBR })} - ${format(addDays(weekStart, 6), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
   const headerDate = isMobile
-    ? format(filteredWeekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })
+    ? format(weekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })
     : weekRange;
 
   if (appointmentsLoading || authLoading || orgLoading) {
@@ -246,7 +234,10 @@ export default function Appointments() {
           </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
           {/* Header with days */}
-          <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-t-lg overflow-hidden`}>
+          <div
+            className="grid gap-0 border rounded-t-lg overflow-hidden"
+            style={{ gridTemplateColumns: `auto repeat(${daysToDisplay.length}, 1fr)` }}
+          >
             <div className="bg-muted p-2 border-r text-center">
               <Clock className="w-4 h-4 text-muted-foreground" />
             </div>
