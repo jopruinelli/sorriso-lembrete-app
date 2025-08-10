@@ -385,6 +385,7 @@ const Index = () => {
             {showPatientForm && (
               <PatientForm
                 patient={editingPatient}
+                organizationSettings={organizationSettings}
                 onSave={editingPatient ? handleUpdatePatient : handleAddPatient}
                 onCancel={() => {
                   setShowPatientForm(false);

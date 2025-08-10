@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { setHours, setMinutes } from 'date-fns';
-import { AlertTriangle, Clock, MapPin, User, FileText, Plus } from 'lucide-react';
+import { setHours, setMinutes, format } from 'date-fns';
+import { AlertTriangle, Clock, MapPin, User, FileText, Plus, MessageSquare } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +43,8 @@ import { Patient, PatientCreateData } from '@/types/patient';
 import { PatientForm } from '@/components/PatientForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { OrganizationSettings } from '@/types/organization';
+import { ptBR } from 'date-fns/locale';
 
 const appointmentSchema = z
   .object({
@@ -92,6 +94,7 @@ interface AppointmentModalProps {
   updateAppointment: (id: string, appointmentData: AppointmentFormData) => Promise<void>;
   deleteAppointment: (id: string) => Promise<void>;
   checkForConflicts: (startTime: Date, endTime: Date, excludeId?: string) => Appointment[];
+  organizationSettings?: OrganizationSettings | null;
 }
 
 export function AppointmentModal({
@@ -108,6 +111,7 @@ export function AppointmentModal({
   updateAppointment,
   deleteAppointment,
   checkForConflicts,
+  organizationSettings,
 }: AppointmentModalProps) {
   const [conflicts, setConflicts] = useState<Appointment[]>([]);
   const [patientSearchOpen, setPatientSearchOpen] = useState(false);
@@ -265,6 +269,27 @@ export function AppointmentModal({
       await deleteAppointment(appointment.id);
       onClose();
     }
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!appointment?.patient?.phone) return;
+    const template =
+      organizationSettings?.whatsapp_appointment_message ||
+      'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}.';
+    const message = template
+      .replace('{nome_do_paciente}', appointment.patient.name)
+      .replace(
+        '{data_consulta}',
+        format(new Date(appointment.start_time), 'dd/MM/yyyy', { locale: ptBR })
+      )
+      .replace(
+        '{hora_consulta}',
+        format(new Date(appointment.start_time), 'HH:mm', { locale: ptBR })
+      );
+    const url = `https://wa.me/55${appointment.patient.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+      message
+    )}`;
+    window.open(url, '_blank');
   };
 
   const handlePatientSave = async (data: PatientCreateData) => {
@@ -679,6 +704,17 @@ export function AppointmentModal({
                 )}
               </div>
               <div className="flex gap-2">
+                {appointment && appointment.patient && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-green-500 text-green-600 hover:bg-green-50"
+                    onClick={handleSendWhatsApp}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    WhatsApp
+                  </Button>
+                )}
                 <Button type="button" variant="outline" onClick={onClose}>
                   Cancelar
                 </Button>

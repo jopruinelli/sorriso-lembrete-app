@@ -8,7 +8,8 @@ import {
   startOfDay,
   addHours,
   isSameDay,
-  isWeekend
+  isWeekend,
+  differenceInCalendarDays
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
@@ -25,6 +26,7 @@ import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { WeekSchedule } from '@/components/schedule/WeekSchedule';
+import { useSearchParams } from 'react-router-dom';
 
 export default function Appointments() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -76,9 +78,29 @@ export default function Appointments() {
     start: Number(organizationSettings?.working_hours_start ?? 8),
     end: Number(organizationSettings?.working_hours_end ?? 18),
   };
-  const scrollTargetHour = 8; // Scroll to 8:00 on load
+  const [scrollTargetHour, setScrollTargetHour] = useState(8);
+  const [searchParams] = useSearchParams();
   const scheduleRef = useRef<HTMLDivElement>(null);
   const firstHourRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      const parsedDate = new Date(dateParam);
+      setCurrentWeek(parsedDate);
+      const start = startOfWeek(parsedDate, { weekStartsOn: 1 });
+      const index = differenceInCalendarDays(parsedDate, start);
+      setSelectedDayIndex(index);
+    }
+    const hourParam = searchParams.get('hour');
+    if (hourParam) {
+      const h = parseInt(hourParam, 10);
+      setScrollTargetHour(h);
+      if (h < workingHours.start || h >= workingHours.end) {
+        setShowNonWorkingHours(true);
+      }
+    }
+  }, [searchParams, workingHours.start, workingHours.end]);
 
   const getAppointmentsForTimeSlot = (date: Date, hour: number) => {
     const slotStart = addHours(startOfDay(date), hour);
@@ -266,7 +288,7 @@ export default function Appointments() {
             getLocationColor={getLocationColor}
             scheduleRef={scheduleRef}
             firstHourRef={firstHourRef}
-            scrollTargetHour={showNonWorkingHours ? scrollTargetHour : workingHours.start}
+            scrollTargetHour={scrollTargetHour}
             showNonWorkingHours={showNonWorkingHours}
           />
         </CardContent>
@@ -298,6 +320,7 @@ export default function Appointments() {
         updateAppointment={updateAppointment}
         deleteAppointment={deleteAppointment}
         checkForConflicts={checkForConflicts}
+        organizationSettings={organizationSettings}
       />
       <SettingsModal
         isOpen={showSettings}
