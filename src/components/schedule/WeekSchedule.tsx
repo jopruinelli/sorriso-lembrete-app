@@ -159,7 +159,10 @@ export function WeekSchedule(props: WeekScheduleProps) {
 
   return (
     <div ref={scheduleRef} className="h-full overflow-y-auto border border-t-0 rounded-b-lg">
-      <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0`}>
+      <div
+        className="grid gap-0"
+        style={{ gridTemplateColumns: `auto repeat(${daysToDisplay.length}, 1fr)` }}
+      >
         {/* Time column */}
         <div className="border-r">
           {Array.from({ length: totalRenderedSlots }, (_, i) => {
