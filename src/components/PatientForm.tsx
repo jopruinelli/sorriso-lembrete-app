@@ -6,6 +6,8 @@ import { X } from 'lucide-react';
 import { addMonths } from 'date-fns';
 import { PatientFormFields } from './patient-form/PatientFormFields';
 import { PatientFormActions } from './patient-form/PatientFormActions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PatientAppointments } from '@/components/PatientAppointments';
 
 interface PatientFormProps {
   patient?: Patient;
@@ -93,19 +95,34 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <PatientFormFields
-            formData={formData}
-            onChange={handleChange}
-            onPeriodChange={handlePeriodChange}
-          />
+        <Tabs defaultValue="dados" className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="dados">Dados</TabsTrigger>
+            <TabsTrigger value="consultas" disabled={!patient}>Consultas</TabsTrigger>
+          </TabsList>
 
-          <PatientFormActions
-            onCancel={onCancel}
-            isEditing={!!patient}
-            disabled={!isFormValid}
-          />
-        </form>
+          <TabsContent value="dados">
+            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+              <PatientFormFields
+                formData={formData}
+                onChange={handleChange}
+                onPeriodChange={handlePeriodChange}
+              />
+
+              <PatientFormActions
+                onCancel={onCancel}
+                isEditing={!!patient}
+                disabled={!isFormValid}
+              />
+            </form>
+          </TabsContent>
+
+          <TabsContent value="consultas">
+            {patient?.id && (
+              <PatientAppointments patientId={patient.id} />
+            )}
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
