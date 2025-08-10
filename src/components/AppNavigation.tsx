@@ -12,13 +12,15 @@ interface AppNavigationProps {
   onSettingsClick: () => void;
   onSignOut: () => void;
   children: React.ReactNode;
+  topBarContent?: React.ReactNode;
 }
 
 export const AppNavigation: React.FC<AppNavigationProps> = ({
   userProfile,
   onSettingsClick,
   onSignOut,
-  children
+  children,
+  topBarContent
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
@@ -162,18 +164,25 @@ export const AppNavigation: React.FC<AppNavigationProps> = ({
         {/* Top bar with hamburger menu */}
         <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-dental-accent/20">
           <div className="flex items-center justify-between p-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+              {topBarContent && (
+                <div className="text-base font-semibold text-dental-primary">
+                  {topBarContent}
+                </div>
+              )}
+            </div>
+
             {/* Mobile user avatar in top bar */}
             {isMobile && (
-              <UserAvatar 
+              <UserAvatar
                 userProfile={userProfile}
                 onSettingsClick={onSettingsClick}
                 onSignOut={onSignOut}
