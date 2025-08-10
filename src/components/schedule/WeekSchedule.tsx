@@ -113,13 +113,10 @@ export function WeekSchedule(props: WeekScheduleProps) {
   } = props;
 
   const hours = useMemo(() => Array.from({ length: TOTAL_HOURS }, (_, i) => i), []);
-  const renderStartHour = showNonWorkingHours ? 0 : workingHours.start;
-  const renderEndHour = showNonWorkingHours ? TOTAL_HOURS : workingHours.end;
-  const renderHours = hours.slice(renderStartHour, renderEndHour);
+  const renderStartSlot = showNonWorkingHours ? 0 : Math.floor(workingHours.start * SLOTS_PER_HOUR);
+  const renderEndSlot = showNonWorkingHours ? TOTAL_SLOTS : Math.ceil(workingHours.end * SLOTS_PER_HOUR);
+  const totalRenderedSlots = renderEndSlot - renderStartSlot;
 
-  const renderStartSlot = renderStartHour * SLOTS_PER_HOUR;
-  const renderEndSlot = renderEndHour * SLOTS_PER_HOUR;
-  const totalRenderedSlots = renderHours.length * SLOTS_PER_HOUR;
   const [drag, setDrag] = useState<
     |
       {
@@ -165,17 +162,20 @@ export function WeekSchedule(props: WeekScheduleProps) {
       <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0`}>
         {/* Time column */}
         <div className="border-r">
-          {renderHours.map((hour) => {
-            const isWorking = hour >= workingHours.start && hour < workingHours.end;
+          {Array.from({ length: totalRenderedSlots }, (_, i) => {
+            const slotIndex = renderStartSlot + i;
+            const slotHour = slotIndex / SLOTS_PER_HOUR;
+            const isWorking = slotHour >= workingHours.start && slotHour < workingHours.end;
+            const isHourBoundary = slotIndex % SLOTS_PER_HOUR === 0;
+            const attachRef = slotIndex === Math.floor(scrollTargetHour * SLOTS_PER_HOUR);
             return (
               <div
-                key={hour}
-                ref={hour === scrollTargetHour ? firstHourRef : undefined}
-                className={`h-12 p-2 border-b text-xs text-center ${
-                  isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'
-                }`}
+                key={slotIndex}
+                ref={attachRef ? firstHourRef : undefined}
+                className={`p-2 text-[10px] sm:text-xs text-center border-b ${isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'} ${isHourBoundary ? '' : 'border-muted/20'}`}
+                style={{ height: SLOT_HEIGHT_PX }}
               >
-                {formatHour(hour)}
+                {isHourBoundary ? formatHour(slotHour) : ''}
               </div>
             );
           })}
@@ -282,13 +282,17 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   setDrag(null);
                 }}
               >
-                {renderHours.map((hour) => {
-                  const isWorking = hour >= workingHours.start && hour < workingHours.end;
+                {Array.from({ length: totalRenderedSlots }, (_, i) => {
+                  const slotIndex = renderStartSlot + i;
+                  const slotHour = slotIndex / SLOTS_PER_HOUR;
+                  const isWorking = slotHour >= workingHours.start && slotHour < workingHours.end;
                   const cellClass = weekend || !isWorking ? 'bg-muted/10 hover:bg-muted/20 opacity-60' : 'hover:bg-muted/30';
+                  const isHourBoundary = slotIndex % SLOTS_PER_HOUR === 0;
                   return (
                     <div
-                      key={hour}
-                      className={`relative h-12 border-b p-1 cursor-pointer transition-colors ${cellClass}`}
+                      key={slotIndex}
+                      className={`relative border-b p-1 cursor-pointer transition-colors ${cellClass} ${isHourBoundary ? '' : 'border-muted/20'}`}
+                      style={{ height: SLOT_HEIGHT_PX }}
                     />
                   );
                 })}

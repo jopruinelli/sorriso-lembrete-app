@@ -150,7 +150,7 @@ export default function Appointments() {
     if (scheduleRef.current && firstHourRef.current) {
       scheduleRef.current.scrollTop = firstHourRef.current.offsetTop;
     }
-  }, []);
+  }, [showNonWorkingHours, workingHours.start]);
 
   const handlePrevDay = () => {
     if (selectedDayIndex === 0) {
