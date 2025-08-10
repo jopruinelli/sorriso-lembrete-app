@@ -45,6 +45,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { OrganizationSettings } from '@/types/organization';
 import { ptBR } from 'date-fns/locale';
+import { formatMessage } from '@/utils/messageTemplates';
 
 const appointmentSchema = z
   .object({
@@ -276,16 +277,10 @@ export function AppointmentModal({
     const template =
       organizationSettings?.whatsapp_appointment_message ||
       'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}.';
-    const message = template
-      .replace('{nome_do_paciente}', appointment.patient.name)
-      .replace(
-        '{data_consulta}',
-        format(new Date(appointment.start_time), 'dd/MM/yyyy', { locale: ptBR })
-      )
-      .replace(
-        '{hora_consulta}',
-        format(new Date(appointment.start_time), 'HH:mm', { locale: ptBR })
-      );
+    const message = formatMessage(template, {
+      patient: appointment.patient,
+      appointment,
+    });
     const url = `https://wa.me/55${appointment.patient.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
       message
     )}`;

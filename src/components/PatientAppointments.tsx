@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Clock, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatMessage } from '@/utils/messageTemplates';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { OrganizationSettings } from '@/types/organization';
@@ -24,19 +25,6 @@ export const PatientAppointments: React.FC<PatientAppointmentsProps> = ({
   const { appointments, loading } = usePatientAppointments(patientId);
   const navigate = useNavigate();
 
-  const formatMessage = (template: string, appointment: Appointment) => {
-    return template
-      .replace('{nome_do_paciente}', patient.name)
-      .replace(
-        '{data_consulta}',
-        format(new Date(appointment.start_time), 'dd/MM/yyyy', { locale: ptBR })
-      )
-      .replace(
-        '{hora_consulta}',
-        format(new Date(appointment.start_time), 'HH:mm', { locale: ptBR })
-      );
-  };
-
   const handleWhatsApp = (
     appointment: Appointment,
     e: React.MouseEvent<HTMLButtonElement>
@@ -45,7 +33,7 @@ export const PatientAppointments: React.FC<PatientAppointmentsProps> = ({
     const defaultMessage =
       organizationSettings?.whatsapp_appointment_message ||
       'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}.';
-    const message = formatMessage(defaultMessage, appointment);
+    const message = formatMessage(defaultMessage, { patient, appointment });
     const phone = patient.phone;
     const url = `https://wa.me/55${phone.replace(/\D/g, '')}?text=${encodeURIComponent(
       message

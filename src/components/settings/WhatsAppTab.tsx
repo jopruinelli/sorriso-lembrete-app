@@ -63,7 +63,7 @@ export const WhatsAppTab: React.FC<WhatsAppTabProps> = ({
             disabled={userProfile?.role !== 'admin'}
           />
           <p className="text-xs text-dental-secondary mt-2">
-            Variáveis disponíveis: {'{nome_do_paciente}'}, {'{data_proximo_contato}'}
+            Variáveis disponíveis: {'{nome_do_paciente}'}, {'{primeiro_nome_do_paciente}'}, {'{data_proximo_contato}'}
           </p>
         </div>
         <div>
@@ -77,7 +77,7 @@ export const WhatsAppTab: React.FC<WhatsAppTabProps> = ({
             disabled={userProfile?.role !== 'admin'}
           />
           <p className="text-xs text-dental-secondary mt-2">
-            Variáveis disponíveis: {'{nome_do_paciente}'}, {'{data_consulta}'}, {'{hora_consulta}'}
+            Variáveis disponíveis: {'{nome_do_paciente}'}, {'{primeiro_nome_do_paciente}'}, {'{data_consulta}'}, {'{hora_consulta}'}
           </p>
         </div>
         {userProfile?.role === 'admin' && (
