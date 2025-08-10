@@ -60,8 +60,14 @@ export const useOrganization = (user: User | null) => {
             settings
               ? {
                   ...settings,
-                  working_hours_start: Number(settings.working_hours_start),
-                  working_hours_end: Number(settings.working_hours_end),
+                  working_hours_start:
+                    settings.working_hours_start !== null
+                      ? Number(settings.working_hours_start)
+                      : null,
+                  working_hours_end:
+                    settings.working_hours_end !== null
+                      ? Number(settings.working_hours_end)
+                      : null,
                 }
               : null
           );
