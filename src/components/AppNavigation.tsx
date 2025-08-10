@@ -50,11 +50,12 @@ export const AppNavigation: React.FC<AppNavigationProps> = ({
       )}
 
       {/* Sidebar */}
-      <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full",
-        !isMobile && "translate-x-0"
-      )}>
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         <div className="flex flex-col h-full">
           {/* Sidebar header */}
           <div className="flex items-center justify-between p-4 border-b border-dental-accent/20">
@@ -152,10 +153,12 @@ export const AppNavigation: React.FC<AppNavigationProps> = ({
       </div>
 
       {/* Main content */}
-      <div className={cn(
-        "transition-all duration-300 ease-in-out",
-        !isMobile ? "ml-64" : "ml-0"
-      )}>
+      <div
+        className={cn(
+          "transition-all duration-300 ease-in-out",
+          !isMobile && sidebarOpen ? "ml-64" : "ml-0"
+        )}
+      >
         {/* Top bar with hamburger menu */}
         <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-dental-accent/20">
           <div className="flex items-center justify-between p-4">
@@ -163,10 +166,7 @@ export const AppNavigation: React.FC<AppNavigationProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={cn(
-                "p-2",
-                isMobile ? "block" : "hidden lg:block"
-              )}
+              className="p-2"
             >
               <Menu className="w-5 h-5" />
             </Button>
