@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Calendar, Users, Settings, LogOut, X } from 'lucide-react';
+import { Menu, Calendar, Users, Settings, LogOut, X, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/UserAvatar';
 import { UserProfile } from '@/types/organization';
@@ -28,6 +28,7 @@ export const AppNavigation: React.FC<AppNavigationProps> = ({
 
   const navigation = [
     { name: 'Pacientes', href: '/', icon: Users },
+    { name: 'Lembretes', href: '/reminders', icon: Bell },
     { name: 'Agenda', href: '/appointments', icon: Calendar },
     { name: 'Configurações', href: '#', icon: Settings, action: onSettingsClick },
   ];
