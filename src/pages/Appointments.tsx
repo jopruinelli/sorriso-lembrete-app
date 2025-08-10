@@ -184,44 +184,41 @@ export default function Appointments() {
       onSettingsClick={() => setShowSettings(true)}
       onSignOut={signOut}
     >
-      <div className="container mx-auto max-w-7xl flex flex-col gap-6 h-[calc(100vh-8rem)] overflow-hidden">
+      <div className="flex flex-col gap-2 h-[calc(100vh-4rem)] overflow-hidden">
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-dental-primary">Agendamentos</h1>
-          <p className="text-dental-secondary">Gerencie suas consultas e compromissos</p>
-        </div>
-
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <Button
-            className="w-full sm:w-auto"
-            onClick={() => {
-              setSelectedAppointment(null);
-              setSelectedTimeSlot(null);
-              setIsModalOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Agendamento
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto"
-            onClick={() => setShowNonWorkingHours(!showNonWorkingHours)}
-          >
-            <Clock className="w-4 h-4 mr-2" />
-            {showNonWorkingHours ? 'Ocultar horários não úteis' : 'Mostrar horários não úteis'}
-          </Button>
-        </div>
-
-      {/* Week/Day Navigation */}
-      <Card className="flex-1 flex flex-col min-h-0">
-        <CardHeader>
-          <div className="hidden md:flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl font-bold text-dental-primary">Agendamentos</h1>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                setSelectedAppointment(null);
+                setSelectedTimeSlot(null);
+                setIsModalOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Novo
+            </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
+              onClick={() => setShowNonWorkingHours(!showNonWorkingHours)}
+            >
+              <Clock className="w-4 h-4 mr-1" />
+              {showNonWorkingHours ? 'Ocultar horários não úteis' : 'Mostrar horários não úteis'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Week/Day Navigation */}
+        <Card className="flex-1 flex flex-col min-h-0">
+          <CardHeader className="px-2 py-2 md:px-4 md:py-4">
+            <div className="hidden md:flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -248,7 +245,7 @@ export default function Appointments() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-hidden">
+        <CardContent className="flex-1 overflow-hidden p-0">
           {/* Header with days */}
           <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-8'} gap-0 border rounded-t-lg overflow-hidden`}>
             <div className="bg-muted p-2 border-r text-center">
@@ -286,25 +283,17 @@ export default function Appointments() {
         </CardContent>
       </Card>
 
-      {/* Location Legend */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Locais</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {locations.map((location) => (
-              <Badge
-                key={location.id}
-                variant="secondary"
-                className={getLocationColor(location.id)}
-              >
-                {location.name}
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-wrap gap-2 py-2">
+        {locations.map((location) => (
+          <Badge
+            key={location.id}
+            variant="secondary"
+            className={getLocationColor(location.id)}
+          >
+            {location.name}
+          </Badge>
+        ))}
+      </div>
 
       <AppointmentModal
         isOpen={isModalOpen}
