@@ -173,7 +173,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
               <div
                 key={slotIndex}
                 ref={attachRef ? firstHourRef : undefined}
-                className={`p-2 text-[10px] sm:text-xs text-center ${isHourBoundary ? 'border-b' : ''} ${isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'}`}
+                className={`px-2 py-1 text-[10px] sm:text-xs text-center ${isHourBoundary ? 'border-b' : ''} ${isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'}`}
                 style={{ height: SLOT_HEIGHT_PX }}
               >
                 {isHourBoundary ? formatHour(slotHour) : ''}
