@@ -76,7 +76,7 @@ export default function Appointments() {
   const filteredWeekDays = weekDays.filter(day => !isWeekend(day));
   const allHours = Array.from({ length: 96 }, (_, i) => i / 4); // 15 min increments
   const workingHours = {
-    start: Number(organizationSettings?.working_hours_start ?? 9),
+    start: Number(organizationSettings?.working_hours_start ?? 8),
     end: Number(organizationSettings?.working_hours_end ?? 18),
   };
   const scrollTargetHour = 8; // Scroll to 8:00 on load

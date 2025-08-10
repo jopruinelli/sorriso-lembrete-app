@@ -210,6 +210,8 @@ export type Database = {
           organization_id: string
           updated_at: string
           whatsapp_default_message: string | null
+          working_hours_start: number | null
+          working_hours_end: number | null
         }
         Insert: {
           created_at?: string
@@ -217,6 +219,8 @@ export type Database = {
           organization_id: string
           updated_at?: string
           whatsapp_default_message?: string | null
+          working_hours_start?: number | null
+          working_hours_end?: number | null
         }
         Update: {
           created_at?: string
@@ -224,6 +228,8 @@ export type Database = {
           organization_id?: string
           updated_at?: string
           whatsapp_default_message?: string | null
+          working_hours_start?: number | null
+          working_hours_end?: number | null
         }
         Relationships: [
           {

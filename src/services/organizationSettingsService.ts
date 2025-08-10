@@ -49,7 +49,7 @@ export class OrganizationSettingsService {
       organization_id: organizationId,
       whatsapp_default_message:
         updates.whatsapp_default_message ?? existing?.whatsapp_default_message ?? defaultMessage,
-      working_hours_start: updates.working_hours_start ?? existing?.working_hours_start ?? 9,
+      working_hours_start: updates.working_hours_start ?? existing?.working_hours_start ?? 8,
       working_hours_end: updates.working_hours_end ?? existing?.working_hours_end ?? 18,
     };
 
@@ -76,7 +76,7 @@ export class OrganizationSettingsService {
           organization_id: organizationId,
           whatsapp_default_message:
             'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!',
-          working_hours_start: 9,
+          working_hours_start: 8,
           working_hours_end: 18,
         },
       ])
