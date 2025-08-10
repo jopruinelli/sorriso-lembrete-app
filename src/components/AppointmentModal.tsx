@@ -706,8 +706,8 @@ export function AppointmentModal({
                     className="border-green-500 text-green-600 hover:bg-green-50"
                     onClick={handleSendWhatsApp}
                   >
-                    <MessageSquare className="w-4 h-4 mr-1" />
-                    WhatsApp
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="sr-only">WhatsApp</span>
                   </Button>
                 )}
                 <Button type="button" variant="outline" onClick={onClose}>
