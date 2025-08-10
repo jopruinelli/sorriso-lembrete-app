@@ -176,7 +176,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
               <div
                 key={slotIndex}
                 ref={attachRef ? firstHourRef : undefined}
-                className={`px-2 py-1 text-[10px] sm:text-xs text-center ${isHourBoundary ? 'border-b' : ''} ${isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'}`}
+                className={`px-2 py-1 text-[10px] sm:text-xs text-center ${isHourBoundary ? 'border-t' : ''} ${isWorking ? 'bg-muted/50 text-muted-foreground' : 'bg-muted/20 text-muted-foreground/50'}`}
                 style={{ height: SLOT_HEIGHT_PX }}
               >
                 {isHourBoundary ? formatHour(slotHour) : ''}
@@ -295,7 +295,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   return (
                     <div
                       key={slotIndex}
-                      className={`relative p-1 cursor-pointer transition-colors ${cellClass} ${isHourBoundary ? 'border-b' : ''}`}
+                      className={`relative p-1 cursor-pointer transition-colors ${cellClass} ${isHourBoundary ? 'border-t' : ''}`}
                       style={{ height: SLOT_HEIGHT_PX }}
                     />
                   );
