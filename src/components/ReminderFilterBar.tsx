@@ -13,6 +13,8 @@ interface ReminderFilterBarProps {
   setTypeFilter: (type: ReminderType) => void;
   contactPeriodFilter: ContactPeriod | 'all';
   setContactPeriodFilter: (period: ContactPeriod | 'all') => void;
+  statusFilter: 'all' | 'active' | 'inactive';
+  setStatusFilter: (status: 'all' | 'active' | 'inactive') => void;
 }
 
 export const ReminderFilterBar: React.FC<ReminderFilterBarProps> = ({
@@ -21,7 +23,9 @@ export const ReminderFilterBar: React.FC<ReminderFilterBarProps> = ({
   typeFilter,
   setTypeFilter,
   contactPeriodFilter,
-  setContactPeriodFilter
+  setContactPeriodFilter,
+  statusFilter,
+  setStatusFilter
 }) => {
   return (
     <div className="space-y-3 mb-4">
@@ -61,6 +65,17 @@ export const ReminderFilterBar: React.FC<ReminderFilterBarProps> = ({
             <SelectItem value="3months">3 meses</SelectItem>
             <SelectItem value="6months">6 meses</SelectItem>
             <SelectItem value="1year">1 ano</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-40 border-dental-primary/30">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="active">Ativos</SelectItem>
+            <SelectItem value="inactive">Inativos</SelectItem>
           </SelectContent>
         </Select>
       </div>

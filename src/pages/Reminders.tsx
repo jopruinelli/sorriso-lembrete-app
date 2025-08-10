@@ -9,7 +9,7 @@ import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { useAppointments } from '@/hooks/useAppointments';
-import { ContactPeriod } from '@/types/patient';
+import { ContactPeriod, Patient } from '@/types/patient';
 import { Appointment } from '@/types/appointment';
 import { format, startOfDay, isAfter, addYears, setYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -18,6 +18,7 @@ import { formatMessage } from '@/utils/messageTemplates';
 interface ReminderPatient {
   name: string;
   phone: string;
+  status: Exclude<Patient['status'], 'closed'>;
   nextContactDate?: Date;
   lastVisit?: Date;
 }
@@ -39,22 +40,33 @@ const Reminders: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<ReminderType>('all');
   const [contactPeriodFilter, setContactPeriodFilter] = useState<ContactPeriod | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   const today = startOfDay(new Date());
 
   const reminders = useMemo(() => {
-    const appointmentReminders: Reminder[] = appointments.map(a => ({
-      id: `appt-${a.id}`,
-      type: 'appointment',
-      date: new Date(a.start_time),
-      patient: {
-        name: a.patient?.name || '',
-        phone: a.patient?.phone || '',
-      },
-      appointment: a
-    }));
+    const nonClosedPatients = patients.filter(p => p.status !== 'closed');
+    const patientMap = new Map(nonClosedPatients.map(p => [p.id, p]));
 
-    const birthdayReminders: Reminder[] = patients
+    const appointmentReminders: Reminder[] = appointments
+      .map(a => {
+        const patient = patientMap.get(a.patient_id);
+        if (!patient) return null;
+        return {
+          id: `appt-${a.id}`,
+          type: 'appointment',
+          date: new Date(a.start_time),
+          patient: {
+            name: patient.name,
+            phone: patient.phone,
+            status: patient.status,
+          },
+          appointment: a,
+        } as Reminder;
+      })
+      .filter((r): r is Reminder => r !== null);
+
+    const birthdayReminders: Reminder[] = nonClosedPatients
       .filter(p => p.birthDate)
       .map(p => {
         const birth = p.birthDate!;
@@ -66,15 +78,20 @@ const Reminders: React.FC = () => {
           id: `bday-${p.id}`,
           type: 'birthday',
           date: next,
-          patient: { name: p.name, phone: p.phone }
+          patient: { name: p.name, phone: p.phone, status: p.status },
         } as Reminder;
       });
 
-    const contactReminders: Reminder[] = patients.map(p => ({
+    const contactReminders: Reminder[] = nonClosedPatients.map(p => ({
       id: `contact-${p.id}`,
       type: 'contact',
       date: p.nextContactDate,
-      patient: { name: p.name, phone: p.phone, nextContactDate: p.nextContactDate }
+      patient: {
+        name: p.name,
+        phone: p.phone,
+        nextContactDate: p.nextContactDate,
+        status: p.status,
+      },
     }));
 
     return [...appointmentReminders, ...birthdayReminders, ...contactReminders];
@@ -84,6 +101,7 @@ const Reminders: React.FC = () => {
     return reminders
       .filter(r => {
         if (searchTerm && !r.patient.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+        if (statusFilter !== 'all' && r.patient.status !== statusFilter) return false;
         if (typeFilter !== 'all' && r.type !== typeFilter) return false;
         const reminderDay = startOfDay(r.date);
         const isOverdue = isAfter(today, reminderDay);
@@ -111,7 +129,7 @@ const Reminders: React.FC = () => {
         return true;
       })
       .sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [reminders, searchTerm, typeFilter, contactPeriodFilter, today]);
+  }, [reminders, searchTerm, typeFilter, contactPeriodFilter, statusFilter, today]);
 
   const handleWhatsApp = (reminder: Reminder) => {
     const phone = reminder.patient.phone;
@@ -154,6 +172,8 @@ const Reminders: React.FC = () => {
             setTypeFilter={setTypeFilter}
             contactPeriodFilter={contactPeriodFilter}
             setContactPeriodFilter={setContactPeriodFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
           />
 
           {filteredReminders.length === 0 ? (
