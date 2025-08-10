@@ -264,14 +264,16 @@ const Index = () => {
           userProfile={userProfile}
           onSettingsClick={() => setShowSettings(true)}
           onSignOut={signOut}
+          topBarContent={
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold text-dental-primary">Gestão de Pacientes</span>
+              <span className="text-xs font-normal text-dental-secondary">
+                {userProfile.organizations?.name || 'Organização não encontrada'}
+              </span>
+            </div>
+          }
         >
           <div className="container mx-auto max-w-7xl">
-            {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-dental-primary">Gestão de Pacientes</h1>
-              <p className="text-dental-secondary">{userProfile.organizations?.name || 'Organização não encontrada'}</p>
-            </div>
-
             {/* Dashboard Cards */}
             <p className="text-sm text-dental-secondary mb-2">Pacientes Ativos</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
