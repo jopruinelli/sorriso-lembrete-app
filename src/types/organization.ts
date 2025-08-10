@@ -22,8 +22,8 @@ export interface OrganizationSettings {
   id: string;
   organization_id: string;
   whatsapp_default_message: string;
-  working_hours_start: number;
-  working_hours_end: number;
+  working_hours_start: number | null;
+  working_hours_end: number | null;
   created_at: string;
   updated_at: string;
 }
