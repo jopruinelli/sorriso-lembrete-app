@@ -13,7 +13,7 @@ import {
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentModal } from '@/components/AppointmentModal';
@@ -166,6 +166,47 @@ export default function Appointments() {
     ? format(weekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })
     : weekRange;
 
+  const topBarNavigation = (
+    <div className="flex items-center gap-2">
+      {isMobile ? (
+        <>
+          <Button variant="ghost" size="icon" onClick={handlePrevDay}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span>{headerDate}</span>
+          <Button variant="ghost" size="icon" onClick={handleNextDay}>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span>{headerDate}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </>
+      )}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setShowNonWorkingHours(!showNonWorkingHours)}
+      >
+        <Clock className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+
   if (appointmentsLoading || authLoading || orgLoading) {
     return <div className="p-6">Carregando...</div>;
   }
@@ -175,63 +216,11 @@ export default function Appointments() {
       userProfile={userProfile}
       onSettingsClick={() => setShowSettings(true)}
       onSignOut={signOut}
-      topBarContent={headerDate}
+      topBarContent={topBarNavigation}
     >
       <div className="flex flex-col gap-2 h-[calc(100vh-4rem)] overflow-hidden">
 
-        <div className="flex items-center justify-between gap-2">
-          <h1 className="text-xl font-bold text-dental-primary">Agendamentos</h1>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={() => {
-                setSelectedAppointment(null);
-                setSelectedTimeSlot(null);
-                setIsModalOpen(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Novo
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowNonWorkingHours(!showNonWorkingHours)}
-            >
-              <Clock className="w-4 h-4 mr-1" />
-              {showNonWorkingHours ? 'Ocultar horários não úteis' : 'Mostrar horários não úteis'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Week/Day Navigation */}
         <Card className="flex-1 flex flex-col min-h-0">
-          <CardHeader className="px-2 py-2 md:px-4 md:py-2">
-            <div className="hidden md:flex items-center justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex md:hidden items-center justify-between">
-              <Button variant="outline" size="sm" onClick={handlePrevDay}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleNextDay}>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
           {/* Header with days */}
           <div
@@ -239,7 +228,17 @@ export default function Appointments() {
             style={{ gridTemplateColumns: `auto repeat(${daysToDisplay.length}, 1fr)` }}
           >
             <div className="bg-muted p-2 border-r text-center">
-              <Clock className="w-4 h-4 text-muted-foreground" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSelectedAppointment(null);
+                  setSelectedTimeSlot(null);
+                  setIsModalOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
             {daysToDisplay.map((day) => {
               const weekend = isWeekend(day);
