@@ -18,7 +18,15 @@ interface SettingsModalProps {
   patients: Patient[];
   onUpdateProfile: (updates: { name: string }) => void;
   onUpdateSettings: (
-    updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message' | 'working_hours_start' | 'working_hours_end'>>
+    updates: Partial<
+      Pick<
+        OrganizationSettings,
+        | 'whatsapp_default_message'
+        | 'whatsapp_appointment_message'
+        | 'working_hours_start'
+        | 'working_hours_end'
+      >
+    >
   ) => void;
   onBulkImport: (patientsData: Omit<Patient, 'id' | 'contactHistory'>[], userId: string) => Promise<number>;
   onDeletePatient: (patientId: string) => void;

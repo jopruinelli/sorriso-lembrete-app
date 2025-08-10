@@ -28,11 +28,21 @@ export class OrganizationSettingsService {
 
   static async updateOrganizationSettings(
     organizationId: string,
-    updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message' | 'working_hours_start' | 'working_hours_end'>>
+    updates: Partial<
+      Pick<
+        OrganizationSettings,
+        | 'whatsapp_default_message'
+        | 'whatsapp_appointment_message'
+        | 'working_hours_start'
+        | 'working_hours_end'
+      >
+    >
   ): Promise<void> {
     console.log('📝 OrganizationSettingsService.updateOrganizationSettings:', { organizationId, updates });
     const defaultMessage =
       'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!';
+    const defaultAppointmentMessage =
+      'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}. Até breve!';
 
     const { data: existing, error: fetchError } = await supabase
       .from('organization_settings')
@@ -49,6 +59,10 @@ export class OrganizationSettingsService {
       organization_id: organizationId,
       whatsapp_default_message:
         updates.whatsapp_default_message ?? existing?.whatsapp_default_message ?? defaultMessage,
+      whatsapp_appointment_message:
+        updates.whatsapp_appointment_message ??
+        existing?.whatsapp_appointment_message ??
+        defaultAppointmentMessage,
       working_hours_start: updates.working_hours_start ?? existing?.working_hours_start ?? 8,
       working_hours_end: updates.working_hours_end ?? existing?.working_hours_end ?? 18,
     };
@@ -68,7 +82,7 @@ export class OrganizationSettingsService {
 
   static async createDefaultSettings(organizationId: string): Promise<void> {
     console.log('⚙️ OrganizationSettingsService.createDefaultSettings:', organizationId);
-    
+
     const { error } = await supabase
       .from('organization_settings')
       .insert([
@@ -76,6 +90,8 @@ export class OrganizationSettingsService {
           organization_id: organizationId,
           whatsapp_default_message:
             'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!',
+          whatsapp_appointment_message:
+            'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}. Até breve!',
           working_hours_start: 8,
           working_hours_end: 18,
         },

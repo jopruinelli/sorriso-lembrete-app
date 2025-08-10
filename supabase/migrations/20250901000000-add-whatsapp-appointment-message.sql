@@ -1,0 +1,2 @@
+alter table organization_settings
+add column whatsapp_appointment_message text;

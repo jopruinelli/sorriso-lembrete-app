@@ -17,7 +17,15 @@ interface SettingsModalContentProps {
   isAdmin: boolean;
   onUpdateProfile: (updates: { name: string }) => void;
   onUpdateSettings: (
-    updates: Partial<Pick<OrganizationSettings, 'whatsapp_default_message' | 'working_hours_start' | 'working_hours_end'>>
+    updates: Partial<
+      Pick<
+        OrganizationSettings,
+        | 'whatsapp_default_message'
+        | 'whatsapp_appointment_message'
+        | 'working_hours_start'
+        | 'working_hours_end'
+      >
+    >
   ) => void;
   onShowExcelImport: () => void;
   onShowPatientRemoval: () => void;

@@ -8,14 +8,21 @@ import { PatientFormFields } from './patient-form/PatientFormFields';
 import { PatientFormActions } from './patient-form/PatientFormActions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PatientAppointments } from '@/components/PatientAppointments';
+import { OrganizationSettings } from '@/types/organization';
 
 interface PatientFormProps {
   patient?: Patient;
+  organizationSettings?: OrganizationSettings | null;
   onSave: (patient: PatientCreateData) => void;
   onCancel: () => void;
 }
 
-export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) => {
+export const PatientForm: React.FC<PatientFormProps> = ({
+  patient,
+  organizationSettings,
+  onSave,
+  onCancel,
+}) => {
   const [formData, setFormData] = useState<PatientCreateData>({
     name: '',
     phone: '',
@@ -119,7 +126,11 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCan
 
           <TabsContent value="consultas">
             {patient?.id && (
-              <PatientAppointments patientId={patient.id} />
+              <PatientAppointments
+                patientId={patient.id}
+                patient={patient}
+                organizationSettings={organizationSettings}
+              />
             )}
           </TabsContent>
         </Tabs>
