@@ -240,104 +240,105 @@ export default function Appointments() {
       onSettingsClick={() => setShowSettings(true)}
       onSignOut={signOut}
       topBarContent={topBarNavigation}
+      contentClassName="p-0"
     >
       <div className="flex flex-col gap-2 h-[calc(100vh-4rem)] overflow-hidden">
-
         <Card className="flex-1 flex flex-col min-h-0">
-        <CardContent className="flex-1 overflow-hidden p-0">
-          {/* Header with days */}
-          <div
-            className="grid gap-0 border rounded-t-lg overflow-hidden"
-            style={{ gridTemplateColumns: `${timeColumnWidth} repeat(${daysToDisplay.length}, 1fr)` }}
-          >
-            <div className="bg-muted p-2 border-r text-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setSelectedAppointment(null);
-                  setSelectedTimeSlot(null);
-                  setIsModalOpen(true);
-                }}
+          <CardContent className="flex-1 p-0 overflow-hidden">
+            <div ref={scheduleRef} className="h-full overflow-y-auto">
+              {/* Header with days */}
+              <div
+                className="sticky top-0 z-10 grid gap-0 border rounded-t-lg overflow-hidden"
+                style={{ gridTemplateColumns: `${timeColumnWidth} repeat(${daysToDisplay.length}, 1fr)` }}
               >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            {daysToDisplay.map((day) => {
-              const weekend = isWeekend(day);
-              return (
-                <div
-                  key={day.toISOString()}
-                  className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r text-center`}
-                >
-                  <div className="font-medium">{format(day, 'EEEEEE', { locale: ptBR })}</div>
-                  <div className={`text-sm ${weekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{format(day, 'd')}</div>
+                <div className="bg-muted p-2 border-r text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedAppointment(null);
+                      setSelectedTimeSlot(null);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
                 </div>
-              );
-            })}
-          </div>
+                {daysToDisplay.map((day) => {
+                  const weekend = isWeekend(day);
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r text-center`}
+                    >
+                      <div className="font-medium">{format(day, 'EEEEEE', { locale: ptBR })}</div>
+                      <div className={`text-sm ${weekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{format(day, 'd')}</div>
+                    </div>
+                  );
+                })}
+              </div>
 
-          {/* Time slots */}
-          <WeekSchedule
-            isMobile={isMobile}
-            daysToDisplay={daysToDisplay}
-            workingHours={workingHours}
-            appointments={appointments}
-            onTimeSlotClick={handleTimeSlotClick}
-            onTimeRangeSelect={handleTimeRangeSelect}
-            onAppointmentClick={handleAppointmentClick}
-            getLocationColor={getLocationColor}
-            scheduleRef={scheduleRef}
-            firstHourRef={firstHourRef}
-            scrollTargetHour={scrollTargetHour}
-            showNonWorkingHours={showNonWorkingHours}
-            timeColumnWidth={timeColumnWidth}
-          />
-        </CardContent>
-      </Card>
+              {/* Time slots */}
+              <WeekSchedule
+                isMobile={isMobile}
+                daysToDisplay={daysToDisplay}
+                workingHours={workingHours}
+                appointments={appointments}
+                onTimeSlotClick={handleTimeSlotClick}
+                onTimeRangeSelect={handleTimeRangeSelect}
+                onAppointmentClick={handleAppointmentClick}
+                getLocationColor={getLocationColor}
+                firstHourRef={firstHourRef}
+                scrollTargetHour={scrollTargetHour}
+                showNonWorkingHours={showNonWorkingHours}
+                timeColumnWidth={timeColumnWidth}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="flex flex-wrap gap-2 py-2">
-        {locations.map((location) => (
-          <Badge
-            key={location.id}
-            variant="secondary"
-            className={getLocationColor(location.id)}
-          >
-            {location.name}
-          </Badge>
-        ))}
-      </div>
+        <div className="flex flex-wrap gap-2 py-2">
+          {locations.map((location) => (
+            <Badge
+              key={location.id}
+              variant="secondary"
+              className={getLocationColor(location.id)}
+            >
+              {location.name}
+            </Badge>
+          ))}
+        </div>
 
-      <AppointmentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        appointment={selectedAppointment}
-        selectedTimeSlot={selectedTimeSlot}
-        locations={locations}
-        titles={titles}
-        patients={patients}
-        addPatient={addPatient}
-        retryLoadPatients={retryLoadPatients}
-        createAppointment={createAppointment}
-        updateAppointment={updateAppointment}
-        deleteAppointment={deleteAppointment}
-        checkForConflicts={checkForConflicts}
-        organizationSettings={organizationSettings}
-      />
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        userProfile={userProfile}
-        organizationSettings={organizationSettings}
-        patients={patients}
-        onUpdateProfile={updateProfile}
-        onUpdateSettings={updateOrganizationSettings}
-        onBulkImport={bulkAddPatients}
-        onDeletePatient={deletePatient}
-        onBulkDelete={bulkDeletePatients}
-        fetchLocations={fetchLocations}
-        fetchTitles={fetchTitles}
-      />
+        <AppointmentModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          appointment={selectedAppointment}
+          selectedTimeSlot={selectedTimeSlot}
+          locations={locations}
+          titles={titles}
+          patients={patients}
+          addPatient={addPatient}
+          retryLoadPatients={retryLoadPatients}
+          createAppointment={createAppointment}
+          updateAppointment={updateAppointment}
+          deleteAppointment={deleteAppointment}
+          checkForConflicts={checkForConflicts}
+          organizationSettings={organizationSettings}
+        />
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          userProfile={userProfile}
+          organizationSettings={organizationSettings}
+          patients={patients}
+          onUpdateProfile={updateProfile}
+          onUpdateSettings={updateOrganizationSettings}
+          onBulkImport={bulkAddPatients}
+          onDeletePatient={deletePatient}
+          onBulkDelete={bulkDeletePatients}
+          fetchLocations={fetchLocations}
+          fetchTitles={fetchTitles}
+        />
       </div>
     </AppNavigation>
   );

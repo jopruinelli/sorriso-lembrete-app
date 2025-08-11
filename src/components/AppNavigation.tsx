@@ -13,6 +13,7 @@ interface AppNavigationProps {
   onSignOut: () => void;
   children: React.ReactNode;
   topBarContent?: React.ReactNode;
+  contentClassName?: string;
 }
 
 export const AppNavigation: React.FC<AppNavigationProps> = ({
@@ -20,7 +21,8 @@ export const AppNavigation: React.FC<AppNavigationProps> = ({
   onSettingsClick,
   onSignOut,
   children,
-  topBarContent
+  topBarContent,
+  contentClassName
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
@@ -193,7 +195,7 @@ export const AppNavigation: React.FC<AppNavigationProps> = ({
         </div>
 
         {/* Page content */}
-        <div className="p-4">
+        <div className={cn("p-4", contentClassName)}>
           {children}
         </div>
       </div>

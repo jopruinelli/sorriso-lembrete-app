@@ -19,7 +19,6 @@ interface WeekScheduleProps {
   ) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   getLocationColor: (locationId: string) => string;
-  scheduleRef: RefObject<HTMLDivElement>;
   firstHourRef: RefObject<HTMLDivElement>;
   scrollTargetHour?: number;
   showNonWorkingHours?: boolean;
@@ -107,7 +106,6 @@ export function WeekSchedule(props: WeekScheduleProps) {
     onTimeRangeSelect,
     onAppointmentClick,
     getLocationColor,
-    scheduleRef,
     firstHourRef,
     scrollTargetHour = 8,
     showNonWorkingHours = false,
@@ -160,7 +158,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
   };
 
   return (
-    <div ref={scheduleRef} className="h-full overflow-y-auto border border-t-0 rounded-b-lg">
+    <div className="border border-t-0 rounded-b-lg">
       <div
         className="grid gap-0"
         style={{ gridTemplateColumns: `${timeColumnWidth} repeat(${daysToDisplay.length}, 1fr)` }}
