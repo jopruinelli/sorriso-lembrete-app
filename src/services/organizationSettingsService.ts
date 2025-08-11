@@ -33,6 +33,7 @@ export class OrganizationSettingsService {
         OrganizationSettings,
         | 'whatsapp_default_message'
         | 'whatsapp_appointment_message'
+        | 'whatsapp_birthday_message'
         | 'working_hours_start'
         | 'working_hours_end'
       >
@@ -43,6 +44,8 @@ export class OrganizationSettingsService {
       'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!';
     const defaultAppointmentMessage =
       'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}. Até breve!';
+    const defaultBirthdayMessage =
+      'Olá {nome_do_paciente}! Feliz aniversário! Desejamos um dia cheio de sorrisos!';
 
     const { data: existing, error: fetchError } = await supabase
       .from('organization_settings')
@@ -63,6 +66,10 @@ export class OrganizationSettingsService {
         updates.whatsapp_appointment_message ??
         existing?.whatsapp_appointment_message ??
         defaultAppointmentMessage,
+      whatsapp_birthday_message:
+        updates.whatsapp_birthday_message ??
+        existing?.whatsapp_birthday_message ??
+        defaultBirthdayMessage,
       working_hours_start: updates.working_hours_start ?? existing?.working_hours_start ?? 8,
       working_hours_end: updates.working_hours_end ?? existing?.working_hours_end ?? 18,
     };
@@ -92,6 +99,8 @@ export class OrganizationSettingsService {
             'Olá {nome_do_paciente}! Este é um lembrete da sua consulta marcada para {data_proximo_contato}. Aguardamos você!',
           whatsapp_appointment_message:
             'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}. Até breve!',
+          whatsapp_birthday_message:
+            'Olá {nome_do_paciente}! Feliz aniversário! Desejamos um dia cheio de sorrisos!',
           working_hours_start: 8,
           working_hours_end: 18,
         },

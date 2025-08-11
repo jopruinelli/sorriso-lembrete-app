@@ -148,6 +148,11 @@ const Reminders: React.FC = () => {
         organizationSettings?.whatsapp_appointment_message || '',
         { patient: { name: reminder.patient.name }, appointment: reminder.appointment }
       );
+    } else if (reminder.type === 'birthday') {
+      message = formatMessage(
+        organizationSettings?.whatsapp_birthday_message || '',
+        { patient: { name: reminder.patient.name, birthday: reminder.date } }
+      );
     } else if (reminder.type === 'contact') {
       message = formatMessage(
         organizationSettings?.whatsapp_default_message || '',
