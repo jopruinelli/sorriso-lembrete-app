@@ -210,33 +210,36 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          organization_id: string
-          updated_at: string
-          whatsapp_default_message: string | null
-          whatsapp_appointment_message: string | null
-          working_hours_end: number | null
-          working_hours_start: number | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          organization_id: string
-          updated_at?: string
-          whatsapp_default_message?: string | null
-          whatsapp_appointment_message?: string | null
-          working_hours_end?: number | null
-          working_hours_start?: number | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          organization_id?: string
-          updated_at?: string
-          whatsapp_default_message?: string | null
-          whatsapp_appointment_message?: string | null
-          working_hours_end?: number | null
-          working_hours_start?: number | null
-        }
+      organization_id: string
+      updated_at: string
+      whatsapp_default_message: string | null
+      whatsapp_appointment_message: string | null
+      whatsapp_birthday_message: string | null
+      working_hours_end: number | null
+      working_hours_start: number | null
+    }
+    Insert: {
+      created_at?: string
+      id?: string
+      organization_id: string
+      updated_at?: string
+      whatsapp_default_message?: string | null
+      whatsapp_appointment_message?: string | null
+      whatsapp_birthday_message?: string | null
+      working_hours_end?: number | null
+      working_hours_start?: number | null
+    }
+    Update: {
+      created_at?: string
+      id?: string
+      organization_id?: string
+      updated_at?: string
+      whatsapp_default_message?: string | null
+      whatsapp_appointment_message?: string | null
+      whatsapp_birthday_message?: string | null
+      working_hours_end?: number | null
+      working_hours_start?: number | null
+    }
         Relationships: [
           {
             foreignKeyName: "organization_settings_organization_id_fkey"

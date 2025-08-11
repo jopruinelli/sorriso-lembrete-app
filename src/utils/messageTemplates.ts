@@ -6,6 +6,7 @@ interface PatientInfo {
   name: string;
   lastVisit?: Date;
   nextContactDate?: Date;
+  birthday?: Date;
 }
 
 interface MessageTemplateData {
@@ -23,6 +24,13 @@ export function formatMessage(template: string, { patient, appointment }: Messag
     message = message.replace(
       '{data_proximo_contato}',
       format(patient.nextContactDate, 'dd/MM/yyyy', { locale: ptBR })
+    );
+  }
+
+  if (patient.birthday) {
+    message = message.replace(
+      '{data_aniversario}',
+      format(patient.birthday, 'dd/MM/yyyy', { locale: ptBR })
     );
   }
 

@@ -22,6 +22,7 @@ interface SettingsModalContentProps {
         OrganizationSettings,
         | 'whatsapp_default_message'
         | 'whatsapp_appointment_message'
+        | 'whatsapp_birthday_message'
         | 'working_hours_start'
         | 'working_hours_end'
       >
