@@ -23,6 +23,7 @@ interface WeekScheduleProps {
   firstHourRef: RefObject<HTMLDivElement>;
   scrollTargetHour?: number;
   showNonWorkingHours?: boolean;
+  timeColumnWidth?: string;
 }
 
 // Visual constants
@@ -110,6 +111,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
     firstHourRef,
     scrollTargetHour = 8,
     showNonWorkingHours = false,
+    timeColumnWidth = '3rem',
   } = props;
 
   const hours = useMemo(() => Array.from({ length: TOTAL_HOURS }, (_, i) => i), []);
@@ -161,7 +163,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
     <div ref={scheduleRef} className="h-full overflow-y-auto border border-t-0 rounded-b-lg">
       <div
         className="grid gap-0"
-        style={{ gridTemplateColumns: `auto repeat(${daysToDisplay.length}, 1fr)` }}
+        style={{ gridTemplateColumns: `${timeColumnWidth} repeat(${daysToDisplay.length}, 1fr)` }}
       >
         {/* Time column */}
         <div className="border-r">
