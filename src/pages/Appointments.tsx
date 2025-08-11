@@ -82,6 +82,7 @@ export default function Appointments() {
   const [searchParams] = useSearchParams();
   const scheduleRef = useRef<HTMLDivElement>(null);
   const firstHourRef = useRef<HTMLDivElement>(null);
+  const timeColumnWidth = '3rem';
 
   useEffect(() => {
     const dateParam = searchParams.get('date');
@@ -247,7 +248,7 @@ export default function Appointments() {
           {/* Header with days */}
           <div
             className="grid gap-0 border rounded-t-lg overflow-hidden"
-            style={{ gridTemplateColumns: `auto repeat(${daysToDisplay.length}, 1fr)` }}
+            style={{ gridTemplateColumns: `${timeColumnWidth} repeat(${daysToDisplay.length}, 1fr)` }}
           >
             <div className="bg-muted p-2 border-r text-center">
               <Button
@@ -290,6 +291,7 @@ export default function Appointments() {
             firstHourRef={firstHourRef}
             scrollTargetHour={scrollTargetHour}
             showNonWorkingHours={showNonWorkingHours}
+            timeColumnWidth={timeColumnWidth}
           />
         </CardContent>
       </Card>
