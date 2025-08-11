@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, Plus, MapPin, Edit } from 'lucide-react';
+import { Trash2, Plus, MapPin, Edit, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +19,7 @@ interface Location {
   name: string;
   address?: string;
   is_active: boolean;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -73,7 +74,8 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
           name: newLocation.name.trim(),
           address: newLocation.address.trim() || null,
           organization_id: userProfile.organization_id,
-          is_active: true
+          is_active: true,
+          is_default: locations.length === 0
         })
         .select()
         .single();
@@ -104,7 +106,8 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
         .update({
           name: location.name,
           address: location.address || null,
-          is_active: location.is_active
+          is_active: location.is_active,
+          is_default: location.is_default
         })
         .eq('id', location.id);
 
@@ -122,6 +125,35 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
       toast({
         title: "Erro",
         description: "Erro ao atualizar local",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const setAsDefault = async (locationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('locations')
+        .update({ is_default: true })
+        .eq('id', locationId);
+
+      if (error) throw error;
+
+      setLocations(locations.map(l => ({
+        ...l,
+        is_default: l.id === locationId
+      })));
+
+      toast({
+        title: "Sucesso",
+        description: "Local padrão atualizado",
+      });
+      fetchLocations();
+    } catch (error) {
+      console.error('Error setting default location:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao definir local padrão",
         variant: "destructive",
       });
     }
@@ -228,6 +260,13 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
                     />
                     <Label>Local ativo</Label>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={editingLocation.is_default}
+                      onCheckedChange={(checked) => setEditingLocation({ ...editingLocation, is_default: checked })}
+                    />
+                    <Label>Local padrão</Label>
+                  </div>
                   <div className="flex gap-2">
                     <Button onClick={() => updateLocation(editingLocation)}>
                       Salvar
@@ -240,49 +279,67 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
               ) : (
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h5 className="font-medium">{location.name}</h5>
+                  <div className="flex items-center gap-2">
+                    <h5 className="font-medium">{location.name}</h5>
+                    <div className="flex gap-1">
                       <Badge variant={location.is_active ? "default" : "secondary"}>
                         {location.is_active ? "Ativo" : "Inativo"}
                       </Badge>
+                      {location.is_default && (
+                        <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                          <Star className="w-3 h-3 mr-1" />
+                          Padrão
+                        </Badge>
+                      )}
                     </div>
-                    {location.address && (
-                      <p className="text-sm text-muted-foreground mt-1">{location.address}</p>
-                    )}
                   </div>
-                  <div className="flex gap-2">
+                  {location.address && (
+                    <p className="text-sm text-muted-foreground mt-1">{location.address}</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!location.is_default && location.is_active && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingLocation(location)}
+                      onClick={() => setAsDefault(location.id)}
                     >
-                      <Edit className="w-4 h-4" />
+                      <Star className="w-4 h-4 mr-1" />
+                      Padrão
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja excluir o local "{location.name}"? Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteLocation(location.id)}>
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingLocation(location)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir o local "{location.name}"? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteLocation(location.id)}>
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
-              )}
-            </Card>
+              </div>
+            )}
+          </Card>
           ))
         )}
       </div>

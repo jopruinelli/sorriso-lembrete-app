@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/command';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Appointment, Location, AppointmentFormData } from '@/types/appointment';
+import { Appointment, Location, AppointmentFormData, AppointmentTitle } from '@/types/appointment';
 import { Patient, PatientCreateData } from '@/types/patient';
 import { PatientForm } from '@/components/PatientForm';
 import { useAuth } from '@/hooks/useAuth';
@@ -84,7 +84,7 @@ interface AppointmentModalProps {
   appointment?: Appointment | null;
   selectedTimeSlot?: { date: Date; hour: number; minute: number; endHour?: number; endMinute?: number } | null;
   locations: Location[];
-  titles: string[];
+  titles: AppointmentTitle[];
   patients: Patient[];
   addPatient: (
     patientData: PatientCreateData,
@@ -122,8 +122,12 @@ export function AppointmentModal({
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const defaultTitle = titles[0] || 'Consulta de Retorno';
-  const firstActiveLocationId = locations.find((l) => l.is_active)?.id || '';
+  const defaultTitle =
+    titles.find((t) => t.is_default)?.title || titles[0]?.title || 'Consulta de Retorno';
+  const defaultLocationId =
+    locations.find((l) => l.is_default && l.is_active)?.id ||
+    locations.find((l) => l.is_active)?.id ||
+    '';
   const availableLocations = appointment
     ? locations.filter((l) => l.is_active || l.id === appointment.location_id)
     : locations.filter((l) => l.is_active);
@@ -132,7 +136,7 @@ export function AppointmentModal({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       patient_id: '',
-      location_id: '',
+      location_id: defaultLocationId,
       title: defaultTitle,
       date: new Date(),
       start_hour: 9,
@@ -176,7 +180,7 @@ export function AppointmentModal({
       // Creating new appointment for specific time slot
       form.reset({
         patient_id: '',
-        location_id: firstActiveLocationId,
+        location_id: defaultLocationId,
         title: defaultTitle,
         date: selectedTimeSlot.date,
         start_hour: selectedTimeSlot.hour,
@@ -194,7 +198,7 @@ export function AppointmentModal({
 
       form.reset({
         patient_id: '',
-        location_id: firstActiveLocationId,
+        location_id: defaultLocationId,
         title: defaultTitle,
         date: now,
         start_hour: 9,
@@ -207,7 +211,7 @@ export function AppointmentModal({
       setPatientSearch('');
       setShowRecurrence(false);
     }
-  }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle, firstActiveLocationId]);
+  }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle, defaultLocationId]);
 
   useEffect(() => {
     if (watchedDate && watchedStartHour !== undefined && watchedStartMinute !== undefined && 
@@ -456,9 +460,12 @@ export function AppointmentModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(titles && titles.length > 0 ? titles : ['Consulta de Retorno']).map((title) => (
-                        <SelectItem key={title} value={title}>
-                          {title}
+                      {(titles.length > 0
+                        ? titles
+                        : [{ id: 'default', title: 'Consulta de Retorno', is_default: false }]
+                      ).map((title) => (
+                        <SelectItem key={title.id} value={title.title}>
+                          {title.title}
                         </SelectItem>
                       ))}
                     </SelectContent>
