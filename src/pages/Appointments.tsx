@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import {
   format,
   startOfWeek,
@@ -184,6 +184,23 @@ export default function Appointments() {
   };
   const daysToDisplay = isMobile ? [weekDays[selectedDayIndex]] : weekDays;
 
+  const hasAfterHoursAppointments = useMemo(() =>
+    appointments.some((a) =>
+      daysToDisplay.some((day) => {
+        const dayStart = startOfDay(day).getTime();
+        const dayEnd = addDays(startOfDay(day), 1).getTime();
+        const workStart = dayStart + workingHours.start * 60 * 60 * 1000;
+        const workEnd = dayStart + workingHours.end * 60 * 60 * 1000;
+        const apptStart = new Date(a.start_time).getTime();
+        const apptEnd = new Date(a.end_time).getTime();
+        const intersectsDay = apptEnd > dayStart && apptStart < dayEnd;
+        if (!intersectsDay) return false;
+        return apptStart < workStart || apptEnd > workEnd;
+      })
+    ),
+    [appointments, daysToDisplay, workingHours.start, workingHours.end]
+  );
+
   const weekRange = `${format(weekStart, "d 'de' MMMM", { locale: ptBR })} - ${format(addDays(weekStart, 6), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
   const headerDate = isMobile
     ? format(weekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })
@@ -224,8 +241,12 @@ export default function Appointments() {
         variant="ghost"
         size="icon"
         onClick={() => setShowNonWorkingHours(!showNonWorkingHours)}
+        className="relative"
       >
         <Clock className="w-4 h-4" />
+        {hasAfterHoursAppointments && !showNonWorkingHours && (
+          <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" />
+        )}
       </Button>
     </div>
   );
