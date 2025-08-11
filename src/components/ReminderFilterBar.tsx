@@ -1,7 +1,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Search, Calendar as CalendarIcon, Bell } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, Bell, User, UserCheck, UserX } from 'lucide-react';
 import { ContactPeriod } from '@/types/patient';
 
 type ReminderType = 'all' | 'appointment' | 'birthday' | 'contact';
@@ -70,12 +70,25 @@ export const ReminderFilterBar: React.FC<ReminderFilterBarProps> = ({
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-40 border-dental-primary/30">
+            {statusFilter === 'active' ? (
+              <UserCheck className="w-4 h-4 mr-2 text-dental-primary" />
+            ) : statusFilter === 'inactive' ? (
+              <UserX className="w-4 h-4 mr-2 text-dental-primary" />
+            ) : (
+              <User className="w-4 h-4 mr-2 text-dental-primary" />
+            )}
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="active">Ativos</SelectItem>
-            <SelectItem value="inactive">Inativos</SelectItem>
+            <SelectItem value="all">
+              <span className="flex items-center"><User className="w-4 h-4 mr-2" />Todos os status</span>
+            </SelectItem>
+            <SelectItem value="active">
+              <span className="flex items-center"><UserCheck className="w-4 h-4 mr-2" />Ativos</span>
+            </SelectItem>
+            <SelectItem value="inactive">
+              <span className="flex items-center"><UserX className="w-4 h-4 mr-2" />Inativos</span>
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

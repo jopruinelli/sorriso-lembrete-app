@@ -4,7 +4,7 @@ import { AppNavigation } from '@/components/AppNavigation';
 import { ReminderFilterBar, ReminderType } from '@/components/ReminderFilterBar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Calendar, Cake, Phone } from 'lucide-react';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
@@ -43,6 +43,12 @@ const Reminders: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   const today = startOfDay(new Date());
+
+  const typeIcons = {
+    appointment: Calendar,
+    birthday: Cake,
+    contact: Phone,
+  } as const;
 
   const reminders = useMemo(() => {
     const nonClosedPatients = patients.filter(p => p.status !== 'closed');
@@ -101,7 +107,8 @@ const Reminders: React.FC = () => {
     return reminders
       .filter(r => {
         if (searchTerm && !r.patient.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-        if (statusFilter !== 'all' && r.patient.status !== statusFilter) return false;
+        if (r.patient.status === 'closed') return false;
+        if (statusFilter !== 'all' && r.patient.status.toLowerCase() !== statusFilter) return false;
         if (typeFilter !== 'all' && r.type !== typeFilter) return false;
         const reminderDay = startOfDay(r.date);
         const isOverdue = isAfter(today, reminderDay);
@@ -179,28 +186,34 @@ const Reminders: React.FC = () => {
           {filteredReminders.length === 0 ? (
             <p className="text-dental-secondary">Nenhum lembrete encontrado.</p>
           ) : (
-            filteredReminders.map(reminder => (
-              <Card key={reminder.id} className="border-l-4 border-dental-primary">
-                <CardContent className="flex items-center justify-between p-4">
-                  <div>
-                    <div className="font-semibold text-dental-primary">{reminder.patient.name}</div>
-                    <div className="text-sm text-dental-secondary">
-                      {reminder.type === 'appointment'
-                        ? format(reminder.date, 'dd/MM/yyyy HH:mm', { locale: ptBR })
-                        : format(reminder.date, 'dd/MM/yyyy', { locale: ptBR })}
+            filteredReminders.map(reminder => {
+              const Icon = typeIcons[reminder.type];
+              return (
+                <Card key={reminder.id} className="border-l-4 border-dental-primary">
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-5 h-5 text-dental-primary" />
+                      <div>
+                        <div className="font-semibold text-dental-primary">{reminder.patient.name}</div>
+                        <div className="text-sm text-dental-secondary">
+                          {reminder.type === 'appointment'
+                            ? format(reminder.date, 'dd/MM/yyyy HH:mm', { locale: ptBR })
+                            : format(reminder.date, 'dd/MM/yyyy', { locale: ptBR })}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleWhatsApp(reminder)}
-                    className="text-dental-primary"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleWhatsApp(reminder)}
+                      className="text-dental-primary"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </AppNavigation>
