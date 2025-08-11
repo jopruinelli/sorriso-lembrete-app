@@ -4,7 +4,6 @@ export interface Location {
   name: string;
   address?: string;
   is_active: boolean;
-  is_default: boolean;
   created_at: string;
   updated_at: string;
 }

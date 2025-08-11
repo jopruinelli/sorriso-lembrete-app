@@ -125,8 +125,8 @@ export function AppointmentModal({
   const defaultTitle =
     titles.find((t) => t.is_default)?.title || titles[0]?.title || 'Consulta de Retorno';
   const defaultLocationId =
-    locations.find((l) => l.is_default && l.is_active)?.id ||
     locations.find((l) => l.is_active)?.id ||
+    locations[0]?.id ||
     '';
   const availableLocations = appointment
     ? locations.filter((l) => l.is_active || l.id === appointment.location_id)

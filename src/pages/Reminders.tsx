@@ -51,7 +51,9 @@ const Reminders: React.FC = () => {
   } as const;
 
   const reminders = useMemo(() => {
-    const nonClosedPatients = patients.filter(p => p.status !== 'closed');
+    const nonClosedPatients = patients.filter(
+      (p): p is Patient & { status: Exclude<Patient['status'], 'closed'> } => p.status !== 'closed'
+    );
     const patientMap = new Map(nonClosedPatients.map(p => [p.id, p]));
 
     const appointmentReminders: Reminder[] = appointments
@@ -107,7 +109,7 @@ const Reminders: React.FC = () => {
     return reminders
       .filter(r => {
         if (searchTerm && !r.patient.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-        if (r.patient.status === 'closed') return false;
+        
         if (statusFilter !== 'all' && r.patient.status.toLowerCase() !== statusFilter) return false;
         if (typeFilter !== 'all' && r.type !== typeFilter) return false;
         const reminderDay = startOfDay(r.date);

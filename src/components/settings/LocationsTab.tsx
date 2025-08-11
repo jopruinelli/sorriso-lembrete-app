@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, Plus, MapPin, Edit, Star } from 'lucide-react';
+import { Trash2, Plus, MapPin, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,7 +19,7 @@ interface Location {
   name: string;
   address?: string;
   is_active: boolean;
-  is_default: boolean;
+  
   created_at: string;
   updated_at: string;
 }
@@ -74,8 +74,7 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
           name: newLocation.name.trim(),
           address: newLocation.address.trim() || null,
           organization_id: userProfile.organization_id,
-          is_active: true,
-          is_default: locations.length === 0
+          is_active: true
         })
         .select()
         .single();
@@ -106,8 +105,7 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
         .update({
           name: location.name,
           address: location.address || null,
-          is_active: location.is_active,
-          is_default: location.is_default
+          is_active: location.is_active
         })
         .eq('id', location.id);
 
@@ -130,34 +128,7 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
     }
   };
 
-  const setAsDefault = async (locationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('locations')
-        .update({ is_default: true })
-        .eq('id', locationId);
-
-      if (error) throw error;
-
-      setLocations(locations.map(l => ({
-        ...l,
-        is_default: l.id === locationId
-      })));
-
-      toast({
-        title: "Sucesso",
-        description: "Local padrão atualizado",
-      });
-      fetchLocations();
-    } catch (error) {
-      console.error('Error setting default location:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao definir local padrão",
-        variant: "destructive",
-      });
-    }
-  };
+  // setAsDefault removed: default location management is not supported by the current schema
 
   const deleteLocation = async (locationId: string) => {
     try {
@@ -260,13 +231,6 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
                     />
                     <Label>Local ativo</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      checked={editingLocation.is_default}
-                      onCheckedChange={(checked) => setEditingLocation({ ...editingLocation, is_default: checked })}
-                    />
-                    <Label>Local padrão</Label>
-                  </div>
                   <div className="flex gap-2">
                     <Button onClick={() => updateLocation(editingLocation)}>
                       Salvar
@@ -285,12 +249,6 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
                       <Badge variant={location.is_active ? "default" : "secondary"}>
                         {location.is_active ? "Ativo" : "Inativo"}
                       </Badge>
-                      {location.is_default && (
-                        <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-                          <Star className="w-3 h-3 mr-1" />
-                          Padrão
-                        </Badge>
-                      )}
                     </div>
                   </div>
                   {location.address && (
@@ -298,16 +256,6 @@ export const LocationsTab: React.FC<LocationsTabProps> = ({ fetchLocations }) =>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  {!location.is_default && location.is_active && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setAsDefault(location.id)}
-                    >
-                      <Star className="w-4 h-4 mr-1" />
-                      Padrão
-                    </Button>
-                  )}
                   <Button
                     variant="outline"
                     size="sm"
