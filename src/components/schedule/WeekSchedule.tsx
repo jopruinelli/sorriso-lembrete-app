@@ -211,7 +211,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
             <div key={day.toISOString()} className="relative border-r">
               {/* Background clickable slots with pointer handlers */}
               <div
-                className="relative"
+                className="relative touch-none"
                 onPointerDown={(e) => {
                   const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                   const offsetY = e.clientY - rect.top;
