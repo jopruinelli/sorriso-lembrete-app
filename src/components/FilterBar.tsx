@@ -2,7 +2,15 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Search, Calendar, CreditCard } from 'lucide-react';
+import {
+  Search,
+  Calendar,
+  CreditCard,
+  User,
+  UserCheck,
+  UserX,
+  UserMinus,
+} from 'lucide-react';
 import { ContactPeriod } from '@/types/patient';
 
 interface FilterBarProps {
@@ -41,13 +49,38 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       <div className="flex gap-2 flex-wrap">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-40 border-dental-primary/30">
-            <SelectValue />
+            {statusFilter === 'active' ? (
+              <UserCheck className="w-4 h-4 mr-2 text-dental-primary" />
+            ) : statusFilter === 'inactive' ? (
+              <UserX className="w-4 h-4 mr-2 text-dental-primary" />
+            ) : statusFilter === 'closed' ? (
+              <UserMinus className="w-4 h-4 mr-2 text-dental-primary" />
+            ) : (
+              <User className="w-4 h-4 mr-2 text-dental-primary" />
+            )}
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="active">Ativos</SelectItem>
-            <SelectItem value="inactive">Inativos</SelectItem>
-            <SelectItem value="closed">Encerrados</SelectItem>
+            <SelectItem value="all">
+              <span className="flex items-center">
+                <User className="w-4 h-4 mr-2" />Todos os status
+              </span>
+            </SelectItem>
+            <SelectItem value="active">
+              <span className="flex items-center">
+                <UserCheck className="w-4 h-4 mr-2" />Ativos
+              </span>
+            </SelectItem>
+            <SelectItem value="inactive">
+              <span className="flex items-center">
+                <UserX className="w-4 h-4 mr-2" />Inativos
+              </span>
+            </SelectItem>
+            <SelectItem value="closed">
+              <span className="flex items-center">
+                <UserMinus className="w-4 h-4 mr-2" />Encerrados
+              </span>
+            </SelectItem>
           </SelectContent>
         </Select>
 
