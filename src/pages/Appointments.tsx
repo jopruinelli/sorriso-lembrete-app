@@ -9,10 +9,13 @@ import {
   addHours,
   isSameDay,
   isWeekend,
-  differenceInCalendarDays
+  differenceInCalendarDays,
+  startOfMonth,
+  addMonths,
+  subMonths
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, CalendarDays, CalendarRange } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,14 +29,16 @@ import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { WeekSchedule } from '@/components/schedule/WeekSchedule';
+import { MonthSchedule } from '@/components/schedule/MonthSchedule';
 import { useSearchParams } from 'react-router-dom';
 
 export default function Appointments() {
-  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; hour: number; minute: number; endHour?: number; endMinute?: number } | null>(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [showSettings, setShowSettings] = useState(false);
   const [showNonWorkingHours, setShowNonWorkingHours] = useState(false);
@@ -72,8 +77,9 @@ export default function Appointments() {
     const start = startOfWeek(week, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
   };
-  const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
-  const weekDays = getWeekDays(currentWeek);
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+  const weekDays = getWeekDays(currentDate);
+  const currentMonth = startOfMonth(currentDate);
   const workingHours = {
     start: Number(organizationSettings?.working_hours_start ?? 8),
     end: Number(organizationSettings?.working_hours_end ?? 18),
@@ -88,7 +94,7 @@ export default function Appointments() {
     const dateParam = searchParams.get('date');
     if (dateParam) {
       const parsedDate = new Date(dateParam);
-      setCurrentWeek(parsedDate);
+      setCurrentDate(parsedDate);
       const start = startOfWeek(parsedDate, { weekStartsOn: 1 });
       const index = differenceInCalendarDays(parsedDate, start);
       setSelectedDayIndex(index);
@@ -179,8 +185,8 @@ export default function Appointments() {
 
   const handlePrevDay = () => {
     if (selectedDayIndex === 0) {
-      const prevWeek = subWeeks(currentWeek, 1);
-      setCurrentWeek(prevWeek);
+      const prevWeek = subWeeks(currentDate, 1);
+      setCurrentDate(prevWeek);
       setSelectedDayIndex(weekDays.length - 1);
     } else {
       setSelectedDayIndex(selectedDayIndex - 1);
@@ -189,8 +195,8 @@ export default function Appointments() {
 
   const handleNextDay = () => {
     if (selectedDayIndex === weekDays.length - 1) {
-      const nextWeek = addWeeks(currentWeek, 1);
-      setCurrentWeek(nextWeek);
+      const nextWeek = addWeeks(currentDate, 1);
+      setCurrentDate(nextWeek);
       setSelectedDayIndex(0);
     } else {
       setSelectedDayIndex(selectedDayIndex + 1);
@@ -216,13 +222,26 @@ export default function Appointments() {
   );
 
   const weekRange = `${format(weekStart, "d 'de' MMMM", { locale: ptBR })} - ${format(addDays(weekStart, 6), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
-  const headerDate = isMobile
-    ? format(weekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })
-    : weekRange;
+  const monthLabel = format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR });
+  const headerDate = viewMode === 'month'
+    ? monthLabel
+    : isMobile
+      ? format(weekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })
+      : weekRange;
 
   const topBarNavigation = (
     <div className="flex items-center gap-2">
-      {isMobile ? (
+      {viewMode === 'month' ? (
+        <>
+          <Button variant="ghost" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span>{headerDate}</span>
+          <Button variant="ghost" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </>
+      ) : isMobile ? (
         <>
           <Button variant="ghost" size="icon" onClick={handlePrevDay}>
             <ChevronLeft className="w-4 h-4" />
@@ -237,7 +256,7 @@ export default function Appointments() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
+            onClick={() => setCurrentDate(subWeeks(currentDate, 1))}
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -245,7 +264,7 @@ export default function Appointments() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
+            onClick={() => setCurrentDate(addWeeks(currentDate, 1))}
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
@@ -254,14 +273,27 @@ export default function Appointments() {
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setShowNonWorkingHours(!showNonWorkingHours)}
-        className="relative"
+        onClick={() => setViewMode(viewMode === 'week' ? 'month' : 'week')}
       >
-        <Clock className="w-4 h-4" />
-        {hasAfterHoursAppointments && !showNonWorkingHours && (
-          <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" />
+        {viewMode === 'week' ? (
+          <CalendarDays className="w-4 h-4" />
+        ) : (
+          <CalendarRange className="w-4 h-4" />
         )}
       </Button>
+      {viewMode === 'week' && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowNonWorkingHours(!showNonWorkingHours)}
+          className="relative"
+        >
+          <Clock className="w-4 h-4" />
+          {hasAfterHoursAppointments && !showNonWorkingHours && (
+            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" />
+          )}
+        </Button>
+      )}
     </div>
   );
 
@@ -281,53 +313,70 @@ export default function Appointments() {
         <Card className="flex-1 flex flex-col min-h-0">
           <CardContent className="flex-1 p-0 overflow-hidden">
             <div ref={scheduleRef} className="h-full overflow-y-auto">
-              {/* Header with days */}
-              <div
-                className="sticky top-0 z-10 grid gap-0 border rounded-t-lg overflow-hidden"
-                style={{ gridTemplateColumns: `${timeColumnWidth} repeat(${daysToDisplay.length}, 1fr)` }}
-              >
-                <div className="bg-muted p-2 border-r text-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setSelectedAppointment(null);
-                      setSelectedTimeSlot(null);
-                      setIsModalOpen(true);
-                    }}
+              {viewMode === 'week' ? (
+                <>
+                  {/* Header with days */}
+                  <div
+                    className="sticky top-0 z-10 grid gap-0 border rounded-t-lg overflow-hidden"
+                    style={{ gridTemplateColumns: `${timeColumnWidth} repeat(${daysToDisplay.length}, 1fr)` }}
                   >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                {daysToDisplay.map((day) => {
-                  const weekend = isWeekend(day);
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r text-center`}
-                    >
-                      <div className="font-medium">{format(day, 'EEEEEE', { locale: ptBR })}</div>
-                      <div className={`text-sm ${weekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{format(day, 'd')}</div>
+                    <div className="bg-muted p-2 border-r text-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedAppointment(null);
+                          setSelectedTimeSlot(null);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
                     </div>
-                  );
-                })}
-              </div>
+                    {daysToDisplay.map((day) => {
+                      const weekend = isWeekend(day);
+                      return (
+                        <div
+                          key={day.toISOString()}
+                          className={`${weekend ? 'bg-muted/20 text-muted-foreground/50' : 'bg-muted'} p-2 border-r text-center`}
+                        >
+                          <div className="font-medium">{format(day, 'EEEEEE', { locale: ptBR })}</div>
+                          <div className={`text-sm ${weekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{format(day, 'd')}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-              {/* Time slots */}
-              <WeekSchedule
-                isMobile={isMobile}
-                daysToDisplay={daysToDisplay}
-                workingHours={workingHours}
-                appointments={appointments}
-                onTimeSlotClick={handleTimeSlotClick}
-                onTimeRangeSelect={handleTimeRangeSelect}
-                onAppointmentClick={handleAppointmentClick}
-                getLocationColor={getLocationColor}
-                firstHourRef={firstHourRef}
-                scrollTargetHour={scrollTargetHour}
-                showNonWorkingHours={showNonWorkingHours}
-                timeColumnWidth={timeColumnWidth}
-              />
+                  {/* Time slots */}
+                  <WeekSchedule
+                    isMobile={isMobile}
+                    daysToDisplay={daysToDisplay}
+                    workingHours={workingHours}
+                    appointments={appointments}
+                    onTimeSlotClick={handleTimeSlotClick}
+                    onTimeRangeSelect={handleTimeRangeSelect}
+                    onAppointmentClick={handleAppointmentClick}
+                    getLocationColor={getLocationColor}
+                    firstHourRef={firstHourRef}
+                    scrollTargetHour={scrollTargetHour}
+                    showNonWorkingHours={showNonWorkingHours}
+                    timeColumnWidth={timeColumnWidth}
+                  />
+                </>
+              ) : (
+                <MonthSchedule
+                  currentMonth={currentMonth}
+                  appointments={appointments}
+                  patients={patients}
+                  onDayClick={(date) => {
+                    setCurrentDate(date);
+                    const start = startOfWeek(date, { weekStartsOn: 1 });
+                    const index = differenceInCalendarDays(date, start);
+                    setSelectedDayIndex(index);
+                    setViewMode('week');
+                  }}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
