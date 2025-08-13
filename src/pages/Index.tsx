@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { AuthGuard } from '@/components/AuthGuard';
@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Users, Calendar, Settings, UserPlus, Clock } from 'lucide-react';
 import { isAfter, format, parseISO, startOfDay } from 'date-fns';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
+import { useSearchParams } from 'react-router-dom';
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
@@ -39,6 +40,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'particular' | 'convenio'>('all');
   const patientsListRef = useRef<HTMLDivElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Filtering logic
   const today = startOfDay(new Date());
@@ -173,6 +175,20 @@ const Index = () => {
     if (!user?.id) return;
     await bulkAddPatients(patientsData, user.id);
   };
+
+  useEffect(() => {
+    const patientId = searchParams.get('patientId');
+    if (patientId && patients.length > 0) {
+      const patient = patients.find(p => p.id === patientId);
+      if (patient) {
+        setEditingPatient(patient);
+        setShowPatientForm(true);
+        const params = new URLSearchParams(searchParams);
+        params.delete('patientId');
+        setSearchParams(params);
+      }
+    }
+  }, [searchParams, patients, setSearchParams]);
 
   if (authLoading || orgLoading) {
     console.log('⏳ Index: showing loading state');
