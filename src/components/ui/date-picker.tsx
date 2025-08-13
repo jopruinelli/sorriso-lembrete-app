@@ -36,6 +36,7 @@ export function DatePicker({
   React.useEffect(() => {
     if (selected) {
       setInputValue(format(selected, 'dd/MM/yyyy', { locale: ptBR }));
+      setViewMonth(selected);
     } else {
       setInputValue("");
     }
