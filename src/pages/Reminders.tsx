@@ -5,6 +5,7 @@ import { ReminderFilterBar, ReminderType } from '@/components/ReminderFilterBar'
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Calendar, Cake, Phone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useSupabasePatients } from '@/hooks/useSupabasePatients';
@@ -16,6 +17,7 @@ import { ptBR } from 'date-fns/locale';
 import { formatMessage } from '@/utils/messageTemplates';
 
 interface ReminderPatient {
+  id: string;
   name: string;
   phone: string;
   status: Exclude<Patient['status'], 'closed'>;
@@ -36,6 +38,7 @@ const Reminders: React.FC = () => {
   const { userProfile, organizationSettings, loading: orgLoading } = useOrganization(user);
   const { patients, loading: patientsLoading } = useSupabasePatients(userProfile?.organization_id);
   const { appointments, loading: apptsLoading } = useAppointments();
+  const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<ReminderType>('all');
@@ -65,6 +68,7 @@ const Reminders: React.FC = () => {
           type: 'appointment',
           date: new Date(a.start_time),
           patient: {
+            id: patient.id,
             name: patient.name,
             phone: patient.phone,
             status: patient.status,
@@ -86,7 +90,7 @@ const Reminders: React.FC = () => {
           id: `bday-${p.id}`,
           type: 'birthday',
           date: next,
-          patient: { name: p.name, phone: p.phone, status: p.status },
+          patient: { id: p.id, name: p.name, phone: p.phone, status: p.status },
         } as Reminder;
       });
 
@@ -95,6 +99,7 @@ const Reminders: React.FC = () => {
       type: 'contact',
       date: p.nextContactDate,
       patient: {
+        id: p.id,
         name: p.name,
         phone: p.phone,
         nextContactDate: p.nextContactDate,
@@ -167,6 +172,18 @@ const Reminders: React.FC = () => {
     window.open(url, '_blank');
   };
 
+  const handleCardClick = (reminder: Reminder) => {
+    if (reminder.type === 'appointment' && reminder.appointment) {
+      const dateParam = format(reminder.date, 'yyyy-MM-dd');
+      const hourParam = format(reminder.date, 'H');
+      navigate(
+        `/appointments?date=${dateParam}&hour=${hourParam}&appointmentId=${reminder.appointment.id}`
+      );
+    } else {
+      navigate(`/?patientId=${reminder.patient.id}`);
+    }
+  };
+
   if (authLoading || orgLoading || patientsLoading || apptsLoading) {
     return <div className="p-6">Carregando...</div>;
   }
@@ -196,7 +213,11 @@ const Reminders: React.FC = () => {
             filteredReminders.map(reminder => {
               const Icon = typeIcons[reminder.type];
               return (
-                <Card key={reminder.id} className="border-l-4 border-dental-primary">
+                <Card
+                  key={reminder.id}
+                  className="border-l-4 border-dental-primary cursor-pointer"
+                  onClick={() => handleCardClick(reminder)}
+                >
                   <CardContent className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       <Icon className="w-5 h-5 text-dental-primary" />
@@ -212,7 +233,10 @@ const Reminders: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleWhatsApp(reminder)}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleWhatsApp(reminder);
+                      }}
                       className="text-dental-primary"
                     >
                       <MessageSquare className="w-4 h-4" />

@@ -79,7 +79,7 @@ export default function Appointments() {
     end: Number(organizationSettings?.working_hours_end ?? 18),
   };
   const [scrollTargetHour, setScrollTargetHour] = useState(8);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const scheduleRef = useRef<HTMLDivElement>(null);
   const firstHourRef = useRef<HTMLDivElement>(null);
   const timeColumnWidth = '3rem';
@@ -102,6 +102,20 @@ export default function Appointments() {
       }
     }
   }, [searchParams, workingHours.start, workingHours.end]);
+
+  useEffect(() => {
+    const appointmentId = searchParams.get('appointmentId');
+    if (appointmentId && appointments.length > 0) {
+      const appt = appointments.find(a => a.id === appointmentId);
+      if (appt) {
+        setSelectedAppointment(appt);
+        setIsModalOpen(true);
+        const params = new URLSearchParams(searchParams);
+        params.delete('appointmentId');
+        setSearchParams(params);
+      }
+    }
+  }, [searchParams, appointments, setSearchParams]);
 
   const getAppointmentsForTimeSlot = (date: Date, hour: number) => {
     const slotStart = addHours(startOfDay(date), hour);
