@@ -89,6 +89,33 @@ export default function Appointments() {
   const scheduleRef = useRef<HTMLDivElement>(null);
   const firstHourRef = useRef<HTMLDivElement>(null);
   const timeColumnWidth = '3rem';
+  const [mobileDays, setMobileDays] = useState(1);
+
+  useEffect(() => {
+    const calculateMobileDays = () => {
+      if (!isMobile) {
+        setMobileDays(7);
+        return;
+      }
+      const TIME_COLUMN_WIDTH_PX = 48; // 3rem
+      const MIN_DAY_WIDTH_PX = 120;
+      const availableWidth = window.innerWidth - TIME_COLUMN_WIDTH_PX;
+      const days = Math.max(
+        1,
+        Math.min(7, Math.floor(availableWidth / MIN_DAY_WIDTH_PX))
+      );
+      setMobileDays(days);
+    };
+    calculateMobileDays();
+    window.addEventListener('resize', calculateMobileDays);
+    return () => window.removeEventListener('resize', calculateMobileDays);
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (selectedDayIndex + mobileDays > 7) {
+      setSelectedDayIndex(Math.max(0, 7 - mobileDays));
+    }
+  }, [mobileDays, selectedDayIndex]);
 
   useEffect(() => {
     const dateParam = searchParams.get('date');
@@ -187,14 +214,14 @@ export default function Appointments() {
     if (selectedDayIndex === 0) {
       const prevWeek = subWeeks(currentDate, 1);
       setCurrentDate(prevWeek);
-      setSelectedDayIndex(weekDays.length - 1);
+      setSelectedDayIndex(7 - mobileDays);
     } else {
       setSelectedDayIndex(selectedDayIndex - 1);
     }
   };
 
   const handleNextDay = () => {
-    if (selectedDayIndex === weekDays.length - 1) {
+    if (selectedDayIndex + mobileDays >= weekDays.length) {
       const nextWeek = addWeeks(currentDate, 1);
       setCurrentDate(nextWeek);
       setSelectedDayIndex(0);
@@ -202,7 +229,7 @@ export default function Appointments() {
       setSelectedDayIndex(selectedDayIndex + 1);
     }
   };
-  const daysToDisplay = isMobile ? [weekDays[selectedDayIndex]] : weekDays;
+  const daysToDisplay = isMobile ? weekDays.slice(selectedDayIndex, selectedDayIndex + mobileDays) : weekDays;
 
   const hasAfterHoursAppointments = useMemo(() =>
     appointments.some((a) =>
@@ -226,7 +253,7 @@ export default function Appointments() {
   const headerDate = viewMode === 'month'
     ? monthLabel
     : isMobile
-      ? format(weekDays[selectedDayIndex], "EEE, d 'de' MMMM", { locale: ptBR })
+      ? `${format(daysToDisplay[0], "d 'de' MMM", { locale: ptBR })} - ${format(daysToDisplay[daysToDisplay.length - 1], "d 'de' MMM", { locale: ptBR })}`
       : weekRange;
 
   const topBarNavigation = (
