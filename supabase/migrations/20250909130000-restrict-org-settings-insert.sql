@@ -6,4 +6,5 @@ DROP POLICY IF EXISTS organization_settings_insert_user_org ON public.organizati
 CREATE POLICY organization_settings_insert_user_org
   ON public.organization_settings
   FOR INSERT
+  TO authenticated
   WITH CHECK (organization_id = get_user_organization_id());
