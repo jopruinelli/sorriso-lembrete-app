@@ -194,6 +194,7 @@ const Reminders: React.FC = () => {
         userProfile={userProfile}
         onSettingsClick={() => {}}
         onSignOut={signOut}
+        topBarContent="Lembretes"
       >
         <div className="p-4 space-y-4">
           <ReminderFilterBar
