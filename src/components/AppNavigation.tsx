@@ -183,14 +183,6 @@ export const AppNavigation: React.FC<AppNavigationProps> = ({
               )}
             </div>
 
-            {/* Mobile user avatar in top bar */}
-            {isMobile && (
-              <UserAvatar
-                userProfile={userProfile}
-                onSettingsClick={onSettingsClick}
-                onSignOut={onSignOut}
-              />
-            )}
           </div>
         </div>
 
