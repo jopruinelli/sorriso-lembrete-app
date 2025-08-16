@@ -226,13 +226,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const offsetY = e.clientY - rect.top;
                   const offsetIndex = Math.max(0, Math.min(totalRenderedSlots - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
                   const index = offsetIndex + renderStartSlot;
-                  const hour = index / SLOTS_PER_HOUR;
-                  const allowed =
-                    !weekend &&
-                    !!effective &&
-                    hour >= effective.start &&
-                    hour < effective.end;
-                  if (!allowed) return;
+                  // Allow selecting slots even outside working hours; hatched cells act as warnings only.
                   setDrag({
                     dayISO: day.toISOString(),
                     startIndex: index,
@@ -310,7 +304,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const hasException = dayClosed || !isWorking;
                   const cellClass =
                     weekend || hasException
-                      ? 'bg-muted/10 hover:bg-muted/20 opacity-60 bg-hatched cursor-not-allowed'
+                      ? 'bg-muted/10 hover:bg-muted/20 opacity-60 bg-hatched cursor-pointer'
                       : 'hover:bg-muted/30 cursor-pointer';
                   const isHourBoundary = slotIndex % SLOTS_PER_HOUR === 0;
                   return (
