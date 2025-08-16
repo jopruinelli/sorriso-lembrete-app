@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { addDays, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, setYear, startOfMonth, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
@@ -10,9 +11,10 @@ interface MonthScheduleProps {
   appointments: Appointment[];
   patients: Patient[];
   onDayClick: (date: Date) => void;
+  onDayLongPress?: (date: Date) => void;
 }
 
-export function MonthSchedule({ currentMonth, appointments, patients, onDayClick }: MonthScheduleProps) {
+export function MonthSchedule({ currentMonth, appointments, patients, onDayClick, onDayLongPress }: MonthScheduleProps) {
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -37,6 +39,15 @@ export function MonthSchedule({ currentMonth, appointments, patients, onDayClick
   const hasBirthday = (day: Date) =>
     patients.some((p) => p.birthDate && isSameDay(setYear(p.birthDate, year), day));
 
+  const longPressTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const clearLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = undefined;
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="grid grid-cols-7 text-center text-xs font-medium">
@@ -59,6 +70,17 @@ export function MonthSchedule({ currentMonth, appointments, patients, onDayClick
                 inMonth ? 'bg-background' : 'bg-muted text-muted-foreground'
               }`}
               onClick={() => onDayClick(day)}
+              onPointerDown={() => {
+                if (onDayLongPress) {
+                  longPressTimer.current = setTimeout(() => onDayLongPress(day), 500);
+                }
+              }}
+              onPointerUp={clearLongPress}
+              onPointerLeave={clearLongPress}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                onDayLongPress?.(day);
+              }}
             >
               <span className="text-xs sm:text-sm">{format(day, 'd')}</span>
               <div className="flex gap-1">

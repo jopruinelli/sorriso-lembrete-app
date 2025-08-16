@@ -240,6 +240,26 @@ export default function Appointments() {
     setIsModalOpen(true);
   };
 
+  const handleDayLongPress = (date: Date) => {
+    setShowExceptionSheet(true);
+    setExceptionReason('');
+    const start = new Date(date);
+    const end = new Date(date);
+    if (isWeekend(date)) {
+      setExceptionType('EXTRA_OPEN');
+      start.setHours(9, 0, 0, 0);
+      end.setHours(12, 0, 0, 0);
+    } else {
+      setExceptionType('DAY_ADJUST');
+      const startHour = Number(organizationSettings?.working_hours_start ?? 8);
+      const endHour = Number(organizationSettings?.working_hours_end ?? 18);
+      start.setHours(startHour, 0, 0, 0);
+      end.setHours(endHour, 0, 0, 0);
+    }
+    setExceptionStart(format(start, "yyyy-MM-dd'T'HH:mm"));
+    setExceptionEnd(format(end, "yyyy-MM-dd'T'HH:mm"));
+  };
+
   const handleSaveException = async () => {
     if (!exceptionStart || !exceptionEnd) return;
     const exc: CalendarException = {
@@ -483,6 +503,7 @@ export default function Appointments() {
                   currentMonth={currentMonth}
                   appointments={appointments}
                   patients={patients}
+                  onDayLongPress={handleDayLongPress}
                   onDayClick={(date) => {
                     setCurrentDate(date);
                     const start = startOfWeek(date, { weekStartsOn: 1 });
