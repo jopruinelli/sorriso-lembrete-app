@@ -132,7 +132,7 @@ export const WhatsAppTab: React.FC<WhatsAppTabProps> = ({
             disabled={!editAppointment}
           />
           <p className="text-xs text-dental-secondary mt-2">
-            Variáveis disponíveis: {'{nome_do_paciente}'}, {'{primeiro_nome_do_paciente}'}, {'{data_consulta}'}, {'{hora_consulta}'}
+            Variáveis disponíveis: {'{nome_do_paciente}'}, {'{primeiro_nome_do_paciente}'}, {'{data_consulta}'}, {'{hora_consulta}'}, {'{local_de_atendimento}'}
           </p>
           {editAppointment && (
             <div className="flex gap-2 mt-2">
