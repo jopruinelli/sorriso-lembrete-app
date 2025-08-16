@@ -37,6 +37,7 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Appointment, Location, AppointmentFormData, AppointmentTitle } from '@/types/appointment';
 import { Patient, PatientCreateData } from '@/types/patient';
@@ -338,9 +339,11 @@ export function AppointmentModal({
                         .toLowerCase()
                         .includes(patientSearch.toLowerCase())
                     )
-                    .sort((a, b) =>
-                      a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
-                    );
+                    .sort((a, b) => {
+                      if (a.status === 'closed' && b.status !== 'closed') return 1;
+                      if (a.status !== 'closed' && b.status === 'closed') return -1;
+                      return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+                    });
                   return (
                     <FormItem className="relative">
                       <FormLabel className="flex items-center gap-2">
@@ -372,21 +375,36 @@ export function AppointmentModal({
                                     <CommandItem
                                       key={patient.id}
                                       value={`${patient.name} ${patient.phone}`}
+                                      disabled={patient.status === 'closed'}
                                       onMouseDown={(e) => {
+                                        if (patient.status === 'closed') {
+                                          e.preventDefault();
+                                          return;
+                                        }
                                         e.preventDefault();
                                         field.onChange(patient.id);
                                         setPatientSearch(patient.name);
                                         setPatientSearchOpen(false);
                                       }}
                                       onSelect={() => {
+                                        if (patient.status === 'closed') return;
                                         field.onChange(patient.id);
                                         setPatientSearch(patient.name);
                                         setPatientSearchOpen(false);
                                       }}
-                                      className="cursor-pointer"
+                                      className={
+                                        patient.status === 'closed'
+                                          ? 'cursor-not-allowed'
+                                          : 'cursor-pointer'
+                                      }
                                     >
                                       <div className="flex flex-col">
-                                        <span className="font-medium">{patient.name}</span>
+                                        <span className="font-medium flex items-center gap-2">
+                                          {patient.name}
+                                          {patient.status === 'closed' && (
+                                            <Badge variant="destructive">Encerrado</Badge>
+                                          )}
+                                        </span>
                                         <span className="text-sm text-muted-foreground">
                                           {patient.phone}
                                         </span>
