@@ -26,7 +26,9 @@ export const convertToDbPatient = (
     name: patient.name,
     phone: patient.phone,
     secondary_phone: patient.secondaryPhone || null,
-    birth_date: patient.birthDate ? patient.birthDate.toISOString() : null,
+    birth_date: patient.birthDate
+      ? patient.birthDate.toISOString().split('T')[0]
+      : null,
     last_visit: patient.lastVisit.toISOString(),
     next_contact_reason: patient.nextContactReason,
     next_contact_date: patient.nextContactDate.toISOString(),
@@ -51,7 +53,9 @@ export const convertToAppPatient = (
     name: dbPatient.name,
     phone: dbPatient.phone,
     secondaryPhone: dbPatient.secondary_phone || undefined,
-    birthDate: dbPatient.birth_date ? new Date(dbPatient.birth_date) : undefined,
+    birthDate: dbPatient.birth_date
+      ? new Date(`${dbPatient.birth_date}T00:00:00`)
+      : undefined,
     lastVisit: new Date(dbPatient.last_visit),
     nextContactReason: dbPatient.next_contact_reason,
     nextContactDate: new Date(dbPatient.next_contact_date),
