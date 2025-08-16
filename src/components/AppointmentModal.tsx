@@ -281,7 +281,7 @@ export function AppointmentModal({
     if (!appointment?.patient?.phone) return;
     const template =
       organizationSettings?.whatsapp_appointment_message ||
-      'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}.';
+      'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta} no {local_de_atendimento}.';
     const message = formatMessage(template, {
       patient: appointment.patient,
       appointment,

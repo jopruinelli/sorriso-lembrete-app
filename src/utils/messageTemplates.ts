@@ -51,6 +51,13 @@ export function formatMessage(template: string, { patient, appointment }: Messag
         '{hora_consulta}',
         format(new Date(appointment.start_time), 'HH:mm', { locale: ptBR })
       );
+
+    if (appointment.location) {
+      const locationInfo = appointment.location.address
+        ? `${appointment.location.name} - ${appointment.location.address}`
+        : appointment.location.name;
+      message = message.replace('{local_de_atendimento}', locationInfo);
+    }
   }
 
   return message;

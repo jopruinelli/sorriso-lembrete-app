@@ -32,7 +32,7 @@ export const PatientAppointments: React.FC<PatientAppointmentsProps> = ({
     e.stopPropagation();
     const defaultMessage =
       organizationSettings?.whatsapp_appointment_message ||
-      'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta}.';
+      'Olá {nome_do_paciente}! Lembrete da sua consulta em {data_consulta} às {hora_consulta} no {local_de_atendimento}.';
     const message = formatMessage(defaultMessage, { patient, appointment });
     const phone = patient.phone;
     const url = `https://wa.me/55${phone.replace(/\D/g, '')}?text=${encodeURIComponent(
