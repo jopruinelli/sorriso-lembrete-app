@@ -8,6 +8,12 @@ interface WeekScheduleProps {
   isMobile: boolean;
   daysToDisplay: Date[];
   workingHours: WorkingHours;
+  /**
+   * Working hours per day, after applying exceptions.
+   * If null, the day is considered fully unavailable.
+   * The array indexes correspond to daysToDisplay.
+   */
+  dayAvailability?: (WorkingHours | null)[];
   appointments: Appointment[];
   onTimeSlotClick: (date: Date, hour: number) => void;
   onTimeRangeSelect?: (
@@ -101,6 +107,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
     isMobile,
     daysToDisplay,
     workingHours,
+    dayAvailability,
     appointments,
     onTimeSlotClick,
     onTimeRangeSelect,
@@ -131,14 +138,14 @@ export function WeekSchedule(props: WeekScheduleProps) {
   const holdTimeoutRef = useRef<number | null>(null);
 
   // Helper to compute an absolute block position for an appointment within a day column
-  const computeBlock = (appointment: Appointment, day: Date) => {
+  const computeBlock = (appointment: Appointment, day: Date, eff: WorkingHours) => {
     const start = new Date(appointment.start_time);
     const end = new Date(appointment.end_time);
 
     const dayStart = startOfDay(day).getTime();
     const dayEnd = addDays(startOfDay(day), 1).getTime();
-    const workStart = dayStart + workingHours.start * 60 * 60 * 1000;
-    const workEnd = dayStart + workingHours.end * 60 * 60 * 1000;
+    const workStart = dayStart + eff.start * 60 * 60 * 1000;
+    const workEnd = dayStart + eff.end * 60 * 60 * 1000;
 
     const startLimit = showNonWorkingHours ? dayStart : workStart;
     const endLimit = showNonWorkingHours ? dayEnd : workEnd;
@@ -186,8 +193,10 @@ export function WeekSchedule(props: WeekScheduleProps) {
         </div>
 
         {/* Day columns */}
-        {daysToDisplay.map((day) => {
+        {daysToDisplay.map((day, dayIndex) => {
           const weekend = isWeekend(day);
+          const effective = dayAvailability?.[dayIndex] ?? workingHours;
+          const dayClosed = effective === null;
           const dayStart = startOfDay(day).getTime();
           const dayEnd = addDays(startOfDay(day), 1).getTime();
 
@@ -197,9 +206,9 @@ export function WeekSchedule(props: WeekScheduleProps) {
             const aEnd = new Date(a.end_time).getTime();
             const intersectsDay = aEnd > dayStart && aStart < dayEnd;
             if (!intersectsDay) return false;
-            if (!showNonWorkingHours) {
-              const workStart = dayStart + workingHours.start * 60 * 60 * 1000;
-              const workEnd = dayStart + workingHours.end * 60 * 60 * 1000;
+            if (!showNonWorkingHours && effective) {
+              const workStart = dayStart + effective.start * 60 * 60 * 1000;
+              const workEnd = dayStart + effective.end * 60 * 60 * 1000;
               return aEnd > workStart && aStart < workEnd;
             }
             return true;
@@ -217,6 +226,13 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const offsetY = e.clientY - rect.top;
                   const offsetIndex = Math.max(0, Math.min(totalRenderedSlots - 1, Math.floor(offsetY / SLOT_HEIGHT_PX)));
                   const index = offsetIndex + renderStartSlot;
+                  const hour = index / SLOTS_PER_HOUR;
+                  const allowed =
+                    !weekend &&
+                    !!effective &&
+                    hour >= effective.start &&
+                    hour < effective.end;
+                  if (!allowed) return;
                   setDrag({
                     dayISO: day.toISOString(),
                     startIndex: index,
@@ -289,13 +305,18 @@ export function WeekSchedule(props: WeekScheduleProps) {
                 {Array.from({ length: totalRenderedSlots }, (_, i) => {
                   const slotIndex = renderStartSlot + i;
                   const slotHour = slotIndex / SLOTS_PER_HOUR;
-                  const isWorking = slotHour >= workingHours.start && slotHour < workingHours.end;
-                  const cellClass = weekend || !isWorking ? 'bg-muted/10 hover:bg-muted/20 opacity-60' : 'hover:bg-muted/30';
+                  const isWorking =
+                    !!effective && slotHour >= effective.start && slotHour < effective.end;
+                  const hasException = dayClosed || !isWorking;
+                  const cellClass =
+                    weekend || hasException
+                      ? 'bg-muted/10 hover:bg-muted/20 opacity-60 bg-hatched cursor-not-allowed'
+                      : 'hover:bg-muted/30 cursor-pointer';
                   const isHourBoundary = slotIndex % SLOTS_PER_HOUR === 0;
                   return (
                     <div
                       key={slotIndex}
-                      className={`relative p-1 cursor-pointer transition-colors ${cellClass} ${isHourBoundary ? 'border-t' : ''}`}
+                      className={`relative p-1 transition-colors ${cellClass} ${isHourBoundary ? 'border-t' : ''}`}
                       style={{ height: SLOT_HEIGHT_PX }}
                     />
                   );
@@ -334,7 +355,7 @@ export function WeekSchedule(props: WeekScheduleProps) {
               {/* Overlay continuous appointment blocks */}
               <div className="pointer-events-none absolute inset-0">
                 {dayAppointments.map((appointment) => {
-                  const block = computeBlock(appointment, day);
+                  const block = computeBlock(appointment, day, effective ?? workingHours);
                   if (!block) return null;
 
                   const info = layout[appointment.id] || { column: 0, totalColumns: 1 };
