@@ -18,7 +18,25 @@ import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, Clock, CalendarDays, CalendarRange } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge, badgeVariants } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from '@/components/ui/drawer';
+import { ToastAction } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentModal } from '@/components/AppointmentModal';
 import { Appointment } from '@/types/appointment';
@@ -31,8 +49,14 @@ import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { WeekSchedule } from '@/components/schedule/WeekSchedule';
 import { MonthSchedule } from '@/components/schedule/MonthSchedule';
 import { useSearchParams } from 'react-router-dom';
-import { composeEffectiveAvailability, listExceptions, CalendarException } from '@/domain/calendarExceptions';
-
+import {
+  composeEffectiveAvailability,
+  listExceptions,
+  addException,
+  removeException,
+  CalendarException,
+  ExceptionType,
+} from '@/domain/calendarExceptions';
 export default function Appointments() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -44,6 +68,14 @@ export default function Appointments() {
   const [showSettings, setShowSettings] = useState(false);
   const [showNonWorkingHours, setShowNonWorkingHours] = useState(false);
   const [exceptions, setExceptions] = useState<CalendarException[]>([]);
+  const [showExceptionSheet, setShowExceptionSheet] = useState(false);
+  const [exceptionType, setExceptionType] = useState<ExceptionType>('BLACKOUT');
+  const [exceptionStart, setExceptionStart] = useState('');
+  const [exceptionEnd, setExceptionEnd] = useState('');
+  const [exceptionReason, setExceptionReason] = useState('');
+  const reasonOptions = ['Feriado', 'Reunião', 'Manutenção'];
+
+  const { toast } = useToast();
 
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const {
@@ -208,6 +240,40 @@ export default function Appointments() {
     setIsModalOpen(true);
   };
 
+  const handleSaveException = async () => {
+    if (!exceptionStart || !exceptionEnd) return;
+    const exc: CalendarException = {
+      id: crypto.randomUUID(),
+      type: exceptionType,
+      dateStart: new Date(exceptionStart).toISOString(),
+      dateEnd: new Date(exceptionEnd).toISOString(),
+      reason: exceptionReason,
+      createdAt: new Date().toISOString(),
+      createdBy: user?.id,
+    };
+    await addException(exc);
+    setExceptions([...exceptions, exc]);
+    toast({
+      title: 'Exceção aplicada',
+      action: (
+        <ToastAction
+          altText="Desfazer"
+          onClick={async () => {
+            await removeException(exc.id);
+            setExceptions((prev) => prev.filter((e) => e.id !== exc.id));
+          }}
+        >
+          Desfazer
+        </ToastAction>
+      ),
+    });
+    setShowExceptionSheet(false);
+    setExceptionStart('');
+    setExceptionEnd('');
+    setExceptionReason('');
+    setExceptionType('BLACKOUT');
+  };
+
   useEffect(() => {
     const todayIndex = weekDays.findIndex(day => isSameDay(day, new Date()));
     setSelectedDayIndex(todayIndex !== -1 ? todayIndex : 0);
@@ -330,6 +396,17 @@ export default function Appointments() {
           {hasAfterHoursAppointments && !showNonWorkingHours && (
             <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" />
           )}
+        </Button>
+      )}
+      {!isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowExceptionSheet(true)}
+          aria-label="Adicionar exceção"
+          className="w-11 h-11"
+        >
+          <Plus className="w-4 h-4" />
         </Button>
       )}
     </div>
@@ -461,6 +538,84 @@ export default function Appointments() {
           fetchLocations={fetchLocations}
           fetchTitles={fetchTitles}
         />
+        {isMobile && (
+          <Button
+            className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg"
+            onClick={() => setShowExceptionSheet(true)}
+            aria-label="Adicionar exceção"
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+        )}
+        <Drawer open={showExceptionSheet} onOpenChange={setShowExceptionSheet}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Adicionar exceção</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="text-sm font-medium">Tipo</label>
+                <Select value={exceptionType} onValueChange={(v) => setExceptionType(v as ExceptionType)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BLACKOUT">Fechamento</SelectItem>
+                    <SelectItem value="EXTRA_OPEN">Abertura extra</SelectItem>
+                    <SelectItem value="DAY_ADJUST">Ajuste de expediente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <div>
+                  <label className="text-sm font-medium">Início</label>
+                  <Input
+                    type="datetime-local"
+                    value={exceptionStart}
+                    onChange={(e) => setExceptionStart(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Fim</label>
+                  <Input
+                    type="datetime-local"
+                    value={exceptionEnd}
+                    onChange={(e) => setExceptionEnd(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1">Motivo</label>
+                <div className="flex gap-2">
+                  {reasonOptions.map((r) => (
+                    <button
+                      type="button"
+                      key={r}
+                      onClick={() => setExceptionReason(r)}
+                      className={cn(
+                        badgeVariants({ variant: exceptionReason === r ? 'default' : 'outline' }),
+                        'px-4 py-2'
+                      )}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <DrawerFooter>
+              <Button
+                onClick={handleSaveException}
+                className="w-full h-11"
+                disabled={!exceptionStart || !exceptionEnd}
+              >
+                Salvar
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
       </div>
     </AppNavigation>
   );
