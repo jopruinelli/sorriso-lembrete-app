@@ -327,6 +327,11 @@ export default function Appointments() {
   };
   const daysToDisplay = isMobile ? weekDays.slice(selectedDayIndex, selectedDayIndex + mobileDays) : weekDays;
 
+  const dayAvailability = useMemo(
+    () => daysToDisplay.map((day) => composeEffectiveAvailability(day, baseHours, exceptions)),
+    [daysToDisplay, baseHours.start, baseHours.end, exceptions]
+  );
+
   const hasAfterHoursAppointments = useMemo(() =>
     appointments.some((a) =>
       daysToDisplay.some((day) => {
@@ -487,6 +492,7 @@ export default function Appointments() {
                     isMobile={isMobile}
                     daysToDisplay={daysToDisplay}
                     workingHours={workingHours}
+                    dayAvailability={dayAvailability}
                     appointments={appointments}
                     onTimeSlotClick={handleTimeSlotClick}
                     onTimeRangeSelect={handleTimeRangeSelect}
@@ -503,6 +509,7 @@ export default function Appointments() {
                   currentMonth={currentMonth}
                   appointments={appointments}
                   patients={patients}
+                  exceptions={exceptions}
                   onDayLongPress={handleDayLongPress}
                   onDayClick={(date) => {
                     setCurrentDate(date);

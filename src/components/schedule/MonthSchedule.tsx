@@ -1,8 +1,9 @@
 import { useRef } from 'react';
-import { addDays, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, setYear, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, setYear, startOfMonth, startOfWeek, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
 import { Patient } from '@/types/patient';
+import { CalendarException } from '@/domain/calendarExceptions';
 import { Button } from '@/components/ui/button';
 import { Cake, Calendar } from 'lucide-react';
 
@@ -10,11 +11,12 @@ interface MonthScheduleProps {
   currentMonth: Date;
   appointments: Appointment[];
   patients: Patient[];
+  exceptions: CalendarException[];
   onDayClick: (date: Date) => void;
   onDayLongPress?: (date: Date) => void;
 }
 
-export function MonthSchedule({ currentMonth, appointments, patients, onDayClick, onDayLongPress }: MonthScheduleProps) {
+export function MonthSchedule({ currentMonth, appointments, patients, exceptions, onDayClick, onDayLongPress }: MonthScheduleProps) {
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -39,6 +41,16 @@ export function MonthSchedule({ currentMonth, appointments, patients, onDayClick
   const hasBirthday = (day: Date) =>
     patients.some((p) => p.birthDate && isSameDay(setYear(p.birthDate, year), day));
 
+  const hasException = (day: Date) => {
+    const dayStart = startOfDay(day);
+    const dayEnd = addDays(dayStart, 1);
+    return exceptions.some((ex) => {
+      const exStart = new Date(ex.dateStart);
+      const exEnd = new Date(ex.dateEnd);
+      return exEnd > dayStart && exStart < dayEnd;
+    });
+  };
+
   const longPressTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const clearLongPress = () => {
@@ -62,11 +74,12 @@ export function MonthSchedule({ currentMonth, appointments, patients, onDayClick
           const inMonth = isSameMonth(day, monthStart);
           const appt = hasAppointment(day);
           const birthday = hasBirthday(day);
+          const exception = hasException(day);
           return (
             <Button
               key={day.toISOString()}
               variant="ghost"
-              className={`h-16 sm:h-24 p-1 sm:p-2 flex flex-col items-start gap-1 rounded-none border ${
+              className={`relative h-16 sm:h-24 p-1 sm:p-2 flex flex-col items-start gap-1 rounded-none border ${
                 inMonth ? 'bg-background' : 'bg-muted text-muted-foreground'
               }`}
               onClick={() => onDayClick(day)}
@@ -82,6 +95,7 @@ export function MonthSchedule({ currentMonth, appointments, patients, onDayClick
                 onDayLongPress?.(day);
               }}
             >
+              {exception && <div className="absolute inset-0 bg-hatched pointer-events-none" />}
               <span className="text-xs sm:text-sm">{format(day, 'd')}</span>
               <div className="flex gap-1">
                 {appt && <Calendar className="h-3 w-3 text-blue-500" />}

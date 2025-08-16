@@ -100,3 +100,15 @@
     @apply bg-dental-background text-foreground;
   }
 }
+
+@layer utilities {
+  .bg-hatched {
+    background-image: repeating-linear-gradient(
+      45deg,
+      hsl(var(--foreground) / 0.1) 0,
+      hsl(var(--foreground) / 0.1) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+  }
+}
