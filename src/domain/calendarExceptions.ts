@@ -56,6 +56,26 @@ export async function addException(exc: CalendarException): Promise<CalendarExce
   }
 }
 
+export async function updateException(exc: CalendarException): Promise<CalendarException> {
+  try {
+    const res = await fetch(`/api/exceptions/${exc.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(exc),
+    });
+    if (!res.ok) throw new Error('API error');
+    return (await res.json()) as CalendarException;
+  } catch {
+    const list = readLocal();
+    const idx = list.findIndex((e) => e.id === exc.id);
+    if (idx !== -1) {
+      list[idx] = exc;
+      writeLocal(list);
+    }
+    return exc;
+  }
+}
+
 export async function removeException(id: string): Promise<void> {
   try {
     const res = await fetch(`/api/exceptions/${id}`, { method: 'DELETE' });

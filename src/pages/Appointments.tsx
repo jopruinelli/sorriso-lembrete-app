@@ -15,7 +15,7 @@ import {
   subMonths
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, Clock, CalendarDays, CalendarRange } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, CalendarDays, CalendarRange, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge, badgeVariants } from '@/components/ui/badge';
@@ -54,6 +54,7 @@ import {
   listExceptions,
   addException,
   removeException,
+  updateException,
   CalendarException,
   ExceptionType,
 } from '@/domain/calendarExceptions';
@@ -73,6 +74,7 @@ export default function Appointments() {
   const [exceptionStart, setExceptionStart] = useState('');
   const [exceptionEnd, setExceptionEnd] = useState('');
   const [exceptionReason, setExceptionReason] = useState('');
+  const [editingExceptionId, setEditingExceptionId] = useState<string | null>(null);
   const reasonOptions = ['Feriado', 'Reunião', 'Manutenção'];
 
   const { toast } = useToast();
@@ -260,10 +262,18 @@ export default function Appointments() {
     setExceptionEnd(format(end, "yyyy-MM-dd'T'HH:mm"));
   };
 
+  const resetExceptionForm = () => {
+    setExceptionStart('');
+    setExceptionEnd('');
+    setExceptionReason('');
+    setExceptionType('BLACKOUT');
+    setEditingExceptionId(null);
+  };
+
   const handleSaveException = async () => {
     if (!exceptionStart || !exceptionEnd) return;
     const exc: CalendarException = {
-      id: crypto.randomUUID(),
+      id: editingExceptionId ?? crypto.randomUUID(),
       type: exceptionType,
       dateStart: new Date(exceptionStart).toISOString(),
       dateEnd: new Date(exceptionEnd).toISOString(),
@@ -271,27 +281,44 @@ export default function Appointments() {
       createdAt: new Date().toISOString(),
       createdBy: user?.id,
     };
-    await addException(exc);
-    setExceptions([...exceptions, exc]);
-    toast({
-      title: 'Exceção aplicada',
-      action: (
-        <ToastAction
-          altText="Desfazer"
-          onClick={async () => {
-            await removeException(exc.id);
-            setExceptions((prev) => prev.filter((e) => e.id !== exc.id));
-          }}
-        >
-          Desfazer
-        </ToastAction>
-      ),
-    });
+    if (editingExceptionId) {
+      await updateException(exc);
+      setExceptions((prev) => prev.map((e) => (e.id === exc.id ? exc : e)));
+      toast({ title: 'Exceção atualizada' });
+    } else {
+      await addException(exc);
+      setExceptions([...exceptions, exc]);
+      toast({
+        title: 'Exceção aplicada',
+        action: (
+          <ToastAction
+            altText="Desfazer"
+            onClick={async () => {
+              await removeException(exc.id);
+              setExceptions((prev) => prev.filter((e) => e.id !== exc.id));
+            }}
+          >
+            Desfazer
+          </ToastAction>
+        ),
+      });
+    }
     setShowExceptionSheet(false);
-    setExceptionStart('');
-    setExceptionEnd('');
-    setExceptionReason('');
-    setExceptionType('BLACKOUT');
+    resetExceptionForm();
+  };
+
+  const handleEditException = (exc: CalendarException) => {
+    setEditingExceptionId(exc.id);
+    setExceptionType(exc.type);
+    setExceptionStart(format(new Date(exc.dateStart), "yyyy-MM-dd'T'HH:mm"));
+    setExceptionEnd(format(new Date(exc.dateEnd), "yyyy-MM-dd'T'HH:mm"));
+    setExceptionReason(exc.reason || '');
+    setShowExceptionSheet(true);
+  };
+
+  const handleDeleteException = async (id: string) => {
+    await removeException(id);
+    setExceptions((prev) => prev.filter((e) => e.id !== id));
   };
 
   useEffect(() => {
@@ -427,7 +454,10 @@ export default function Appointments() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setShowExceptionSheet(true)}
+          onClick={() => {
+            resetExceptionForm();
+            setShowExceptionSheet(true);
+          }}
           aria-label="Adicionar exceção"
           className="w-11 h-11"
         >
@@ -569,7 +599,10 @@ export default function Appointments() {
         {isMobile && (
           <Button
             className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg"
-            onClick={() => setShowExceptionSheet(true)}
+            onClick={() => {
+              resetExceptionForm();
+              setShowExceptionSheet(true);
+            }}
             aria-label="Adicionar exceção"
           >
             <Plus className="w-6 h-6" />
@@ -578,58 +611,118 @@ export default function Appointments() {
         <Drawer open={showExceptionSheet} onOpenChange={setShowExceptionSheet}>
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle>Adicionar exceção</DrawerTitle>
+              <DrawerTitle>Gerenciar exceções</DrawerTitle>
             </DrawerHeader>
             <div className="p-4 space-y-4">
-              <div>
-                <label className="text-sm font-medium">Tipo</label>
-                <Select value={exceptionType} onValueChange={(v) => setExceptionType(v as ExceptionType)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BLACKOUT">Fechamento</SelectItem>
-                    <SelectItem value="EXTRA_OPEN">Abertura extra</SelectItem>
-                    <SelectItem value="DAY_ADJUST">Ajuste de expediente</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {exceptions.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhuma exceção cadastrada.</p>
+                )}
+                {exceptions.map((ex) => (
+                  <div
+                    key={ex.id}
+                    className="flex items-center justify-between border rounded-md p-2"
+                  >
+                    <div className="text-left">
+                      <div className="font-medium text-sm">
+                        {ex.type === 'BLACKOUT'
+                          ? 'Fechamento'
+                          : ex.type === 'EXTRA_OPEN'
+                          ? 'Abertura extra'
+                          : 'Ajuste de expediente'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(ex.dateStart), 'dd/MM/yyyy HH:mm')} -
+                        {' '}
+                        {format(new Date(ex.dateEnd), 'dd/MM/yyyy HH:mm')}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditException(ex)}
+                        aria-label="Editar"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteException(ex.id)}
+                        aria-label="Excluir"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="grid gap-2">
-                <div>
-                  <label className="text-sm font-medium">Início</label>
-                  <Input
-                    type="datetime-local"
-                    value={exceptionStart}
-                    onChange={(e) => setExceptionStart(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Fim</label>
-                  <Input
-                    type="datetime-local"
-                    value={exceptionEnd}
-                    onChange={(e) => setExceptionEnd(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1">Motivo</label>
-                <div className="flex gap-2">
-                  {reasonOptions.map((r) => (
-                    <button
-                      type="button"
-                      key={r}
-                      onClick={() => setExceptionReason(r)}
-                      className={cn(
-                        badgeVariants({ variant: exceptionReason === r ? 'default' : 'outline' }),
-                        'px-4 py-2'
-                      )}
+              <div className="border-t pt-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-medium">
+                    {editingExceptionId ? 'Editar exceção' : 'Nova exceção'}
+                  </h3>
+                  {editingExceptionId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={resetExceptionForm}
                     >
-                      {r}
-                    </button>
-                  ))}
+                      Cancelar
+                    </Button>
+                  )}
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Tipo</label>
+                  <Select value={exceptionType} onValueChange={(v) => setExceptionType(v as ExceptionType)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BLACKOUT">Fechamento</SelectItem>
+                      <SelectItem value="EXTRA_OPEN">Abertura extra</SelectItem>
+                      <SelectItem value="DAY_ADJUST">Ajuste de expediente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <div>
+                    <label className="text-sm font-medium">Início</label>
+                    <Input
+                      type="datetime-local"
+                      value={exceptionStart}
+                      onChange={(e) => setExceptionStart(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Fim</label>
+                    <Input
+                      type="datetime-local"
+                      value={exceptionEnd}
+                      onChange={(e) => setExceptionEnd(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1">Motivo</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {reasonOptions.map((r) => (
+                      <button
+                        type="button"
+                        key={r}
+                        onClick={() => setExceptionReason(r)}
+                        className={cn(
+                          badgeVariants({ variant: exceptionReason === r ? 'default' : 'outline' }),
+                          'px-4 py-2'
+                        )}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -639,7 +732,7 @@ export default function Appointments() {
                 className="w-full h-11"
                 disabled={!exceptionStart || !exceptionEnd}
               >
-                Salvar
+                {editingExceptionId ? 'Atualizar' : 'Salvar'}
               </Button>
             </DrawerFooter>
           </DrawerContent>
