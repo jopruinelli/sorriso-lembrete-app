@@ -57,7 +57,6 @@ import {
   CalendarException,
   ExceptionType,
 } from '@/domain/calendarExceptions';
-
 export default function Appointments() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
