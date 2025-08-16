@@ -31,6 +31,7 @@ import { useSupabasePatients } from '@/hooks/useSupabasePatients';
 import { WeekSchedule } from '@/components/schedule/WeekSchedule';
 import { MonthSchedule } from '@/components/schedule/MonthSchedule';
 import { useSearchParams } from 'react-router-dom';
+import { composeEffectiveAvailability, listExceptions, CalendarException } from '@/domain/calendarExceptions';
 
 export default function Appointments() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -42,6 +43,7 @@ export default function Appointments() {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [showSettings, setShowSettings] = useState(false);
   const [showNonWorkingHours, setShowNonWorkingHours] = useState(false);
+  const [exceptions, setExceptions] = useState<CalendarException[]>([]);
 
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const {
@@ -80,16 +82,24 @@ export default function Appointments() {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = getWeekDays(currentDate);
   const currentMonth = startOfMonth(currentDate);
-  const workingHours = {
+  const baseHours = {
     start: Number(organizationSettings?.working_hours_start ?? 8),
     end: Number(organizationSettings?.working_hours_end ?? 18),
   };
+  const workingHours = weekDays.reduce((acc, day) => {
+    const eff = composeEffectiveAvailability(day, baseHours, exceptions) ?? baseHours;
+    return { start: Math.min(acc.start, eff.start), end: Math.max(acc.end, eff.end) };
+  }, { ...baseHours }); // disponibilidade efetiva: padrão + exceções
   const [scrollTargetHour, setScrollTargetHour] = useState(8);
   const [searchParams, setSearchParams] = useSearchParams();
   const scheduleRef = useRef<HTMLDivElement>(null);
   const firstHourRef = useRef<HTMLDivElement>(null);
   const timeColumnWidth = '3rem';
   const [mobileDays, setMobileDays] = useState(1);
+
+  useEffect(() => {
+    listExceptions().then(setExceptions);
+  }, []);
 
   useEffect(() => {
     const calculateMobileDays = () => {
@@ -236,8 +246,9 @@ export default function Appointments() {
       daysToDisplay.some((day) => {
         const dayStart = startOfDay(day).getTime();
         const dayEnd = addDays(startOfDay(day), 1).getTime();
-        const workStart = dayStart + workingHours.start * 60 * 60 * 1000;
-        const workEnd = dayStart + workingHours.end * 60 * 60 * 1000;
+        const eff = composeEffectiveAvailability(day, baseHours, exceptions) ?? baseHours;
+        const workStart = dayStart + eff.start * 60 * 60 * 1000;
+        const workEnd = dayStart + eff.end * 60 * 60 * 1000;
         const apptStart = new Date(a.start_time).getTime();
         const apptEnd = new Date(a.end_time).getTime();
         const intersectsDay = apptEnd > dayStart && apptStart < dayEnd;
@@ -245,7 +256,7 @@ export default function Appointments() {
         return apptStart < workStart || apptEnd > workEnd;
       })
     ),
-    [appointments, daysToDisplay, workingHours.start, workingHours.end]
+    [appointments, daysToDisplay, baseHours.start, baseHours.end, exceptions]
   );
 
   const weekRange = `${format(weekStart, "d 'de' MMMM", { locale: ptBR })} - ${format(addDays(weekStart, 6), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
