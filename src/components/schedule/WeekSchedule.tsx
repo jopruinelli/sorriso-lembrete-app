@@ -302,9 +302,10 @@ export function WeekSchedule(props: WeekScheduleProps) {
                   const isWorking =
                     !!effective && slotHour >= effective.start && slotHour < effective.end;
                   const hasException = dayClosed || !isWorking;
+                  const isHatched = weekend || hasException;
                   const cellClass =
-                    weekend || hasException
-                      ? 'bg-muted/10 hover:bg-muted/20 opacity-60 bg-hatched cursor-pointer'
+                    isHatched
+                      ? 'bg-muted/10 hover:bg-muted/20 opacity-60 cursor-pointer'
                       : 'hover:bg-muted/30 cursor-pointer';
                   const isHourBoundary = slotIndex % SLOTS_PER_HOUR === 0;
                   return (
@@ -312,7 +313,11 @@ export function WeekSchedule(props: WeekScheduleProps) {
                       key={slotIndex}
                       className={`relative p-1 transition-colors ${cellClass} ${isHourBoundary ? 'border-t' : ''}`}
                       style={{ height: SLOT_HEIGHT_PX }}
-                    />
+                    >
+                      {isHatched && (
+                        <div className="absolute inset-0 bg-hatched pointer-events-none" />
+                      )}
+                    </div>
                   );
                 })}
 
