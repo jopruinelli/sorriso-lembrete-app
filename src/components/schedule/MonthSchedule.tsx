@@ -1,5 +1,17 @@
 import { useRef } from 'react';
-import { addDays, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, setYear, startOfMonth, startOfWeek, startOfDay } from 'date-fns';
+import {
+  addDays,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  isWeekend,
+  setYear,
+  startOfMonth,
+  startOfWeek,
+  startOfDay,
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
 import { Patient } from '@/types/patient';
@@ -19,8 +31,8 @@ interface MonthScheduleProps {
 export function MonthSchedule({ currentMonth, appointments, patients, exceptions, onDayClick, onDayLongPress }: MonthScheduleProps) {
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
+  const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
   const days: Date[] = [];
   for (let day = startDate; day <= endDate; day = addDays(day, 1)) {
@@ -28,7 +40,7 @@ export function MonthSchedule({ currentMonth, appointments, patients, exceptions
   }
 
   const weekDayNames = Array.from({ length: 7 }, (_, i) =>
-    format(addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), i), 'EEEEEE', {
+    format(addDays(startOfWeek(new Date(), { weekStartsOn: 0 }), i), 'EEEEEE', {
       locale: ptBR,
     })
   );
@@ -75,6 +87,8 @@ export function MonthSchedule({ currentMonth, appointments, patients, exceptions
           const appt = hasAppointment(day);
           const birthday = hasBirthday(day);
           const exception = hasException(day);
+          const weekend = isWeekend(day);
+          const hatched = weekend || exception;
           return (
             <Button
               key={day.toISOString()}
@@ -95,7 +109,7 @@ export function MonthSchedule({ currentMonth, appointments, patients, exceptions
                 onDayLongPress?.(day);
               }}
             >
-              {exception && <div className="absolute inset-0 bg-hatched pointer-events-none" />}
+              {hatched && <div className="absolute inset-0 bg-hatched pointer-events-none" />}
               <span className="text-xs sm:text-sm">{format(day, 'd')}</span>
               <div className="flex gap-1">
                 {appt && <Calendar className="h-3 w-3 text-blue-500" />}
