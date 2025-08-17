@@ -33,7 +33,9 @@ export async function listExceptions(): Promise<CalendarException[]> {
   try {
     const res = await fetch('/api/exceptions');
     if (!res.ok) throw new Error('API error');
-    return (await res.json()) as CalendarException[];
+    const data = (await res.json()) as CalendarException[];
+    writeLocal(data);
+    return data;
   } catch {
     return readLocal();
   }
@@ -47,7 +49,11 @@ export async function addException(exc: CalendarException): Promise<CalendarExce
       body: JSON.stringify(exc),
     });
     if (!res.ok) throw new Error('API error');
-    return (await res.json()) as CalendarException;
+    const saved = (await res.json()) as CalendarException;
+    const list = readLocal();
+    list.push(saved);
+    writeLocal(list);
+    return saved;
   } catch {
     const list = readLocal();
     list.push(exc);
@@ -64,7 +70,16 @@ export async function updateException(exc: CalendarException): Promise<CalendarE
       body: JSON.stringify(exc),
     });
     if (!res.ok) throw new Error('API error');
-    return (await res.json()) as CalendarException;
+    const saved = (await res.json()) as CalendarException;
+    const list = readLocal();
+    const idx = list.findIndex((e) => e.id === saved.id);
+    if (idx !== -1) {
+      list[idx] = saved;
+    } else {
+      list.push(saved);
+    }
+    writeLocal(list);
+    return saved;
   } catch {
     const list = readLocal();
     const idx = list.findIndex((e) => e.id === exc.id);
@@ -80,7 +95,7 @@ export async function removeException(id: string): Promise<void> {
   try {
     const res = await fetch(`/api/exceptions/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('API error');
-  } catch {
+  } finally {
     const list = readLocal().filter((e) => e.id !== id);
     writeLocal(list);
   }
