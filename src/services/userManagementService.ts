@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserProfile } from '@/types/organization';
+import { UserProfile, Organization } from '@/types/organization';
 
 export class UserManagementService {
   static async getOrganizationUsers(organizationId: string): Promise<UserProfile[]> {
@@ -11,7 +11,8 @@ export class UserManagementService {
         .from('user_profiles')
         .select(`
           *,
-          organizations (*)
+          organizations (*),
+          auth_users:auth.users (email)
         `)
         .eq('organization_id', organizationId)
         .order('created_at', { ascending: false });
@@ -29,12 +30,26 @@ export class UserManagementService {
         return [];
       }
 
+      interface RawUser {
+        id: string;
+        user_id: string;
+        organization_id: string;
+        name: string;
+        role: string;
+        status: string;
+        created_at: string;
+        updated_at: string;
+        organizations: Organization;
+        auth_users?: { email?: string };
+      }
+
       // Mapear os dados para UserProfile
-      const users: UserProfile[] = data.map(user => ({
+      const users: UserProfile[] = (data as RawUser[]).map(user => ({
         id: user.id,
         user_id: user.user_id,
         organization_id: user.organization_id,
         name: user.name,
+        email: user.auth_users?.email || undefined,
         role: user.role as 'admin' | 'user',
         status: user.status as 'pending' | 'approved' | 'rejected',
         created_at: user.created_at,
@@ -187,7 +202,7 @@ export class UserManagementService {
     userId: string, 
     organizationId: string, 
     eventType: string, 
-    eventData: Record<string, any>
+      eventData: Record<string, unknown>
   ): Promise<void> {
     try {
       await supabase

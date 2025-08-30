@@ -11,6 +11,7 @@ export interface UserProfile {
   user_id: string;
   organization_id: string;
   name: string;
+  email?: string;
   role: 'admin' | 'user';
   status?: 'pending' | 'approved' | 'rejected';
   created_at: string;

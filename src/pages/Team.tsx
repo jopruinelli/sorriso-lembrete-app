@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import { AppNavigation } from '@/components/AppNavigation';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { useLocations } from '@/hooks/useLocations';
 import { useProfessionalRoles } from '@/hooks/useProfessionalRoles';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { Professional } from '@/types/professional';
+import { UserManagementService } from '@/services/userManagementService';
+import { UserProfile } from '@/types/organization';
 
 const Team: React.FC = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
@@ -20,6 +22,7 @@ const Team: React.FC = () => {
   const { locations: availableLocations } = useLocations(userProfile?.organization_id);
   const { roles: roleOptions, specialtiesByRole } = useProfessionalRoles(userProfile?.organization_id);
   const { professionals, addProfessional } = useProfessionals(userProfile?.organization_id);
+  const [organizationUsers, setOrganizationUsers] = useState<UserProfile[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Omit<Professional, 'id'>>({
     firstName: '',
@@ -29,6 +32,25 @@ const Team: React.FC = () => {
     specialties: [],
     locations: []
   });
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      if (userProfile?.organization_id) {
+        try {
+          const users = await UserManagementService.getOrganizationUsers(
+            userProfile.organization_id
+          );
+          setOrganizationUsers(users.filter(u => u.status === 'approved' && u.email));
+        } catch (error) {
+          console.error('❌ Error loading organization users:', error);
+        }
+      }
+    };
+
+    if (userProfile?.role === 'admin') {
+      loadUsers();
+    }
+  }, [userProfile]);
 
   const toggleSpecialty = (spec: string) => {
     setFormData(prev => ({
@@ -101,15 +123,26 @@ const Team: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="user">Usuário</Label>
-                <Input
-                  id="user"
-                  value={formData.user}
-                  onChange={e => setFormData({ ...formData, user: e.target.value })}
-                  placeholder="E-mail ou nome de usuário"
-                />
-              </div>
+              {userProfile?.role === 'admin' && (
+                <div>
+                  <Label htmlFor="user">Usuário</Label>
+                  <Select
+                    value={formData.user}
+                    onValueChange={value => setFormData({ ...formData, user: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar usuário" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {organizationUsers.map(u => (
+                        <SelectItem key={u.user_id} value={u.email!}>
+                          {u.name} ({u.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div>
                 <Label>Cargo *</Label>
@@ -195,7 +228,10 @@ const Team: React.FC = () => {
                       .join(', ')}</p>
                   )}
                   {prof.user && (
-                    <p><span className="font-semibold">Usuário:</span> {prof.user}</p>
+                    <p>
+                      <span className="font-semibold">Usuário:</span>{' '}
+                      {organizationUsers.find(u => u.email === prof.user)?.name || prof.user}
+                    </p>
                   )}
                 </CardContent>
               </Card>
