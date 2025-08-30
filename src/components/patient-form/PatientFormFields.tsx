@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PatientCreateData } from '@/types/patient';
+import { PatientCreateData, ContactPeriod } from '@/types/patient';
 import { DatePickerField } from './DatePickerField';
 import { PeriodSelector } from './PeriodSelector';
 
@@ -15,7 +15,7 @@ interface Location {
 interface PatientFormFieldsProps {
   formData: PatientCreateData;
   onChange: <K extends keyof PatientCreateData>(field: K, value: PatientCreateData[K]) => void;
-  onPeriodChange: (period: any) => void;
+  onPeriodChange: (period: ContactPeriod) => void;
   locations?: Location[];
 }
 
@@ -95,8 +95,9 @@ export const PatientFormFields: React.FC<PatientFormFieldsProps> = ({
 
       <div>
         <Label htmlFor="locationId">Local / Clínica *</Label>
-        <Select 
-          value={formData.locationId} 
+        <Select
+          value={formData.locationId}
+          defaultValue={formData.locationId}
           onValueChange={(value) => onChange('locationId', value)}
         >
           <SelectTrigger>
