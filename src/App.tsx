@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Appointments from "./pages/Appointments";
 import Reminders from "./pages/Reminders";
 import NotFound from "./pages/NotFound";
+import Team from "./pages/Team";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/reminders" element={<Reminders />} />
           <Route path="/appointments" element={<Appointments />} />
+          <Route path="/team" element={<Team />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
