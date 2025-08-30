@@ -116,20 +116,12 @@ export function AppointmentModal({
 
   const defaultTitle =
     titles.find((t) => t.is_default)?.title || titles[0]?.title || 'Consulta de Retorno';
-  const defaultLocationId =
-    locations.find((l) => l.is_active)?.id ||
-    locations[0]?.id ||
-    '';
-  const availableLocations = appointment
-    ? locations.filter((l) => l.is_active || l.id === appointment.location_id)
-    : locations.filter((l) => l.is_active);
-
   const now = new Date();
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       patient_id: '',
-      location_id: defaultLocationId,
+      location_id: '',
       title: defaultTitle,
       start_time: setMinutes(setHours(now, 9), 0),
       end_time: setMinutes(setHours(now, 10), 0),
@@ -140,6 +132,11 @@ export function AppointmentModal({
 
   const watchedStartTime = form.watch('start_time');
   const watchedEndTime = form.watch('end_time');
+  const watchedPatientId = form.watch('patient_id');
+  const patientLocationId = patients.find((p) => p.id === watchedPatientId)?.locationId;
+  const availableLocations = appointment
+    ? locations.filter((l) => l.is_active || l.id === appointment.location_id)
+    : locations.filter((l) => l.is_active || l.id === patientLocationId);
 
   useEffect(() => {
     if (appointment) {
@@ -169,7 +166,7 @@ export function AppointmentModal({
       );
       form.reset({
         patient_id: '',
-        location_id: defaultLocationId,
+        location_id: '',
         title: defaultTitle,
         start_time: startTime,
         end_time: endTime,
@@ -185,7 +182,7 @@ export function AppointmentModal({
       const endTime = setMinutes(setHours(now, 10), 0);
       form.reset({
         patient_id: '',
-        location_id: defaultLocationId,
+        location_id: '',
         title: defaultTitle,
         start_time: startTime,
         end_time: endTime,
@@ -195,7 +192,7 @@ export function AppointmentModal({
       setPatientSearch('');
       setShowRecurrence(false);
     }
-  }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle, defaultLocationId]);
+  }, [appointment, selectedTimeSlot, locations, patients, titles, form, defaultTitle]);
 
   useEffect(() => {
     if (watchedStartTime && watchedEndTime) {
@@ -277,6 +274,7 @@ export function AppointmentModal({
     retryLoadPatients();
     if (newPatient) {
       form.setValue('patient_id', newPatient.id);
+      form.setValue('location_id', newPatient.locationId);
       setPatientSearch(newPatient.name);
     }
     setShowPatientForm(false);
@@ -335,7 +333,10 @@ export function AppointmentModal({
                           value={patientSearch}
                           onChange={(e) => {
                             setPatientSearch(e.target.value);
-                            if (field.value) field.onChange('');
+                            if (field.value) {
+                              field.onChange('');
+                              form.setValue('location_id', '');
+                            }
                             setPatientSearchOpen(true);
                           }}
                           onClick={() => setPatientSearchOpen(true)}
@@ -362,12 +363,14 @@ export function AppointmentModal({
                                         }
                                         e.preventDefault();
                                         field.onChange(patient.id);
+                                        form.setValue('location_id', patient.locationId);
                                         setPatientSearch(patient.name);
                                         setPatientSearchOpen(false);
                                       }}
                                       onSelect={() => {
                                         if (patient.status === 'closed') return;
                                         field.onChange(patient.id);
+                                        form.setValue('location_id', patient.locationId);
                                         setPatientSearch(patient.name);
                                         setPatientSearchOpen(false);
                                       }}
@@ -435,6 +438,7 @@ export function AppointmentModal({
                       {availableLocations.map((location) => (
                         <SelectItem key={location.id} value={location.id}>
                           {location.name} {location.address && `- ${location.address}`}
+                          {location.id === patientLocationId && ' ⭐'}
                         </SelectItem>
                       ))}
                     </SelectContent>
