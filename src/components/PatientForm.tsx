@@ -9,10 +9,12 @@ import { PatientFormActions } from './patient-form/PatientFormActions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PatientAppointments } from '@/components/PatientAppointments';
 import { OrganizationSettings } from '@/types/organization';
+import { useLocations } from '@/hooks/useLocations';
 
 interface PatientFormProps {
   patient?: Patient;
   organizationSettings?: OrganizationSettings | null;
+  organizationId?: string;
   onSave: (patient: PatientCreateData) => void;
   onCancel: () => void;
 }
@@ -20,9 +22,11 @@ interface PatientFormProps {
 export const PatientForm: React.FC<PatientFormProps> = ({
   patient,
   organizationSettings,
+  organizationId,
   onSave,
   onCancel,
 }) => {
+  const { locations } = useLocations(organizationId);
   const [formData, setFormData] = useState<PatientCreateData>({
     name: '',
     phone: '',
@@ -33,8 +37,16 @@ export const PatientForm: React.FC<PatientFormProps> = ({
     nextContactDate: new Date(),
     status: 'active' as 'active' | 'inactive' | 'closed',
     inactiveReason: '',
-    paymentType: 'particular' as 'particular' | 'convenio'
+    paymentType: 'particular' as 'particular' | 'convenio',
+    locationId: ''
   });
+
+  // Definir local padrão quando locations estiver disponível
+  useEffect(() => {
+    if (locations.length > 0 && !formData.locationId && !patient) {
+      setFormData(prev => ({ ...prev, locationId: locations[0].id }));
+    }
+  }, [locations, formData.locationId, patient]);
 
   useEffect(() => {
     if (patient) {
@@ -48,7 +60,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({
         nextContactDate: patient.nextContactDate,
         status: patient.status,
         inactiveReason: patient.inactiveReason || '',
-        paymentType: patient.paymentType
+        paymentType: patient.paymentType,
+        locationId: patient.locationId
       });
     }
   }, [patient]);
@@ -88,7 +101,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
     handleChange('nextContactDate', nextDate);
   };
 
-  const isFormValid = formData.name && formData.phone;
+  const isFormValid = formData.name && formData.phone && formData.locationId;
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
@@ -114,6 +127,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                 formData={formData}
                 onChange={handleChange}
                 onPeriodChange={handlePeriodChange}
+                locations={locations}
               />
 
               <PatientFormActions

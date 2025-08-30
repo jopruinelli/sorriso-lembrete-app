@@ -214,6 +214,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onCancel }) 
       nextContactReason: row.motivoProximoContato!,
       status: row.status as 'active' | 'inactive' | 'closed',
       paymentType: row.tipoAtendimento as 'particular' | 'convenio',
+      locationId: 'default-location', // Usar primeiro local disponível
       created_at: new Date(),
       updated_at: new Date(),
       updated_by: undefined

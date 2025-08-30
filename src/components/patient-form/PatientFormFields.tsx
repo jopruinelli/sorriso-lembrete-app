@@ -7,16 +7,23 @@ import { PatientCreateData } from '@/types/patient';
 import { DatePickerField } from './DatePickerField';
 import { PeriodSelector } from './PeriodSelector';
 
+interface Location {
+  id: string;
+  name: string;
+}
+
 interface PatientFormFieldsProps {
   formData: PatientCreateData;
   onChange: <K extends keyof PatientCreateData>(field: K, value: PatientCreateData[K]) => void;
   onPeriodChange: (period: any) => void;
+  locations?: Location[];
 }
 
 export const PatientFormFields: React.FC<PatientFormFieldsProps> = ({
   formData,
   onChange,
-  onPeriodChange
+  onPeriodChange,
+  locations = []
 }) => {
   return (
     <>
@@ -85,6 +92,25 @@ export const PatientFormFields: React.FC<PatientFormFieldsProps> = ({
         onSelect={(date) => onChange('nextContactDate', date)}
         required
       />
+
+      <div>
+        <Label htmlFor="locationId">Local / Clínica *</Label>
+        <Select 
+          value={formData.locationId} 
+          onValueChange={(value) => onChange('locationId', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecionar local" />
+          </SelectTrigger>
+          <SelectContent>
+            {locations.map((location) => (
+              <SelectItem key={location.id} value={location.id}>
+                {location.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>

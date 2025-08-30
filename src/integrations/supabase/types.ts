@@ -275,6 +275,7 @@ export type Database = {
           id: string
           inactive_reason: string | null
           last_visit: string
+          location_id: string
           name: string
           next_contact_date: string
           next_contact_reason: string
@@ -293,6 +294,7 @@ export type Database = {
           id?: string
           inactive_reason?: string | null
           last_visit: string
+          location_id: string
           name: string
           next_contact_date: string
           next_contact_reason: string
@@ -311,6 +313,7 @@ export type Database = {
           id?: string
           inactive_reason?: string | null
           last_visit?: string
+          location_id?: string
           name?: string
           next_contact_date?: string
           next_contact_reason?: string
@@ -324,6 +327,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_patients_location"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patients_organization_id_fkey"
             columns: ["organization_id"]

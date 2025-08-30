@@ -11,6 +11,7 @@ export interface Patient {
   status: 'active' | 'inactive' | 'closed';
   inactiveReason?: string;
   paymentType: 'particular' | 'convenio';
+  locationId: string;
   contactHistory: ContactRecord[];
   created_at: Date;
   updated_at?: Date;
@@ -28,6 +29,7 @@ export interface PatientCreateData {
   status: 'active' | 'inactive' | 'closed';
   inactiveReason?: string;
   paymentType: 'particular' | 'convenio';
+  locationId: string;
 }
 
 export interface ContactRecord {

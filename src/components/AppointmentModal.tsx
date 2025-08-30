@@ -76,6 +76,7 @@ interface AppointmentModalProps {
   locations: Location[];
   titles: AppointmentTitle[];
   patients: Patient[];
+  organizationId?: string;
   addPatient: (
     patientData: PatientCreateData,
     userId: string
@@ -96,6 +97,7 @@ export function AppointmentModal({
   locations,
   titles,
   patients,
+  organizationId,
   addPatient,
   retryLoadPatients,
   createAppointment,
@@ -635,7 +637,11 @@ export function AppointmentModal({
       </DialogContent>
     </Dialog>
     {showPatientForm && (
-      <PatientForm onSave={handlePatientSave} onCancel={handlePatientCancel} />
+      <PatientForm 
+        organizationId={organizationId}
+        onSave={handlePatientSave} 
+        onCancel={handlePatientCancel} 
+      />
     )}
     </>
   );

@@ -12,6 +12,7 @@ export interface DatabasePatient {
   status: 'active' | 'inactive' | 'closed';
   inactive_reason?: string;
   payment_type: 'particular' | 'convenio';
+  location_id: string;
   created_at: string;
   updated_at: string;
   updated_by?: string;

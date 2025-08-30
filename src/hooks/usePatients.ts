@@ -17,6 +17,7 @@ const samplePatients: Patient[] = [
     nextContactDate: new Date('2025-03-15'),
     status: 'active',
     paymentType: 'particular',
+    locationId: 'location-1',
     contactHistory: [
       {
         id: '1',
@@ -40,6 +41,7 @@ const samplePatients: Patient[] = [
     nextContactDate: new Date('2024-12-10'),
     status: 'active',
     paymentType: 'particular',
+    locationId: 'location-1',
     contactHistory: [],
     created_at: new Date('2024-05-10'),
     updated_at: new Date('2024-05-10'),
@@ -55,6 +57,7 @@ const samplePatients: Patient[] = [
     nextContactDate: new Date('2024-11-20'),
     status: 'active',
     paymentType: 'particular',
+    locationId: 'location-1',
     contactHistory: [],
     created_at: new Date('2024-08-20'),
     updated_at: new Date('2024-08-20'),
@@ -76,6 +79,7 @@ export const usePatients = () => {
         nextContactDate: new Date(patient.nextContactDate as string | number | Date),
         birthDate: patient.birthDate ? new Date(patient.birthDate as string | number | Date) : undefined,
         paymentType: patient.paymentType || 'particular', // Default para registros existentes
+        locationId: patient.locationId || 'location-1', // Default para registros existentes
         contactHistory: (patient as any).contactHistory.map((contact: Record<string, unknown>) => ({
           ...contact,
           date: new Date(contact.date as string | number | Date)

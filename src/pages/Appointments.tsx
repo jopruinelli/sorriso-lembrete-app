@@ -574,6 +574,7 @@ export default function Appointments() {
           locations={locations}
           titles={titles}
           patients={patients}
+          organizationId={userProfile?.organization_id}
           addPatient={addPatient}
           retryLoadPatients={retryLoadPatients}
           createAppointment={createAppointment}
