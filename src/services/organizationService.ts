@@ -1,4 +1,5 @@
 
+import { sanitizeUserName, sanitizeOrganizationName } from '@/utils/inputSanitization';
 import { supabase } from '@/integrations/supabase/client';
 import { Organization } from '@/types/organization';
 import { OrganizationSettingsService } from './organizationSettingsService';
@@ -8,10 +9,15 @@ export class OrganizationService {
     console.log('🏢 OrganizationService.createOrganization:', { name, userId, userName, isMainAdmin });
     
     try {
+      // Sanitize inputs
+      const sanitizedName = sanitizeOrganizationName(name);
+      const sanitizedUserName = sanitizeUserName(userName);
+      
+      console.log('✅ Inputs sanitized:', { sanitizedName, sanitizedUserName });
       // Create organization
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
-        .insert([{ name }])
+        .insert([{ name: sanitizedName }])
         .select()
         .single();
 
@@ -28,7 +34,7 @@ export class OrganizationService {
         .insert([{
           user_id: userId,
           organization_id: orgData.id,
-          name: userName,
+          name: sanitizedUserName,
           role: 'admin',
           status: 'approved' // Auto-aprovado para quem cria a organização
         }])
@@ -55,6 +61,11 @@ export class OrganizationService {
     console.log('🤝 OrganizationService.joinOrganization:', { organizationName, userId, userName });
     
     try {
+      // Sanitize inputs
+      const sanitizedOrgName = sanitizeOrganizationName(organizationName);
+      const sanitizedUserName = sanitizeUserName(userName);
+      
+      console.log('✅ Inputs sanitized for join:', { sanitizedOrgName, sanitizedUserName });
       // Debug: First let's see all organizations
       const { data: allOrgs, error: allOrgsError } = await supabase
         .from('organizations')
@@ -69,7 +80,7 @@ export class OrganizationService {
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('*')
-        .ilike('name', organizationName)
+        .ilike('name', sanitizedOrgName)
         .maybeSingle();
 
       console.log('🔍 Organization search result:', { orgData, orgError, searchTerm: organizationName });
@@ -111,7 +122,7 @@ export class OrganizationService {
         .insert([{
           user_id: userId,
           organization_id: orgData.id,
-          name: userName,
+          name: sanitizedUserName,
           role: 'user',
           status: 'pending' // Aguardando aprovação
         }])

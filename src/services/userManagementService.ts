@@ -118,20 +118,89 @@ export class UserManagementService {
     console.log('🔄 UserManagementService.updateUserRole:', { userId, role });
     
     try {
+      // Get current user and organization info for security validation
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuario não autenticado');
+      }
+
+      // Verify current user is admin in the same organization as target user
+      const { data: targetUser, error: targetError } = await supabase
+        .from('user_profiles')
+        .select('organization_id')
+        .eq('id', userId)
+        .single();
+
+      if (targetError || !targetUser) {
+        throw new Error('Usuário alvo não encontrado');
+      }
+
+      const { data: currentUserProfile, error: currentError } = await supabase
+        .from('user_profiles')
+        .select('role, organization_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (currentError || !currentUserProfile) {
+        throw new Error('Perfil do usuário atual não encontrado');
+      }
+
+      // Security checks
+      if (currentUserProfile.role !== 'admin') {
+        throw new Error('Apenas administradores podem alterar funções');
+      }
+
+      if (currentUserProfile.organization_id !== targetUser.organization_id) {
+        throw new Error('Usuários só podem gerenciar membros da mesma organização');
+      }
+
+      if (user.id === userId) {
+        throw new Error('Usuários não podem alterar sua própria função');
+      }
+
+      // Update the role
       const { error } = await supabase
         .from('user_profiles')
         .update({ role })
-        .eq('user_id', userId);
+        .eq('id', userId);
 
       if (error) {
         console.error('❌ Error updating user role:', error);
         throw error;
       }
 
+      // Log security event
+      await this.logSecurityEvent(user.id, currentUserProfile.organization_id, 'role_change', {
+        target_user_id: userId,
+        new_role: role,
+        timestamp: new Date().toISOString()
+      });
+
       console.log('✅ User role updated successfully');
     } catch (error) {
       console.error('❌ Error in updateUserRole:', error);
       throw error;
+    }
+  }
+
+  static async logSecurityEvent(
+    userId: string, 
+    organizationId: string, 
+    eventType: string, 
+    eventData: Record<string, any>
+  ): Promise<void> {
+    try {
+      await supabase
+        .from('security_audit_log')
+        .insert({
+          user_id: userId,
+          organization_id: organizationId,
+          event_type: eventType,
+          event_data: eventData
+        });
+    } catch (error) {
+      // Log errors but don't fail the main operation
+      console.error('Failed to log security event:', error);
     }
   }
 }

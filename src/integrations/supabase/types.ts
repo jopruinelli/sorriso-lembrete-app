@@ -121,7 +121,7 @@ export type Database = {
           id: string
           method: string | null
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           patient_id: string
           successful: boolean
           user_id: string
@@ -132,7 +132,7 @@ export type Database = {
           id?: string
           method?: string | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           patient_id: string
           successful?: boolean
           user_id: string
@@ -143,7 +143,7 @@ export type Database = {
           id?: string
           method?: string | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           patient_id?: string
           successful?: boolean
           user_id?: string
@@ -278,7 +278,7 @@ export type Database = {
           name: string
           next_contact_date: string
           next_contact_reason: string
-          organization_id: string | null
+          organization_id: string
           payment_type: string
           phone: string
           secondary_phone: string | null
@@ -296,7 +296,7 @@ export type Database = {
           name: string
           next_contact_date: string
           next_contact_reason: string
-          organization_id?: string | null
+          organization_id: string
           payment_type?: string
           phone: string
           secondary_phone?: string | null
@@ -314,7 +314,7 @@ export type Database = {
           name?: string
           next_contact_date?: string
           next_contact_reason?: string
-          organization_id?: string | null
+          organization_id?: string
           payment_type?: string
           phone?: string
           secondary_phone?: string | null
@@ -332,6 +332,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          organization_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          organization_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          organization_id?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_profiles: {
         Row: {

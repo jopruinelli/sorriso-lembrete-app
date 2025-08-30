@@ -66,7 +66,7 @@ export class PatientService {
       
       const { data, error } = await supabase
         .from('patients')
-        .insert([dbPatient])
+        .insert([dbPatient as any]) // Type assertion to handle organization_id being required now
         .select()
         .single();
 
@@ -156,7 +156,7 @@ export class PatientService {
       
       const { data, error } = await supabase
         .from('patients')
-        .insert(dbPatients)
+        .insert(dbPatients as any[]) // Type assertion to handle organization_id being required now
         .select();
 
       if (error) {
