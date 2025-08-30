@@ -11,6 +11,7 @@ import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useLocations } from '@/hooks/useLocations';
 import { useProfessionalRoles } from '@/hooks/useProfessionalRoles';
+import { useProfessionals } from '@/hooks/useProfessionals';
 import { Professional } from '@/types/professional';
 
 const Team: React.FC = () => {
@@ -18,8 +19,7 @@ const Team: React.FC = () => {
   const { userProfile, loading: orgLoading } = useOrganization(user);
   const { locations: availableLocations } = useLocations(userProfile?.organization_id);
   const { roles: roleOptions, specialtiesByRole } = useProfessionalRoles(userProfile?.organization_id);
-
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const { professionals, addProfessional } = useProfessionals(userProfile?.organization_id);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Omit<Professional, 'id'>>({
     firstName: '',
@@ -48,13 +48,9 @@ const Team: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newProfessional: Professional = {
-      id: Date.now().toString(),
-      ...formData,
-    };
-    setProfessionals(prev => [...prev, newProfessional]);
+    await addProfessional(formData);
     setFormData({ firstName: '', lastName: '', user: '', role: '', specialties: [], locations: [] });
     setShowForm(false);
   };
