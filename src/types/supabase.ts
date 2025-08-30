@@ -29,3 +29,16 @@ export interface DatabaseContactRecord {
   successful: boolean;
   created_at: string;
 }
+
+export interface DatabaseProfessional {
+  id: string;
+  organization_id: string;
+  first_name: string;
+  last_name: string;
+  user_email: string | null;
+  role: string;
+  specialties: string[] | null;
+  location_ids: string[] | null;
+  created_at: string;
+  updated_at: string;
+}

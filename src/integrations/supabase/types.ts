@@ -343,6 +343,53 @@ export type Database = {
           },
         ]
       }
+      professionals: {
+        Row: {
+          id: string
+          organization_id: string
+          first_name: string
+          last_name: string
+          user_email: string | null
+          role: string
+          specialties: string[] | null
+          location_ids: string[] | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          first_name: string
+          last_name: string
+          user_email?: string | null
+          role: string
+          specialties?: string[] | null
+          location_ids?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          first_name?: string
+          last_name?: string
+          user_email?: string | null
+          role?: string
+          specialties?: string[] | null
+          location_ids?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professionals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_audit_log: {
         Row: {
           created_at: string | null
