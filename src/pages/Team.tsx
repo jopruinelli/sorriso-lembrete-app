@@ -15,12 +15,14 @@ import { useProfessionals } from '@/hooks/useProfessionals';
 import { Professional } from '@/types/professional';
 import { UserManagementService } from '@/services/userManagementService';
 import { UserProfile } from '@/types/organization';
+import { EspecialidadeMultiSelect } from '@/components/EspecialidadeMultiSelect';
+import { EspecialidadeOption } from '@/services/especialidades';
 
 const Team: React.FC = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const { userProfile, loading: orgLoading } = useOrganization(user);
   const { locations: availableLocations } = useLocations(userProfile?.organization_id);
-  const { roles: roleOptions, specialtiesByRole } = useProfessionalRoles(userProfile?.organization_id);
+  const { roles: roleOptions } = useProfessionalRoles(userProfile?.organization_id);
   const { professionals, addProfessional } = useProfessionals(userProfile?.organization_id);
   const [organizationUsers, setOrganizationUsers] = useState<UserProfile[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -32,6 +34,7 @@ const Team: React.FC = () => {
     specialties: [],
     locations: []
   });
+  const [especialidades, setEspecialidades] = useState<EspecialidadeOption[]>([]);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -52,15 +55,6 @@ const Team: React.FC = () => {
     }
   }, [userProfile]);
 
-  const toggleSpecialty = (spec: string) => {
-    setFormData(prev => ({
-      ...prev,
-      specialties: prev.specialties.includes(spec)
-        ? prev.specialties.filter(s => s !== spec)
-        : [...prev.specialties, spec]
-    }));
-  };
-
   const toggleLocation = (loc: string) => {
     setFormData(prev => ({
       ...prev,
@@ -74,6 +68,7 @@ const Team: React.FC = () => {
     e.preventDefault();
     await addProfessional(formData);
     setFormData({ firstName: '', lastName: '', user: '', role: '', specialties: [], locations: [] });
+    setEspecialidades([]);
     setShowForm(false);
   };
 
@@ -148,7 +143,10 @@ const Team: React.FC = () => {
                 <Label>Cargo *</Label>
                 <Select
                   value={formData.role}
-                  onValueChange={value => setFormData({ ...formData, role: value, specialties: [] })}
+                  onValueChange={value => {
+                    setFormData({ ...formData, role: value, specialties: [] });
+                    setEspecialidades([]);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecionar cargo" />
@@ -161,23 +159,24 @@ const Team: React.FC = () => {
                 </Select>
               </div>
 
-              {formData.role && specialtiesByRole[formData.role]?.length > 0 && (
-                <div>
-                  <Label>Especialidade</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {specialtiesByRole[formData.role]?.map(spec => (
-                      <div key={spec} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`spec-${spec}`}
-                          checked={formData.specialties.includes(spec)}
-                          onCheckedChange={() => toggleSpecialty(spec)}
-                        />
-                        <Label htmlFor={`spec-${spec}`}>{spec}</Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div>
+                <Label>Especialidade</Label>
+                <p className="text-sm text-muted-foreground">
+                  Opcional — adicione especialidades se desejar
+                </p>
+                <EspecialidadeMultiSelect
+                  cargoId={formData.role || null}
+                  value={especialidades}
+                  onChange={opts => {
+                    setEspecialidades(opts);
+                    setFormData(prev => ({
+                      ...prev,
+                      specialties: opts.map(o => o.nome)
+                    }));
+                  }}
+                  allowCreateEspecialidade
+                />
+              </div>
 
               <div>
                 <Label>Local / Clínica</Label>
