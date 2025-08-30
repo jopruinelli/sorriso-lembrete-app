@@ -96,8 +96,7 @@ export const PatientFormFields: React.FC<PatientFormFieldsProps> = ({
       <div>
         <Label htmlFor="locationId">Local / Clínica *</Label>
         <Select
-          value={formData.locationId}
-          defaultValue={formData.locationId}
+          value={formData.locationId || undefined}
           onValueChange={(value) => onChange('locationId', value)}
         >
           <SelectTrigger>
