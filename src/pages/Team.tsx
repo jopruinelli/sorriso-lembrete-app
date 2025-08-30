@@ -9,28 +9,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
+import { useLocations } from '@/hooks/useLocations';
+import { useProfessionalRoles } from '@/hooks/useProfessionalRoles';
 import { Professional } from '@/types/professional';
-
-const roleOptions = [
-  { id: 'dentist', label: 'Dentista' },
-  { id: 'assistant', label: 'Assistente' },
-  { id: 'reception', label: 'Recepcionista' }
-];
-
-const specialtyOptions: Record<string, string[]> = {
-  dentist: ['Clínico Geral', 'Ortodontia', 'Implantodontia'],
-  assistant: ['Financeiro', 'Agenda / Secretaria'],
-  reception: ['Atendimento ao Cliente']
-};
-
-const locationOptions = [
-  { id: 'loc1', name: 'Clínica Central' },
-  { id: 'loc2', name: 'Unidade Norte' }
-];
 
 const Team: React.FC = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const { userProfile, loading: orgLoading } = useOrganization(user);
+  const { locations: availableLocations } = useLocations(userProfile?.organization_id);
+  const { roles: roleOptions, specialtiesByRole } = useProfessionalRoles(userProfile?.organization_id);
 
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -93,7 +80,10 @@ const Team: React.FC = () => {
           </Button>
 
           {showForm && (
-            <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-white">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4 p-4 border rounded-lg bg-white max-w-2xl mx-auto w-full"
+            >
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">Nome *</Label>
@@ -136,17 +126,17 @@ const Team: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {roleOptions.map(role => (
-                      <SelectItem key={role.id} value={role.id}>{role.label}</SelectItem>
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {formData.role && (
+              {formData.role && specialtiesByRole[formData.role]?.length > 0 && (
                 <div>
                   <Label>Especialidade</Label>
                   <div className="flex flex-wrap gap-2">
-                    {specialtyOptions[formData.role]?.map(spec => (
+                    {specialtiesByRole[formData.role]?.map(spec => (
                       <div key={spec} className="flex items-center space-x-2">
                         <Checkbox
                           id={`spec-${spec}`}
@@ -163,7 +153,7 @@ const Team: React.FC = () => {
               <div>
                 <Label>Local / Clínica</Label>
                 <div className="flex flex-wrap gap-2">
-                  {locationOptions.map(loc => (
+                  {availableLocations.map(loc => (
                     <div key={loc.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`loc-${loc.id}`}
@@ -198,12 +188,15 @@ const Team: React.FC = () => {
                   <CardTitle>{prof.firstName} {prof.lastName}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <p><span className="font-semibold">Cargo:</span> {roleOptions.find(r => r.id === prof.role)?.label}</p>
+                  <p><span className="font-semibold">Cargo:</span> {prof.role}</p>
                   {prof.specialties.length > 0 && (
                     <p><span className="font-semibold">Especialidade:</span> {prof.specialties.join(', ')}</p>
                   )}
                   {prof.locations.length > 0 && (
-                    <p><span className="font-semibold">Local/Clínica:</span> {prof.locations.map(id => locationOptions.find(l => l.id === id)?.name).join(', ')}</p>
+                    <p><span className="font-semibold">Local/Clínica:</span> {prof.locations
+                      .map(id => availableLocations.find(l => l.id === id)?.name)
+                      .filter(Boolean)
+                      .join(', ')}</p>
                   )}
                   {prof.user && (
                     <p><span className="font-semibold">Usuário:</span> {prof.user}</p>
