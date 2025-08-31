@@ -7,22 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CargoSelect } from '@/components/CargoSelect';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useLocations } from '@/hooks/useLocations';
-import { useProfessionalRoles } from '@/hooks/useProfessionalRoles';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { Professional } from '@/types/professional';
 import { UserManagementService } from '@/services/userManagementService';
 import { UserProfile } from '@/types/organization';
 import { EspecialidadeMultiSelect } from '@/components/EspecialidadeMultiSelect';
-import { EspecialidadeOption } from '@/services/especialidades';
+import { EspecialidadeOption, CargoOption } from '@/services/especialidades';
 
 const Team: React.FC = () => {
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
   const { userProfile, loading: orgLoading } = useOrganization(user);
   const { locations: availableLocations } = useLocations(userProfile?.organization_id);
-  const { roles: roleOptions } = useProfessionalRoles(userProfile?.organization_id);
   const { professionals, addProfessional } = useProfessionals(userProfile?.organization_id);
   const [organizationUsers, setOrganizationUsers] = useState<UserProfile[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -35,6 +34,7 @@ const Team: React.FC = () => {
     locations: []
   });
   const [especialidades, setEspecialidades] = useState<EspecialidadeOption[]>([]);
+  const [selectedCargo, setSelectedCargo] = useState<CargoOption | null>(null);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -69,6 +69,7 @@ const Team: React.FC = () => {
     await addProfessional(formData);
     setFormData({ firstName: '', lastName: '', user: '', role: '', specialties: [], locations: [] });
     setEspecialidades([]);
+    setSelectedCargo(null);
     setShowForm(false);
   };
 
@@ -141,31 +142,24 @@ const Team: React.FC = () => {
 
               <div>
                 <Label>Cargo *</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={value => {
-                    setFormData({ ...formData, role: value, specialties: [] });
+                <CargoSelect
+                  value={selectedCargo}
+                  onChange={opt => {
+                    setSelectedCargo(opt);
+                    setFormData({
+                      ...formData,
+                      role: opt?.nome || '',
+                      specialties: [],
+                    });
                     setEspecialidades([]);
                   }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecionar cargo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roleOptions.map(role => (
-                      <SelectItem key={role} value={role}>{role}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               </div>
 
               <div>
-                <Label>Especialidade</Label>
-                <p className="text-sm text-muted-foreground">
-                  Opcional — adicione especialidades se desejar
-                </p>
+                <Label>Especialidade (opcional)</Label>
                 <EspecialidadeMultiSelect
-                  cargoId={formData.role || null}
+                  cargoId={selectedCargo?.id || null}
                   value={especialidades}
                   onChange={opts => {
                     setEspecialidades(opts);
