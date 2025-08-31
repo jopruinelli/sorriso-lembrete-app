@@ -125,12 +125,7 @@ export const EspecialidadeMultiSelect: React.FC<Props> = ({
           Selecione o cargo para ver especialidades (opcional)
         </p>
       )}
-      {cargoId && options.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          Não se aplica para este cargo
-        </p>
-      )}
-      {cargoId && (
+        {cargoId && (
         isMobile ? (
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>{trigger}</SheetTrigger>
