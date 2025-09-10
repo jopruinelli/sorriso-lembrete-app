@@ -14,7 +14,7 @@ export class PatientService {
 
     try {
       const { data, error } = await supabase
-        .from('patients')
+        .from('patients_secure')
         .select('*')
         .eq('organization_id', organizationId)
         .order('next_contact_date', { ascending: true });

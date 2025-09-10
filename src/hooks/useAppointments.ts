@@ -22,7 +22,7 @@ export const useAppointments = () => {
         .from('appointments')
         .select(`
           *,
-          patient:patients(name, phone),
+          patient:patients_secure(name, phone),
           location:locations(name, address)
         `)
         .eq('organization_id', userProfile.organization_id)
