@@ -10,9 +10,7 @@ export class UserManagementService {
       const { data, error } = await supabase
         .from('user_profiles')
         .select(`
-          *,
-          organizations (*),
-          auth_users:auth.users (email)
+          *
         `)
         .eq('organization_id', organizationId)
         .order('created_at', { ascending: false });
@@ -211,8 +209,8 @@ export class UserManagementService {
           user_id: userId,
           organization_id: organizationId,
           event_type: eventType,
-          event_data: eventData
-        });
+          event_data: eventData as any,
+        } as any);
     } catch (error) {
       // Log errors but don't fail the main operation
       console.error('Failed to log security event:', error);

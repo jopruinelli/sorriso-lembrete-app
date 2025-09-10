@@ -343,42 +343,86 @@ export type Database = {
           },
         ]
       }
-      professionals: {
+      professional_roles: {
         Row: {
-          id: string
-          organization_id: string
-          first_name: string
-          last_name: string
-          user_email: string | null
-          role: string
-          specialties: string[] | null
-          location_ids: string[] | null
           created_at: string
+          id: string
+          is_active: boolean
+          main_area: string
+          organization_id: string
+          role: string
+          specialty: string | null
+          sub_area: string | null
           updated_at: string
         }
         Insert: {
-          id?: string
-          organization_id: string
-          first_name: string
-          last_name: string
-          user_email?: string | null
-          role: string
-          specialties?: string[] | null
-          location_ids?: string[] | null
           created_at?: string
+          id?: string
+          is_active?: boolean
+          main_area: string
+          organization_id: string
+          role: string
+          specialty?: string | null
+          sub_area?: string | null
           updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: string
+          is_active?: boolean
+          main_area?: string
           organization_id?: string
-          first_name?: string
-          last_name?: string
+          role?: string
+          specialty?: string | null
+          sub_area?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_roles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professionals: {
+        Row: {
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+          location_ids: string[] | null
+          organization_id: string
+          role: string
+          specialties: string[] | null
+          updated_at: string
+          user_email: string | null
+        }
+        Insert: {
+          created_at?: string
+          first_name: string
+          id?: string
+          last_name: string
+          location_ids?: string[] | null
+          organization_id: string
+          role: string
+          specialties?: string[] | null
+          updated_at?: string
           user_email?: string | null
+        }
+        Update: {
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          location_ids?: string[] | null
+          organization_id?: string
           role?: string
           specialties?: string[] | null
-          location_ids?: string[] | null
-          created_at?: string
           updated_at?: string
+          user_email?: string | null
         }
         Relationships: [
           {

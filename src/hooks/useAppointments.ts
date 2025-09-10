@@ -22,14 +22,14 @@ export const useAppointments = () => {
         .from('appointments')
         .select(`
           *,
-          patient:patients_secure(name, phone),
+          patient:patients(name),
           location:locations(name, address)
         `)
         .eq('organization_id', userProfile.organization_id)
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      setAppointments((data || []) as Appointment[]);
+      setAppointments(((data || []) as unknown) as Appointment[]);
     } catch (error) {
       console.error('Error fetching appointments:', error);
       toast({

@@ -24,7 +24,7 @@ export const useProfessionalRoles = (organizationId?: string) => {
 
       try {
         const { data, error } = await supabase
-          .from('professional_roles')
+          .from('professional_roles' as any)
           .select('id, role, specialty, is_active')
           .eq('organization_id', organizationId)
           .eq('is_active', true)
@@ -35,7 +35,8 @@ export const useProfessionalRoles = (organizationId?: string) => {
         const roleSet = new Set<string>();
         const specialtyMap: Record<string, string[]> = {};
 
-        data?.forEach(item => {
+        const rows = (data as any[]) || [];
+        rows.forEach((item: any) => {
           roleSet.add(item.role);
           if (item.specialty) {
             if (!specialtyMap[item.role]) {
