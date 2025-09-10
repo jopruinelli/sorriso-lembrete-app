@@ -37,22 +37,18 @@ export class UserManagementService {
         status: string;
         created_at: string;
         updated_at: string;
-        organizations: Organization;
-        auth_users?: { email?: string };
       }
 
       // Mapear os dados para UserProfile
-      const users: UserProfile[] = (data as RawUser[]).map(user => ({
+      const users: UserProfile[] = ((data as any) || [] as RawUser[]).map((user: RawUser) => ({
         id: user.id,
         user_id: user.user_id,
         organization_id: user.organization_id,
         name: user.name,
-        email: user.auth_users?.email || undefined,
         role: user.role as 'admin' | 'user',
         status: user.status as 'pending' | 'approved' | 'rejected',
         created_at: user.created_at,
         updated_at: user.updated_at,
-        organizations: user.organizations
       }));
 
       console.log('✅ Mapped organization users:', users);
