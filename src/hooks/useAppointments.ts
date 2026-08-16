@@ -154,7 +154,7 @@ export const useAppointments = () => {
 
       const { error } = await supabase
         .from('appointments')
-        .update(updateData)
+        .update(updateData as never)
         .eq('id', id);
 
       if (error) throw error;

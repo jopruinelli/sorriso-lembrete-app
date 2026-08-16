@@ -513,14 +513,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_organization_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_user_id: { Args: never; Returns: string }
+      get_user_organization_id: { Args: never; Returns: string }
       user_belongs_to_organization: {
         Args: { org_id: string }
         Returns: boolean
